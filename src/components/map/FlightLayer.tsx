@@ -53,10 +53,6 @@ export default function FlightLayer({ map }: FlightLayerProps) {
   const airportsRef = useRef<Record<string, Airport>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [dataState, setDataState] = useState<{
-    airports: Record<string, Airport>,
-    schedule: ScheduledFlight[],
-  } | null>(null)
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -86,11 +82,11 @@ export default function FlightLayer({ map }: FlightLayerProps) {
         allocateOrdersToFlights(orders, sched, airports)
 
         if (mounted) {
-          setDataState({ airports, schedule: sched })
+          // Guardar refs para uso posterior por el layer
+          airportsRef.current = airports
+          scheduleRef.current = sched
           setLoading(false)
         }
-
-        if (mounted) setLoading(false)
       } catch (err) {
         console.error('Failed to load flight data:', err)
         if (mounted) {
@@ -214,7 +210,7 @@ export default function FlightLayer({ map }: FlightLayerProps) {
 
   if (loading) {
     return (
-      <div className="absolute bottom-4 right-4 bg-blue-50 border border-blue-400 text-blue-700 px-4 py-3 rounded z-[1000]" role="alert">
+      <div className="absolute bottom-4 right-4 bg-blue-50 border border-blue-400 text-blue-700 px-4 py-3 rounded z-[40]" role="alert">
         Loading flight data...
       </div>
     )
@@ -222,7 +218,7 @@ export default function FlightLayer({ map }: FlightLayerProps) {
 
   if (error) {
     return (
-      <div className="absolute bottom-4 right-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded z-[1000]" role="alert">
+      <div className="absolute bottom-4 right-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded z-[40]" role="alert">
         <strong className="font-bold">Error: </strong>
         <span className="block sm:inline">{error}</span>
       </div>
