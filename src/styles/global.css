@@ -4,33 +4,56 @@
 @import "tailwindcss";
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 48 96% 53%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 221 83% 53%;
+  --background: 0 0% 98%;
+  --foreground: 0 0% 20%;
+  --card: 0 0% 95%;
+  --card-foreground: 0 0% 15%;
+  --primary: 0 0% 40%;
+  --primary-foreground: 0 0% 95%;
+  --secondary: 0 0% 90%;
+  --secondary-foreground: 0 0% 25%;
+  --muted: 0 0% 85%;
+  --muted-foreground: 0 0% 50%;
+  --accent: 0 0% 60%;
+  --accent-foreground: 0 0% 10%;
+  --destructive: 0 0% 30%;
+  --destructive-foreground: 0 0% 95%;
+  --border: 0 0% 80%;
+  --input: 0 0% 85%;
+  --ring: 0 0% 40%;
   --radius: 1rem;
 }
 
 body { 
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Leaflet CSS */
+html {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+}
 
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Leaflet CSS específicos */
+#map {
+  z-index: 1;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background-color: #e5e5e5;
+}
 
 /* Grid del layout */
 .app-grid{display:grid;grid-template-columns:260px 1fr 320px;grid-template-rows:56px 1fr;height:100vh;}

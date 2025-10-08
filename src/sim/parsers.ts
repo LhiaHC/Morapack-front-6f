@@ -33,7 +33,7 @@ function dmsToDec(input: string): number {
 }
 
 /** Normaliza un código de aeropuerto. */
-const normCode = (c: string) => String(c).trim().toUpperCase() as AirportCode
+// (removed unused helper `normCode` to satisfy strict TS checks)
 
 /** =================== AIRPORTS ===================
  * Formato real (CSV): idx, CODE, Ciudad, País, alias, tz, capacidad, Lat(DMS), Lon(DMS), Región

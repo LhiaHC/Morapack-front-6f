@@ -33,9 +33,10 @@ export default function MapView(){
 
   return (
     <SimProvider>
-      <div id="map" className="map-container" />
-      {map && <FlightLayer map={map} />}
-      <SimControls />
+      <div className="absolute inset-0 w-full h-full">
+        <div id="map" className="absolute inset-0 w-full h-full" />
+        {map && <FlightLayer map={map} />}
+      </div>
     </SimProvider>
   )
 }

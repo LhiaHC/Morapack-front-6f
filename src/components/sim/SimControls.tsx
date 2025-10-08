@@ -11,7 +11,7 @@ export default function SimControls() {
   } = useSimulation()
 
   return (
-    <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-md z-[1000]">
+    <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-md z-[40]">
       <div className="mb-4">
         <div className="text-sm text-gray-500">Simulation Time</div>
         <div className="text-lg font-mono">

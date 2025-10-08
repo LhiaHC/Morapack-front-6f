@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from './ui/button'
 
 import type { OpsStats } from '../types'
-import api from '@/services/api'
+import api from '../services/api'
 
 export default function Rightbar({ currentRoute }: { currentRoute: string }) {
   const [stats, setStats] = useState<OpsStats>({ flights: 0, orders: 0, etaDelays: 0 })
