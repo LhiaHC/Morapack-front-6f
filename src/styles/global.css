@@ -22,6 +22,8 @@
   --input: 0 0% 85%;
   --ring: 0 0% 40%;
   --radius: 1rem;
+  --sidebar-bg: 0 0% 94%;          /* gris claro */
+  --sidebar-foreground: 0 0% 20%;  /* texto oscuro */
 }
 
 body { 
@@ -62,3 +64,56 @@ html {
 .app-main{grid-column:2;grid-row:2;}
 .app-rightbar{grid-column:3;grid-row:2;overflow:auto;}
 .map-container{height:calc(100vh - 56px);width:100%;}
+
+.sidebar-scroll {
+  overflow-y: auto;
+  /* “fade” arriba/abajo para que el scroll se sienta más suave */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+}
+
+/* Scrollbar discreto (webkit) */
+.sidebar-scroll::-webkit-scrollbar { width: 10px; }
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* Forzar estilo de los sheet/sidebar overlay para que no queden en negro */
+.sheet-content, .sheet-panel, aside[role="dialog"] {
+  background-color: hsl(var(--sidebar-bg)) !important;
+  color: hsl(var(--sidebar-foreground)) !important;
+}
+
+/* Links/items inside sidebar */
+.app-sidebar a, .app-sidebar button, nav a, nav button {
+  color: hsl(var(--sidebar-foreground));
+}
+.app-sidebar a:hover, .app-sidebar button:hover, nav a:hover, nav button:hover {
+  background-color: hsl(var(--muted));
+}
+
+/* Iconos dentro del sidebar: contraste */
+.app-sidebar svg, nav svg {
+  color: hsl(var(--sidebar-foreground));
+}
+
+/* Make sure overlay covers the map visually */
+.leaflet-container + .fixed.inset-0 {
+  z-index: 60;
+}
+
+/* Floating hamburger visual tweaks */
+.floating-hamburger-button {
+  background: hsl(var(--card));
+  border-radius: 0.5rem;
+  padding: 0.35rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* Force text inside nav to use sidebar foreground, override .text-white */
+nav span, nav p, nav a > span {
+  color: hsl(var(--sidebar-foreground)) !important;
+}

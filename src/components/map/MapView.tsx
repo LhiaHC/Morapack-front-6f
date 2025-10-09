@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import FlightLayer from './FlightLayer'
-import SimControls from '../sim/SimControls'
 import { SimProvider } from '../../sim/SimContext'
 
 // @ts-ignore
