@@ -13,7 +13,7 @@ export default function MapView(){
   const [map, setMap] = useState<L.Map | null>(null)
 
   useEffect(() => {
-    const mapInstance = L.map('map', { zoomControl: true }).setView([-12.0464, -77.0428], 3)
+    const mapInstance = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 3)
     setMap(mapInstance)
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -27,6 +27,7 @@ export default function MapView(){
 
     return () => { 
       mapInstance.remove()
+      mapInstance.zoomControl.remove()
     }
   }, [])
 
