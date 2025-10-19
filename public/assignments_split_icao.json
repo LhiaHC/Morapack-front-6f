@@ -1,0 +1,1563 @@
+[
+  {
+    "orderId": "ORD-001",
+    "splits": [
+      {
+        "consignmentId": "C-001-1",
+        "qty": 43,
+        "lineRefs": [
+          {
+            "lineId": "ORD-001-L1",
+            "qty": 43
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-465#2025-10-20T04:39:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 43
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-002",
+    "splits": [
+      {
+        "consignmentId": "C-002-1",
+        "qty": 79,
+        "lineRefs": [
+          {
+            "lineId": "ORD-002-L1",
+            "qty": 79
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-361#2025-10-20T03:51:00.000Z",
+            "from": "EBCI",
+            "to": "UMMS",
+            "qty": 79
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-003",
+    "splits": [
+      {
+        "consignmentId": "C-003-1",
+        "qty": 106,
+        "lineRefs": [
+          {
+            "lineId": "ORD-003-L1",
+            "qty": 106
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-036#2025-10-20T11:08:00.000Z",
+            "from": "UBBB",
+            "to": "SEQM",
+            "qty": 106
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-004",
+    "splits": [
+      {
+        "consignmentId": "C-004-1",
+        "qty": 12,
+        "lineRefs": [
+          {
+            "lineId": "ORD-004-L1",
+            "qty": 12
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-227#2025-10-20T08:34:00.000Z",
+            "from": "SPIM",
+            "to": "UBBB",
+            "qty": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-005",
+    "splits": [
+      {
+        "consignmentId": "C-005-1",
+        "qty": 107,
+        "lineRefs": [
+          {
+            "lineId": "ORD-005-L1",
+            "qty": 107
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-036#2025-10-20T11:08:00.000Z",
+            "from": "UBBB",
+            "to": "SEQM",
+            "qty": 107
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-006",
+    "splits": [
+      {
+        "consignmentId": "C-006-1",
+        "qty": 48,
+        "lineRefs": [
+          {
+            "lineId": "ORD-006-L1",
+            "qty": 48
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-468#2025-10-20T12:26:00.000Z",
+            "from": "UBBB",
+            "to": "EBCI",
+            "qty": 48
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-007",
+    "splits": [
+      {
+        "consignmentId": "C-007-1",
+        "qty": 81,
+        "lineRefs": [
+          {
+            "lineId": "ORD-007-L1",
+            "qty": 81
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-177#2025-10-20T19:25:00.000Z",
+            "from": "SPIM",
+            "to": "EHAM",
+            "qty": 81
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-008",
+    "splits": [
+      {
+        "consignmentId": "C-008-1",
+        "qty": 142,
+        "lineRefs": [
+          {
+            "lineId": "ORD-008-L1",
+            "qty": 142
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1116#2025-10-20T22:12:00.000Z",
+            "from": "UBBB",
+            "to": "VIDP",
+            "qty": 142
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-009",
+    "splits": [
+      {
+        "consignmentId": "C-009-1",
+        "qty": 1,
+        "lineRefs": [
+          {
+            "lineId": "ORD-009-L1",
+            "qty": 1
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-020#2025-10-20T19:41:00.000Z",
+            "from": "UBBB",
+            "to": "SKBO",
+            "qty": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-010",
+    "splits": [
+      {
+        "consignmentId": "C-010-1",
+        "qty": 23,
+        "lineRefs": [
+          {
+            "lineId": "ORD-010-L1",
+            "qty": 23
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-133#2025-10-21T02:20:00.000Z",
+            "from": "SPIM",
+            "to": "EBCI",
+            "qty": 23
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-011",
+    "splits": [
+      {
+        "consignmentId": "C-011-1",
+        "qty": 91,
+        "lineRefs": [
+          {
+            "lineId": "ORD-011-L1",
+            "qty": 91
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1027#2025-10-20T22:23:00.000Z",
+            "from": "EBCI",
+            "to": "OAKB",
+            "qty": 91
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-012",
+    "splits": [
+      {
+        "consignmentId": "C-012-1",
+        "qty": 142,
+        "lineRefs": [
+          {
+            "lineId": "ORD-012-L1",
+            "qty": 142
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1116#2025-10-20T22:12:00.000Z",
+            "from": "UBBB",
+            "to": "VIDP",
+            "qty": 142
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-013",
+    "splits": [
+      {
+        "consignmentId": "C-013-1",
+        "qty": 26,
+        "lineRefs": [
+          {
+            "lineId": "ORD-013-L1",
+            "qty": 26
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-816#2025-10-21T00:01:00.000Z",
+            "from": "UBBB",
+            "to": "SPIM",
+            "qty": 26
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-014",
+    "splits": [
+      {
+        "consignmentId": "C-014-A",
+        "qty": 75,
+        "lineRefs": [
+          {
+            "lineId": "ORD-014-L1",
+            "qty": 75
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-955#2025-10-21T21:13:00.000Z",
+            "from": "EBCI",
+            "to": "UMMS",
+            "qty": 75
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-014-B",
+        "qty": 75,
+        "lineRefs": [
+          {
+            "lineId": "ORD-014-L2",
+            "qty": 75
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1656#2025-10-21T22:26:00.000Z",
+            "from": "UBBB",
+            "to": "UMMS",
+            "qty": 75
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-015",
+    "splits": [
+      {
+        "consignmentId": "C-015-A",
+        "qty": 82,
+        "lineRefs": [
+          {
+            "lineId": "ORD-015-L1",
+            "qty": 82
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1057#2025-10-21T21:27:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 82
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-015-B",
+        "qty": 81,
+        "lineRefs": [
+          {
+            "lineId": "ORD-015-L2",
+            "qty": 81
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-819#2025-10-21T22:08:00.000Z",
+            "from": "SPIM",
+            "to": "UBBB",
+            "qty": 81
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-016",
+    "splits": [
+      {
+        "consignmentId": "C-016-1",
+        "qty": 99,
+        "lineRefs": [
+          {
+            "lineId": "ORD-016-L1",
+            "qty": 99
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-735#2025-10-21T20:16:00.000Z",
+            "from": "SPIM",
+            "to": "LBSF",
+            "qty": 99
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-017",
+    "splits": [
+      {
+        "consignmentId": "C-017-A",
+        "qty": 82,
+        "lineRefs": [
+          {
+            "lineId": "ORD-017-L1",
+            "qty": 82
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1057#2025-10-21T21:27:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 82
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-017-B",
+        "qty": 81,
+        "lineRefs": [
+          {
+            "lineId": "ORD-017-L2",
+            "qty": 81
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-819#2025-10-21T22:08:00.000Z",
+            "from": "SPIM",
+            "to": "UBBB",
+            "qty": 81
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-018",
+    "splits": [
+      {
+        "consignmentId": "C-018-A",
+        "qty": 82,
+        "lineRefs": [
+          {
+            "lineId": "ORD-018-L1",
+            "qty": 82
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-819#2025-10-21T22:08:00.000Z",
+            "from": "SPIM",
+            "to": "UBBB",
+            "qty": 82
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-018-B",
+        "qty": 81,
+        "lineRefs": [
+          {
+            "lineId": "ORD-018-L2",
+            "qty": 81
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1639#2025-10-22T01:45:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 81
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-019",
+    "splits": [
+      {
+        "consignmentId": "C-019-A",
+        "qty": 82,
+        "lineRefs": [
+          {
+            "lineId": "ORD-019-L1",
+            "qty": 82
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1639#2025-10-22T01:45:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 82
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-019-B",
+        "qty": 82,
+        "lineRefs": [
+          {
+            "lineId": "ORD-019-L2",
+            "qty": 82
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1641#2025-10-22T04:39:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 82
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-020",
+    "splits": [
+      {
+        "consignmentId": "C-020-1",
+        "qty": 20,
+        "lineRefs": [
+          {
+            "lineId": "ORD-020-L1",
+            "qty": 20
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1363#2025-10-22T07:28:00.000Z",
+            "from": "SPIM",
+            "to": "OSDI",
+            "qty": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-021",
+    "splits": [
+      {
+        "consignmentId": "C-021-A",
+        "qty": 82,
+        "lineRefs": [
+          {
+            "lineId": "ORD-021-L1",
+            "qty": 82
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1644#2025-10-22T12:26:00.000Z",
+            "from": "UBBB",
+            "to": "EBCI",
+            "qty": 82
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-021-B",
+        "qty": 82,
+        "lineRefs": [
+          {
+            "lineId": "ORD-021-L2",
+            "qty": 82
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1305#2025-10-22T13:07:00.000Z",
+            "from": "SPIM",
+            "to": "EBCI",
+            "qty": 82
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-022",
+    "splits": [
+      {
+        "consignmentId": "C-022-1",
+        "qty": 61,
+        "lineRefs": [
+          {
+            "lineId": "ORD-022-L1",
+            "qty": 61
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1692#2025-10-22T11:52:00.000Z",
+            "from": "UBBB",
+            "to": "EKCH",
+            "qty": 61
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-023",
+    "splits": [
+      {
+        "consignmentId": "C-023-1",
+        "qty": 107,
+        "lineRefs": [
+          {
+            "lineId": "ORD-023-L1",
+            "qty": 107
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1589#2025-10-22T14:39:00.000Z",
+            "from": "EBCI",
+            "to": "VIDP",
+            "qty": 107
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-024",
+    "splits": [
+      {
+        "consignmentId": "C-024-A",
+        "qty": 78,
+        "lineRefs": [
+          {
+            "lineId": "ORD-024-L1",
+            "qty": 78
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1808#2025-10-22T22:21:00.000Z",
+            "from": "EBCI",
+            "to": "SVMI",
+            "qty": 78
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-024-B",
+        "qty": 77,
+        "lineRefs": [
+          {
+            "lineId": "ORD-024-L2",
+            "qty": 77
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1816#2025-10-23T01:41:00.000Z",
+            "from": "UBBB",
+            "to": "SVMI",
+            "qty": 77
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-025",
+    "splits": [
+      {
+        "consignmentId": "C-025-1",
+        "qty": 29,
+        "lineRefs": [
+          {
+            "lineId": "ORD-025-L1",
+            "qty": 29
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2306#2025-10-22T20:32:00.000Z",
+            "from": "UBBB",
+            "to": "OERK",
+            "qty": 29
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-026",
+    "splits": [
+      {
+        "consignmentId": "C-026-A",
+        "qty": 78,
+        "lineRefs": [
+          {
+            "lineId": "ORD-026-L1",
+            "qty": 78
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1808#2025-10-22T22:21:00.000Z",
+            "from": "EBCI",
+            "to": "SVMI",
+            "qty": 78
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-026-B",
+        "qty": 77,
+        "lineRefs": [
+          {
+            "lineId": "ORD-026-L2",
+            "qty": 77
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1816#2025-10-23T01:41:00.000Z",
+            "from": "UBBB",
+            "to": "SVMI",
+            "qty": 77
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-027",
+    "splits": [
+      {
+        "consignmentId": "C-027-1",
+        "qty": 56,
+        "lineRefs": [
+          {
+            "lineId": "ORD-027-L1",
+            "qty": 56
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2252#2025-10-22T21:43:00.000Z",
+            "from": "UBBB",
+            "to": "LBSF",
+            "qty": 56
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-028",
+    "splits": [
+      {
+        "consignmentId": "C-028-A",
+        "qty": 78,
+        "lineRefs": [
+          {
+            "lineId": "ORD-028-L1",
+            "qty": 78
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1816#2025-10-23T01:41:00.000Z",
+            "from": "UBBB",
+            "to": "SVMI",
+            "qty": 78
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-028-B",
+        "qty": 78,
+        "lineRefs": [
+          {
+            "lineId": "ORD-028-L2",
+            "qty": 78
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1810#2025-10-23T05:55:00.000Z",
+            "from": "EBCI",
+            "to": "SVMI",
+            "qty": 78
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-029",
+    "splits": [
+      {
+        "consignmentId": "C-029-1",
+        "qty": 71,
+        "lineRefs": [
+          {
+            "lineId": "ORD-029-L1",
+            "qty": 71
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2231#2025-10-23T12:32:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 71
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-030",
+    "splits": [
+      {
+        "consignmentId": "C-030-A",
+        "qty": 213,
+        "lineRefs": [
+          {
+            "lineId": "ORD-030-L1",
+            "qty": 213
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-1973#2025-10-23T19:22:00.000Z",
+            "from": "SPIM",
+            "to": "OAKB",
+            "qty": 213
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-030-B",
+        "qty": 213,
+        "lineRefs": [
+          {
+            "lineId": "ORD-030-L2",
+            "qty": 213
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2908#2025-10-23T20:24:00.000Z",
+            "from": "UBBB",
+            "to": "OAKB",
+            "qty": 213
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-030-C",
+        "qty": 211,
+        "lineRefs": [
+          {
+            "lineId": "ORD-030-L3",
+            "qty": 211
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2791#2025-10-23T22:23:00.000Z",
+            "from": "EBCI",
+            "to": "OAKB",
+            "qty": 211
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-031",
+    "splits": [
+      {
+        "consignmentId": "C-031-A",
+        "qty": 99,
+        "lineRefs": [
+          {
+            "lineId": "ORD-031-L1",
+            "qty": 99
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2864#2025-10-24T00:50:00.000Z",
+            "from": "UBBB",
+            "to": "EKCH",
+            "qty": 99
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-031-B",
+        "qty": 98,
+        "lineRefs": [
+          {
+            "lineId": "ORD-031-L2",
+            "qty": 98
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2745#2025-10-24T01:00:00.000Z",
+            "from": "EBCI",
+            "to": "EKCH",
+            "qty": 98
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-032",
+    "splits": [
+      {
+        "consignmentId": "C-032-1",
+        "qty": 143,
+        "lineRefs": [
+          {
+            "lineId": "ORD-032-L1",
+            "qty": 143
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2817#2025-10-24T04:39:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 143
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-033",
+    "splits": [
+      {
+        "consignmentId": "C-033-1",
+        "qty": 6,
+        "lineRefs": [
+          {
+            "lineId": "ORD-033-L1",
+            "qty": 6
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2934#2025-10-24T05:27:00.000Z",
+            "from": "UBBB",
+            "to": "OPKC",
+            "qty": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-034",
+    "splits": [
+      {
+        "consignmentId": "C-034-A",
+        "qty": 66,
+        "lineRefs": [
+          {
+            "lineId": "ORD-034-L1",
+            "qty": 66
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2479#2025-10-24T05:58:00.000Z",
+            "from": "SPIM",
+            "to": "EBCI",
+            "qty": 66
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-034-B",
+        "qty": 65,
+        "lineRefs": [
+          {
+            "lineId": "ORD-034-L2",
+            "qty": 65
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2818#2025-10-24T06:55:00.000Z",
+            "from": "UBBB",
+            "to": "EBCI",
+            "qty": 65
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-035",
+    "splits": [
+      {
+        "consignmentId": "C-035-1",
+        "qty": 6,
+        "lineRefs": [
+          {
+            "lineId": "ORD-035-L1",
+            "qty": 6
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2910#2025-10-24T05:37:00.000Z",
+            "from": "UBBB",
+            "to": "OAKB",
+            "qty": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-036",
+    "splits": [
+      {
+        "consignmentId": "C-036-1",
+        "qty": 18,
+        "lineRefs": [
+          {
+            "lineId": "ORD-036-L1",
+            "qty": 18
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2733#2025-10-24T11:26:00.000Z",
+            "from": "EBCI",
+            "to": "LKPR",
+            "qty": 18
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-037",
+    "splits": [
+      {
+        "consignmentId": "C-037-1",
+        "qty": 84,
+        "lineRefs": [
+          {
+            "lineId": "ORD-037-L1",
+            "qty": 84
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3236#2025-10-24T20:27:00.000Z",
+            "from": "UBBB",
+            "to": "SGAS",
+            "qty": 84
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-038",
+    "splits": [
+      {
+        "consignmentId": "C-038-A",
+        "qty": 111,
+        "lineRefs": [
+          {
+            "lineId": "ORD-038-L1",
+            "qty": 111
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2821#2025-10-24T21:27:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 111
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-038-B",
+        "qty": 111,
+        "lineRefs": [
+          {
+            "lineId": "ORD-038-L2",
+            "qty": 111
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2583#2025-10-24T22:08:00.000Z",
+            "from": "SPIM",
+            "to": "UBBB",
+            "qty": 111
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-038-C",
+        "qty": 111,
+        "lineRefs": [
+          {
+            "lineId": "ORD-038-L3",
+            "qty": 111
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3403#2025-10-25T01:45:00.000Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 111
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-039",
+    "splits": [
+      {
+        "consignmentId": "C-039-1",
+        "qty": 131,
+        "lineRefs": [
+          {
+            "lineId": "ORD-039-L1",
+            "qty": 131
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-2380#2025-10-25T02:09:00.000Z",
+            "from": "SPIM",
+            "to": "SEQM",
+            "qty": 131
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-040",
+    "splits": [
+      {
+        "consignmentId": "C-040-1",
+        "qty": 55,
+        "lineRefs": [
+          {
+            "lineId": "ORD-040-L1",
+            "qty": 55
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3256#2025-10-25T00:04:00.000Z",
+            "from": "EBCI",
+            "to": "LATI",
+            "qty": 55
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-041",
+    "splits": [
+      {
+        "consignmentId": "C-041-1",
+        "qty": 89,
+        "lineRefs": [
+          {
+            "lineId": "ORD-041-L1",
+            "qty": 89
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3480#2025-10-25T12:43:00.000Z",
+            "from": "UBBB",
+            "to": "OSDI",
+            "qty": 89
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-042",
+    "splits": [
+      {
+        "consignmentId": "C-042-1",
+        "qty": 15,
+        "lineRefs": [
+          {
+            "lineId": "ORD-042-L1",
+            "qty": 15
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3232#2025-10-25T15:51:00.000Z",
+            "from": "EBCI",
+            "to": "SGAS",
+            "qty": 15
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-043",
+    "splits": [
+      {
+        "consignmentId": "C-043-A",
+        "qty": 268,
+        "lineRefs": [
+          {
+            "lineId": "ORD-043-L1",
+            "qty": 268
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-4064#2025-10-25T20:00:00.000Z",
+            "from": "UBBB",
+            "to": "OSDI",
+            "qty": 268
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-043-B",
+        "qty": 268,
+        "lineRefs": [
+          {
+            "lineId": "ORD-043-L2",
+            "qty": 268
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3131#2025-10-25T22:18:00.000Z",
+            "from": "SPIM",
+            "to": "OSDI",
+            "qty": 268
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-043-C",
+        "qty": 268,
+        "lineRefs": [
+          {
+            "lineId": "ORD-043-L3",
+            "qty": 268
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3945#2025-10-26T00:03:00.000Z",
+            "from": "EBCI",
+            "to": "OSDI",
+            "qty": 268
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-044",
+    "splits": [
+      {
+        "consignmentId": "C-044-1",
+        "qty": 68,
+        "lineRefs": [
+          {
+            "lineId": "ORD-044-L1",
+            "qty": 68
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-4110#2025-10-26T05:27:00.000Z",
+            "from": "UBBB",
+            "to": "OPKC",
+            "qty": 68
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-045",
+    "splits": [
+      {
+        "consignmentId": "C-045-1",
+        "qty": 131,
+        "lineRefs": [
+          {
+            "lineId": "ORD-045-L1",
+            "qty": 131
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-4018#2025-10-26T05:43:00.000Z",
+            "from": "UBBB",
+            "to": "LBSF",
+            "qty": 131
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-046",
+    "splits": [
+      {
+        "consignmentId": "C-046-A",
+        "qty": 80,
+        "lineRefs": [
+          {
+            "lineId": "ORD-046-L1",
+            "qty": 80
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3931#2025-10-26T05:13:00.000Z",
+            "from": "EBCI",
+            "to": "EHAM",
+            "qty": 80
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-046-B",
+        "qty": 80,
+        "lineRefs": [
+          {
+            "lineId": "ORD-046-L2",
+            "qty": 80
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3701#2025-10-26T09:14:00.000Z",
+            "from": "SPIM",
+            "to": "EHAM",
+            "qty": 80
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-047",
+    "splits": [
+      {
+        "consignmentId": "C-047-1",
+        "qty": 109,
+        "lineRefs": [
+          {
+            "lineId": "ORD-047-L1",
+            "qty": 109
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-4060#2025-10-26T10:49:00.000Z",
+            "from": "UBBB",
+            "to": "VIDP",
+            "qty": 109
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-048",
+    "splits": [
+      {
+        "consignmentId": "C-048-1",
+        "qty": 70,
+        "lineRefs": [
+          {
+            "lineId": "ORD-048-L1",
+            "qty": 70
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3998#2025-10-26T16:17:00.000Z",
+            "from": "UBBB",
+            "to": "EBCI",
+            "qty": 70
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-049",
+    "splits": [
+      {
+        "consignmentId": "C-049-A",
+        "qty": 58,
+        "lineRefs": [
+          {
+            "lineId": "ORD-049-L1",
+            "qty": 58
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3554#2025-10-26T22:11:00.000Z",
+            "from": "SPIM",
+            "to": "SEQM",
+            "qty": 58
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-049-B",
+        "qty": 57,
+        "lineRefs": [
+          {
+            "lineId": "ORD-049-L2",
+            "qty": 57
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3556#2025-10-27T02:09:00.000Z",
+            "from": "SPIM",
+            "to": "SEQM",
+            "qty": 57
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-050",
+    "splits": [
+      {
+        "consignmentId": "C-050-1",
+        "qty": 119,
+        "lineRefs": [
+          {
+            "lineId": "ORD-050-L1",
+            "qty": 119
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-3651#2025-10-27T00:27:00.000Z",
+            "from": "SPIM",
+            "to": "EDDI",
+            "qty": 119
+          }
+        ]
+      }
+    ]
+  }
+]

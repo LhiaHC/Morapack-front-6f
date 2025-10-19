@@ -1,4 +1,4 @@
-import type { Airport, AirportCode, Cancellation, ClientId, FlightDef, FlightId, HHMM, Order } from "./types"
+import type { Airport, AirportCode, Cancellation, ClientId, FlightDef, FlightId, HHMM, Order } from "../types"
 
 
 async function fetchText(path: string): Promise<string> {

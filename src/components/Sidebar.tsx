@@ -23,7 +23,6 @@ export default function Sidebar({ collapsed = false }: { collapsed?: boolean }) 
           {!collapsed && <span>Mapa</span>}
         </NavLink>
         
-
         <NavLink to="/aeropuertos" className={({isActive}) => cx(baseItem, isActive && activeItem)} title="Aeropuertos">
           <Package className="h-4 w-4" />
           {!collapsed && <span>Aeropuertos</span>}

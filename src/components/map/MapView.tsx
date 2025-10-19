@@ -2,18 +2,26 @@ import { useEffect, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import FlightLayer from './FlightLayer'
-import { SimProvider } from '../../sim/SimContext'
+import type { AirportICAO, FlightInstance, AssignmentByOrder, TimelineEvent } from '../../types'
 
 // @ts-ignore
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png'
 // @ts-ignore
 import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png'
 
-export default function MapView(){
+interface MapViewProps {
+  airports: AirportICAO[]
+  instances: FlightInstance[]
+  assignments: AssignmentByOrder[]
+  timeline: TimelineEvent[]
+  selectedOrderId?: string | null
+}
+
+export default function MapView({ airports, instances, assignments, timeline, selectedOrderId }: MapViewProps){
   const [map, setMap] = useState<L.Map | null>(null)
 
   useEffect(() => {
-    const mapInstance = L.map('map', { zoomControl: true }).setView([-12.0464, -77.0428], 3)
+    const mapInstance = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 3)
     setMap(mapInstance)
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -31,11 +39,18 @@ export default function MapView(){
   }, [])
 
   return (
-    <SimProvider>
-      <div className="absolute inset-0 w-full h-full">
-        <div id="map" className="absolute inset-0 w-full h-full" />
-        {map && <FlightLayer map={map} />}
-      </div>
-    </SimProvider>
+    <div className="absolute inset-0 w-full h-full">
+      <div id="map" className="absolute inset-0 w-full h-full" />
+      {map && (
+        <FlightLayer 
+          map={map} 
+          airports={airports}
+          instances={instances}
+          assignments={assignments}
+          timeline={timeline}
+          selectedOrderId={selectedOrderId}
+        />
+      )}
+    </div>
   )
 }

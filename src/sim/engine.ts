@@ -8,7 +8,7 @@ import type {
   Order, 
   ScheduledFlight, 
   WeeklyPlan
-} from "./types"
+} from "../types"
 
 function localToUTC(baseUTC: Date, hhmm: HHMM, tzOffset: number, dayOffset: number): Date {
   const [hh, mm] = hhmm.split(':').map(Number)
