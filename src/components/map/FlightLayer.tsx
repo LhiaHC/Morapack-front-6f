@@ -17,11 +17,11 @@ interface FlightLayerProps {
 }
 
 // Icono personalizado para vuelos
-const PLANE_ICON = L.icon({
-  iconUrl: '/images/plane.png',
+const PLANE_ICON = L.divIcon({
+  className: 'plane-marker',
+  html: '<div style="font-size: 24px;">✈</div>',
   iconSize: [24, 24],
   iconAnchor: [12, 12],
-  popupAnchor: [0, -12]
 })
 
 // Estado del marcador

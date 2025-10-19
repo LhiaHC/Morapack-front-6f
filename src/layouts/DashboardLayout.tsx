@@ -123,17 +123,16 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
       </main>
 
       {/* Botón flotante Simulación */}
-      <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center pointer-events-none">
+      {/*<div className="fixed inset-x-0 bottom-6 z-50 flex justify-center pointer-events-none">
         <Button 
           data-testid="simulation-button" 
           size="lg" 
           className="rounded-full shadow-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white border-2 border-white/20 backdrop-blur-sm pointer-events-auto transform hover:scale-105 transition-all duration-200"
           onClick={() => setUploadOpen(true)}
         >
-          
           Iniciar Simulación
         </Button>
-      </div>
+      </div>*/}
     </div>
   )
 }
