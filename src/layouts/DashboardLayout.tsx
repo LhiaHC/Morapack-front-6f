@@ -27,40 +27,15 @@ Button.displayName = 'Button';
 
 
 
-// === Hook: detectar desktop (≥ lg) ===
-function useIsDesktop(query = '(min-width: 1024px)') {
-  const [is, setIs] = React.useState<boolean>(() => (typeof window !== 'undefined' ? window.matchMedia(query).matches : false))
-  React.useEffect(() => {
-    const m = window.matchMedia(query)
-    const onChange = () => setIs(m.matches)
-    if (typeof m.addEventListener === 'function') m.addEventListener('change', onChange)
-    else if (typeof m.addListener === 'function') m.addListener(onChange)
-    onChange()
-    return () => {
-      if (typeof m.removeEventListener === 'function') m.removeEventListener('change', onChange)
-      else if (typeof m.removeListener === 'function') m.removeListener(onChange)
-    }
-  }, [query])
-  return is
-}
-
+// === DashboardLayout Props ===
 export type DashboardLayoutProps = {
   children?: React.ReactNode
   SidebarContent?: React.ComponentType<{ collapsed?: boolean }>
 }
 
 export default function DashboardLayout({ children, SidebarContent }: DashboardLayoutProps) {
-  const isDesktop = useIsDesktop()
   const [openLeft, setOpenLeft] = React.useState(false)   // para mobile
   const [openRight, setOpenRight] = React.useState(false)
-
-  // Estado colapsado (solo desktop) + persistencia
-  const [collapsed] = React.useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    const raw = localStorage.getItem('sidebar:collapsed')
-    return raw === '1'
-  })
-
 
   const [uploadOpen, setUploadOpen] = React.useState(false);
   const [uploadMessages, setUploadMessages] = React.useState<{flights?: string, airports?: string}>({});
@@ -139,20 +114,24 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         handleUploadConfirm={handleUploadConfirm}
         SidebarContent={SidebarContent}
       />
-      {/* Main empujado por el sidebar persistente */}
-      <main
-        className={cn(
-          'absolute inset-0 pt-14 transition-[padding-left] duration-300 ease-in-out',
-          isDesktop && (collapsed ? 'pl-[72px]' : 'pl-[260px]')
-        )}
-      >
-        {children ? children : <Outlet />}
+
+      {/* Main content - ocupa todo el espacio disponible */}
+      <main className="absolute top-14 left-0 right-0 bottom-0 overflow-hidden">
+        <div className="w-full h-full">
+          {children ? children : <Outlet />}
+        </div>
       </main>
 
       {/* Botón flotante Simulación */}
-      <div className="fixed inset-x-0 bottom-6 z-40 flex justify-center">
-        <Button data-testid="simulation-button" size="lg" className="rounded-full shadow-lg">
-          ⚙️ Simulación
+      <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center pointer-events-none">
+        <Button 
+          data-testid="simulation-button" 
+          size="lg" 
+          className="rounded-full shadow-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white border-2 border-white/20 backdrop-blur-sm pointer-events-auto transform hover:scale-105 transition-all duration-200"
+          onClick={() => setUploadOpen(true)}
+        >
+          
+          Iniciar Simulación
         </Button>
       </div>
     </div>

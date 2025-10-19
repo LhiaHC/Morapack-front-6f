@@ -1,0 +1,29 @@
+[
+  {
+    "instanceId": "MP-101#2025-10-20T00:00Z",
+    "flightId": "MP-101",
+    "origin": "SPIM",
+    "dest": "EBCI",
+    "depUtc": "2025-10-20T00:00:00Z",
+    "arrUtc": "2025-10-20T12:00:00Z",
+    "capacity": 320
+  },
+  {
+    "instanceId": "MP-202#2025-10-20T06:00Z",
+    "flightId": "MP-202",
+    "origin": "EBCI",
+    "dest": "UBBB",
+    "depUtc": "2025-10-20T06:00:00Z",
+    "arrUtc": "2025-10-20T18:00:00Z",
+    "capacity": 280
+  },
+  {
+    "instanceId": "MP-303#2025-10-20T12:00Z",
+    "flightId": "MP-303",
+    "origin": "SPIM",
+    "dest": "UBBB",
+    "depUtc": "2025-10-20T12:00:00Z",
+    "arrUtc": "2025-10-21T00:00:00Z",
+    "capacity": 300
+  }
+]

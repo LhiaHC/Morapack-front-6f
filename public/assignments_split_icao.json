@@ -1,0 +1,128 @@
+[
+  {
+    "orderId": "ORD-001",
+    "splits": [
+      {
+        "consignmentId": "C-001-1",
+        "qty": 120,
+        "lineRefs": [
+          {
+            "lineId": "ORD-001-L1",
+            "qty": 80
+          },
+          {
+            "lineId": "ORD-001-L2",
+            "qty": 40
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-303#2025-10-20T12:00Z",
+            "from": "SPIM",
+            "to": "UBBB",
+            "qty": 120
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-002",
+    "splits": [
+      {
+        "consignmentId": "C-002-1",
+        "qty": 90,
+        "lineRefs": [
+          {
+            "lineId": "ORD-002-L1",
+            "qty": 90
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-101#2025-10-20T00:00Z",
+            "from": "SPIM",
+            "to": "EBCI",
+            "qty": 90
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-003",
+    "splits": [
+      {
+        "consignmentId": "C-003-1",
+        "qty": 60,
+        "lineRefs": [
+          {
+            "lineId": "ORD-003-L1",
+            "qty": 60
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-202#2025-10-20T06:00Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 60
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "orderId": "ORD-004",
+    "splits": [
+      {
+        "consignmentId": "C-004-A",
+        "qty": 100,
+        "lineRefs": [
+          {
+            "lineId": "ORD-004-L1",
+            "qty": 100
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-303#2025-10-20T12:00Z",
+            "from": "SPIM",
+            "to": "UBBB",
+            "qty": 100
+          }
+        ]
+      },
+      {
+        "consignmentId": "C-004-B",
+        "qty": 80,
+        "lineRefs": [
+          {
+            "lineId": "ORD-004-L2",
+            "qty": 80
+          }
+        ],
+        "legs": [
+          {
+            "seq": 1,
+            "instanceId": "MP-101#2025-10-20T00:00Z",
+            "from": "SPIM",
+            "to": "EBCI",
+            "qty": 80
+          },
+          {
+            "seq": 2,
+            "instanceId": "MP-202#2025-10-20T06:00Z",
+            "from": "EBCI",
+            "to": "UBBB",
+            "qty": 80
+          }
+        ]
+      }
+    ]
+  }
+]

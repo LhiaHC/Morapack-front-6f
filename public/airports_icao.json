@@ -1,0 +1,35 @@
+[
+  {
+    "icao": "SPIM",
+    "iata": "LIM",
+    "name": "Jorge Ch\u00e1vez Intl",
+    "city": "Lima",
+    "country": "Peru",
+    "lat": -12.0219,
+    "lon": -77.1143,
+    "warehouseCapacity": 900,
+    "infiniteSource": true
+  },
+  {
+    "icao": "EBCI",
+    "iata": "CRL",
+    "name": "Brussels South Charleroi",
+    "city": "Charleroi",
+    "country": "Belgium",
+    "lat": 50.4592,
+    "lon": 4.4538,
+    "warehouseCapacity": 800,
+    "infiniteSource": true
+  },
+  {
+    "icao": "UBBB",
+    "iata": "GYD",
+    "name": "Heydar Aliyev Intl",
+    "city": "Baku",
+    "country": "Azerbaijan",
+    "lat": 40.4675,
+    "lon": 50.0467,
+    "warehouseCapacity": 700,
+    "infiniteSource": true
+  }
+]

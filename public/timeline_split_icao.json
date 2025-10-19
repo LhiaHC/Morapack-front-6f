@@ -1,0 +1,229 @@
+[
+  {
+    "ts": "2025-10-19T23:10:00Z",
+    "type": "WAIT_START",
+    "orderId": "ORD-002",
+    "consignmentId": "C-002-1",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-19T23:10:00Z",
+    "type": "WAIT_START",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-19T23:55:00Z",
+    "type": "WAIT_END",
+    "orderId": "ORD-002",
+    "consignmentId": "C-002-1",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-19T23:55:00Z",
+    "type": "WAIT_END",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-20T00:00:00Z",
+    "type": "LOAD",
+    "orderId": "ORD-002",
+    "consignmentId": "C-002-1",
+    "instanceId": "MP-101#2025-10-20T00:00Z",
+    "from": "SPIM",
+    "to": "EBCI",
+    "qty": 90
+  },
+  {
+    "ts": "2025-10-20T00:00:00Z",
+    "type": "LOAD",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "instanceId": "MP-101#2025-10-20T00:00Z",
+    "from": "SPIM",
+    "to": "EBCI",
+    "qty": 80
+  },
+  {
+    "ts": "2025-10-20T05:10:00Z",
+    "type": "WAIT_START",
+    "orderId": "ORD-003",
+    "consignmentId": "C-003-1",
+    "airport": "EBCI"
+  },
+  {
+    "ts": "2025-10-20T05:10:00Z",
+    "type": "WAIT_START",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "airport": "EBCI"
+  },
+  {
+    "ts": "2025-10-20T05:55:00Z",
+    "type": "WAIT_END",
+    "orderId": "ORD-003",
+    "consignmentId": "C-003-1",
+    "airport": "EBCI"
+  },
+  {
+    "ts": "2025-10-20T05:55:00Z",
+    "type": "WAIT_END",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "airport": "EBCI"
+  },
+  {
+    "ts": "2025-10-20T06:00:00Z",
+    "type": "LOAD",
+    "orderId": "ORD-003",
+    "consignmentId": "C-003-1",
+    "instanceId": "MP-202#2025-10-20T06:00Z",
+    "from": "EBCI",
+    "to": "UBBB",
+    "qty": 60
+  },
+  {
+    "ts": "2025-10-20T06:00:00Z",
+    "type": "LOAD",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "instanceId": "MP-202#2025-10-20T06:00Z",
+    "from": "EBCI",
+    "to": "UBBB",
+    "qty": 80
+  },
+  {
+    "ts": "2025-10-20T11:10:00Z",
+    "type": "WAIT_START",
+    "orderId": "ORD-001",
+    "consignmentId": "C-001-1",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-20T11:10:00Z",
+    "type": "WAIT_START",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-A",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-20T11:55:00Z",
+    "type": "WAIT_END",
+    "orderId": "ORD-001",
+    "consignmentId": "C-001-1",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-20T11:55:00Z",
+    "type": "WAIT_END",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-A",
+    "airport": "SPIM"
+  },
+  {
+    "ts": "2025-10-20T12:00:00Z",
+    "type": "LOAD",
+    "orderId": "ORD-001",
+    "consignmentId": "C-001-1",
+    "instanceId": "MP-303#2025-10-20T12:00Z",
+    "from": "SPIM",
+    "to": "UBBB",
+    "qty": 120
+  },
+  {
+    "ts": "2025-10-20T12:00:00Z",
+    "type": "ARRIVAL",
+    "orderId": "ORD-002",
+    "consignmentId": "C-002-1",
+    "instanceId": "MP-101#2025-10-20T00:00Z",
+    "at": "EBCI"
+  },
+  {
+    "ts": "2025-10-20T12:00:00Z",
+    "type": "LOAD",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-A",
+    "instanceId": "MP-303#2025-10-20T12:00Z",
+    "from": "SPIM",
+    "to": "UBBB",
+    "qty": 100
+  },
+  {
+    "ts": "2025-10-20T12:00:00Z",
+    "type": "ARRIVAL",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "instanceId": "MP-101#2025-10-20T00:00Z",
+    "at": "EBCI"
+  },
+  {
+    "ts": "2025-10-20T14:00:00Z",
+    "type": "PICKUP_READY",
+    "orderId": "ORD-002",
+    "consignmentId": "C-002-1",
+    "airport": "EBCI"
+  },
+  {
+    "ts": "2025-10-20T18:00:00Z",
+    "type": "ARRIVAL",
+    "orderId": "ORD-003",
+    "consignmentId": "C-003-1",
+    "instanceId": "MP-202#2025-10-20T06:00Z",
+    "at": "UBBB"
+  },
+  {
+    "ts": "2025-10-20T18:00:00Z",
+    "type": "ARRIVAL",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "instanceId": "MP-202#2025-10-20T06:00Z",
+    "at": "UBBB"
+  },
+  {
+    "ts": "2025-10-20T20:00:00Z",
+    "type": "PICKUP_READY",
+    "orderId": "ORD-003",
+    "consignmentId": "C-003-1",
+    "airport": "UBBB"
+  },
+  {
+    "ts": "2025-10-20T20:00:00Z",
+    "type": "PICKUP_READY",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-B",
+    "airport": "UBBB"
+  },
+  {
+    "ts": "2025-10-21T00:00:00Z",
+    "type": "ARRIVAL",
+    "orderId": "ORD-001",
+    "consignmentId": "C-001-1",
+    "instanceId": "MP-303#2025-10-20T12:00Z",
+    "at": "UBBB"
+  },
+  {
+    "ts": "2025-10-21T00:00:00Z",
+    "type": "ARRIVAL",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-A",
+    "instanceId": "MP-303#2025-10-20T12:00Z",
+    "at": "UBBB"
+  },
+  {
+    "ts": "2025-10-21T02:00:00Z",
+    "type": "PICKUP_READY",
+    "orderId": "ORD-001",
+    "consignmentId": "C-001-1",
+    "airport": "UBBB"
+  },
+  {
+    "ts": "2025-10-21T02:00:00Z",
+    "type": "PICKUP_READY",
+    "orderId": "ORD-004",
+    "consignmentId": "C-004-A",
+    "airport": "UBBB"
+  }
+]

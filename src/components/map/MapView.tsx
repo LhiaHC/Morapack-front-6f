@@ -2,14 +2,21 @@ import { useEffect, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import FlightLayer from './FlightLayer'
-import { SimProvider } from '../../sim/SimContext'
+import type { AirportICAO, FlightInstance, AssignmentByOrder, TimelineEvent } from '../../sim/types'
 
 // @ts-ignore
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png'
 // @ts-ignore
 import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png'
 
-export default function MapView(){
+interface MapViewProps {
+  airports: AirportICAO[]
+  instances: FlightInstance[]
+  assignments: AssignmentByOrder[]
+  timeline: TimelineEvent[]
+}
+
+export default function MapView({ airports, instances, assignments, timeline }: MapViewProps){
   const [map, setMap] = useState<L.Map | null>(null)
 
   useEffect(() => {
@@ -27,16 +34,21 @@ export default function MapView(){
 
     return () => { 
       mapInstance.remove()
-      mapInstance.zoomControl.remove()
     }
   }, [])
 
   return (
-    <SimProvider>
-      <div className="absolute inset-0 w-full h-full">
-        <div id="map" className="absolute inset-0 w-full h-full" />
-        {map && <FlightLayer map={map} />}
-      </div>
-    </SimProvider>
+    <div className="absolute inset-0 w-full h-full">
+      <div id="map" className="absolute inset-0 w-full h-full" />
+      {map && (
+        <FlightLayer 
+          map={map} 
+          airports={airports}
+          instances={instances}
+          assignments={assignments}
+          timeline={timeline}
+        />
+      )}
+    </div>
   )
 }

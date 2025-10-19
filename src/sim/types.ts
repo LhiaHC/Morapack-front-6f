@@ -238,3 +238,86 @@ export type DailyFlightPlan = {
 }
 
 export type WeeklyPlan = Record<string, DailyFlightPlan[]> // date -> vuelos de ese día
+
+/* ======================= ICAO Static Data Types ======================== */
+
+/**
+ * Aeropuerto con código ICAO (para datos estáticos JSON)
+ */
+export type AirportICAO = {
+  icao: string
+  iata?: string
+  name: string
+  city?: string
+  country?: string
+  lat: number
+  lon: number
+  warehouseCapacity?: number
+  infiniteSource?: boolean
+}
+
+/**
+ * Instancia de vuelo programado (con código ICAO)
+ */
+export type FlightInstance = {
+  instanceId: string       // e.g., "MP-101#2025-10-20T00:00Z"
+  flightId?: string        // e.g., "MP-101"
+  origin: string           // ICAO code
+  dest: string             // ICAO code
+  depUtc: string           // ISO datetime
+  arrUtc: string           // ISO datetime
+  capacity: number
+}
+
+/**
+ * Leg de un consignment (split)
+ */
+export type AssignmentLeg = {
+  seq: number
+  instanceId: string
+  from: string             // ICAO code
+  to: string               // ICAO code
+  qty: number
+}
+
+/**
+ * Line reference dentro de un split
+ */
+export type LineRef = {
+  lineId: string
+  qty: number
+}
+
+/**
+ * Split de un pedido (consignment)
+ */
+export type AssignmentSplit = {
+  consignmentId: string
+  qty: number
+  lineRefs?: LineRef[]
+  legs: AssignmentLeg[]
+}
+
+/**
+ * Asignaciones agrupadas por pedido
+ */
+export type AssignmentByOrder = {
+  orderId: string
+  splits: AssignmentSplit[]
+}
+
+/**
+ * Evento de timeline para trazabilidad
+ */
+export type TimelineEvent = {
+  ts: string               // ISO datetime
+  type: 'WAIT_START' | 'WAIT_END' | 'LOAD' | 'ARRIVAL' | 'PICKUP_READY' | 'CANCELLATION'
+  orderId: string
+  consignmentId?: string
+  instanceId?: string
+  airport?: string         // ICAO code
+  from?: string            // ICAO code
+  to?: string              // ICAO code
+  qty?: number
+  at?: string              // ICAO code
+}

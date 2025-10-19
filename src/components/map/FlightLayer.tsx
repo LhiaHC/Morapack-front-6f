@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import L from 'leaflet'
-import { parseAirports, parseFlightDefs, parseCancellations, parseOrders } from '../../sim/parsers'
-import { allocateOrdersToFlights, buildSchedule, positionAt } from '../../sim/engine'
 import { useSimulation } from '../../sim/SimContext'
 import type { 
-  Airport,
-  FlightId,
-  FlightMarkerState,
-  ScheduledFlight
+  AirportICAO,
+  FlightInstance,
+  AssignmentByOrder,
+  TimelineEvent
 } from '../../sim/types'
 
 interface FlightLayerProps {
   map: L.Map
+  airports: AirportICAO[]
+  instances: FlightInstance[]
+  assignments: AssignmentByOrder[]
+  timeline: TimelineEvent[]
 }
 
 // Icono personalizado para vuelos
@@ -22,12 +24,10 @@ const PLANE_ICON = L.icon({
   popupAnchor: [0, -12]
 })
 
-// Estado del marcador y sus metadatos
+// Estado del marcador
 type FlightMarker = {
   marker: L.Marker
-  lastActive: boolean
-  lastUpdate: number
-  state: FlightMarkerState
+  instanceId: string
 }
 
 // Colores para diferentes estados de carga
@@ -38,194 +38,205 @@ const LOAD_COLORS = {
   UNKNOWN: '#9E9E9E'   // Gris: sin datos
 }
 
-// Calcular el ángulo de rotación para el ícono del avión
-function calculateRotation(from: Airport, to: Airport): number {
-  const dLng = to.lng - from.lng
-  const dLat = to.lat - from.lat
+// Utilidades
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+function lerp(start: number, end: number, t: number): number {
+  return start + (end - start) * t
+}
+
+function calculateRotation(fromLat: number, fromLon: number, toLat: number, toLon: number): number {
+  const dLng = toLon - fromLon
+  const dLat = toLat - fromLat
   return (Math.atan2(dLng, dLat) * 180) / Math.PI
 }
 
-export default function FlightLayer({ map }: FlightLayerProps) {
-  const { simTime, config } = useSimulation()
+export default function FlightLayer({ map, airports, instances, assignments }: FlightLayerProps) {
+  const { simTime } = useSimulation()
   const layerRef = useRef<L.LayerGroup | null>(null)
-  const markersRef = useRef<Record<FlightId, FlightMarker>>({})
-  const scheduleRef = useRef<ScheduledFlight[]>([])
-  const airportsRef = useRef<Record<string, Airport>>({})
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const markersRef = useRef<Record<string, FlightMarker>>({})
+  const airportRoutesRef = useRef<L.Polyline[]>([])
+  const airportMarkersRef = useRef<L.Marker[]>([])
 
-  // Cargar datos iniciales
+  // Crear mapa de aeropuertos por ICAO
+  const airportMap = useRef<Record<string, AirportICAO>>({})
   useEffect(() => {
-    let mounted = true
+    airportMap.current = airports.reduce((acc, airport) => {
+      acc[airport.icao] = airport
+      return acc
+    }, {} as Record<string, AirportICAO>)
+  }, [airports])
+
+  // Calcular carga por instancia desde assignments
+  const loadByInstance = useRef<Record<string, number>>({})
+  useEffect(() => {
+    const loads: Record<string, number> = {}
+    
+    assignments.forEach(orderAssignment => {
+      orderAssignment.splits.forEach(split => {
+        split.legs.forEach(leg => {
+          if (!loads[leg.instanceId]) {
+            loads[leg.instanceId] = 0
+          }
+          loads[leg.instanceId] += leg.qty
+        })
+      })
+    })
+    
+    loadByInstance.current = loads
+  }, [assignments])
+
+  // Inicializar capa y pintar aeropuertos + rutas
+  useEffect(() => {
     const group = L.layerGroup()
     layerRef.current = group
     group.addTo(map)
-    
-    async function loadData() {
-      try {
-        // Carga y procesa los datos
-        const [airports, flights, cancels, orders] = await Promise.all([
-          parseAirports('/data/aeropuertos.txt'),
-          parseFlightDefs('/data/vuelos.txt'),
-          parseCancellations('/data/cancelaciones.txt'),
-          parseOrders('/data/pedidos.txt'),
-        ]).catch(err => {
-          throw new Error(`Failed to load data files: ${err.message}`)
+
+    // Pintar aeropuertos
+    airports.forEach(airport => {
+      const marker = L.marker([airport.lat, airport.lon], {
+        title: airport.icao
+      })
+      
+      const tooltipContent = `
+        <strong>${airport.icao}</strong> ${airport.iata ? `(${airport.iata})` : ''}<br/>
+        ${airport.name}<br/>
+        ${airport.city ? `${airport.city}, ` : ''}${airport.country || ''}
+      `
+      marker.bindTooltip(tooltipContent)
+      marker.addTo(group)
+      airportMarkersRef.current.push(marker)
+    })
+
+    // Dibujar rutas (polylines) para cada instancia
+    instances.forEach(instance => {
+      const originAirport = airportMap.current[instance.origin]
+      const destAirport = airportMap.current[instance.dest]
+      
+      if (originAirport && destAirport) {
+        const polyline = L.polyline([
+          [originAirport.lat, originAirport.lon],
+          [destAirport.lat, destAirport.lon]
+        ], {
+          color: '#3388ff',
+          weight: 2,
+          opacity: 0.4,
+          dashArray: '5, 10'
         })
-
-        if (!mounted) return
-
-        // Programa vuelos por 7 días y aplica cancelaciones
-        const sched = buildSchedule(config.startDateISO, config.days, flights, airports, cancels)
         
-        // Asigna pedidos respetando capacidades
-        allocateOrdersToFlights(orders, sched, airports)
-
-        if (mounted) {
-          // Guardar refs para uso posterior por el layer
-          airportsRef.current = airports
-          scheduleRef.current = sched
-          setLoading(false)
-        }
-      } catch (err) {
-        console.error('Failed to load flight data:', err)
-        if (mounted) {
-          setError(err instanceof Error ? err.message : 'Failed to load flight data')
-          setLoading(false)
-        }
+        polyline.bindTooltip(`${instance.origin} → ${instance.dest}`)
+        polyline.addTo(group)
+        airportRoutesRef.current.push(polyline)
       }
-    }
-
-    loadData()
+    })
 
     return () => {
-      mounted = false
       if (layerRef.current) {
         layerRef.current.remove()
       }
-      // Limpia todos los markers
       Object.values(markersRef.current).forEach(m => m.marker.remove())
       markersRef.current = {}
+      airportRoutesRef.current = []
+      airportMarkersRef.current = []
     }
-  }, [map, config.startDateISO, config.days])
+  }, [map, airports, instances])
 
-  // Actualizar posiciones de vuelos según el tiempo de simulación
+  // Actualizar posiciones de aviones según tiempo de simulación
   useEffect(() => {
-    if (loading || !layerRef.current) return
+    if (!layerRef.current) return
 
+    const now = simTime.getTime()
     const markers = markersRef.current
-    const airports = airportsRef.current
-    const sched = scheduleRef.current
 
-    // Actualiza o crea markers activos
-    for (const f of sched) {
-      const pos = positionAt(f, simTime, airports)
-      const flightMarker = markers[f.id]
-
-      // Estado del marcador
-      const state: FlightMarkerState = {
-        id: f.id,
-        position: { lat: pos.lat, lng: pos.lng },
-        active: pos.active,
-        progress: pos.active ? 
-          (simTime.getTime() - f.dep.getTime()) / (f.arr.getTime() - f.dep.getTime()) : 
-          undefined,
-        loadFactor: pos.loadFactor
-      }
-
-      // Color basado en factor de carga
-      const loadColor = pos.loadFactor ?
-        pos.loadFactor > 0.9 ? LOAD_COLORS.HIGH :
-        pos.loadFactor > 0.7 ? LOAD_COLORS.MEDIUM :
-        LOAD_COLORS.LOW :
-        LOAD_COLORS.UNKNOWN
-
-      // Limpia markers inactivos después de 5 segundos
-      if (!pos.active && flightMarker?.lastActive) {
-        const now = Date.now()
-        if (now - flightMarker.lastUpdate > 5000) {
-          flightMarker.marker.remove()
-          delete markers[f.id]
-          continue
+    // Actualizar o crear markers para cada instancia en vuelo
+    instances.forEach(instance => {
+      const depTime = new Date(instance.depUtc).getTime()
+      const arrTime = new Date(instance.arrUtc).getTime()
+      
+      // Verificar si el vuelo está activo
+      const isActive = now >= depTime && now <= arrTime
+      
+      if (!isActive) {
+        // Remover marker si existe
+        if (markers[instance.instanceId]) {
+          markers[instance.instanceId].marker.remove()
+          delete markers[instance.instanceId]
         }
+        return
       }
 
-      if (!pos.active && !flightMarker) continue
+      // Calcular posición interpolada
+      const originAirport = airportMap.current[instance.origin]
+      const destAirport = airportMap.current[instance.dest]
+      
+      if (!originAirport || !destAirport) return
 
-      // Crea o actualiza el marker
-      if (!flightMarker) {
-        const marker = L.marker([pos.lat, pos.lng], {
+      const progress = clamp((now - depTime) / (arrTime - depTime), 0, 1)
+      const lat = lerp(originAirport.lat, destAirport.lat, progress)
+      const lon = lerp(originAirport.lon, destAirport.lon, progress)
+
+      // Calcular carga y factor de carga
+      const loaded = loadByInstance.current[instance.instanceId] || 0
+      const loadFactor = loaded / instance.capacity
+      
+      const loadColor = loadFactor > 0.9 ? LOAD_COLORS.HIGH :
+                        loadFactor > 0.7 ? LOAD_COLORS.MEDIUM :
+                        loadFactor > 0 ? LOAD_COLORS.LOW :
+                        LOAD_COLORS.UNKNOWN
+
+      // Crear o actualizar marker
+      if (!markers[instance.instanceId]) {
+        const marker = L.marker([lat, lon], {
           icon: PLANE_ICON,
-          title: f.id
+          title: instance.instanceId
         })
 
-        // Calcular rotación del avión
-        const fromAirport = airports[f.from]
-        const toAirport = airports[f.to]
-        const rotation = calculateRotation(fromAirport, toAirport)
+        const rotation = calculateRotation(
+          originAirport.lat, originAirport.lon,
+          destAirport.lat, destAirport.lon
+        )
         
-        marker.getElement()?.style.setProperty('transform', `rotate(${rotation}deg)`)
-        
+        const element = marker.getElement()
+        if (element) {
+          element.style.transform = `rotate(${rotation}deg)`
+        }
+
         const tooltipContent = `
-          <strong>${f.id}</strong><br/>
-          ${f.from} → ${f.to}<br/>
+          <strong>${instance.flightId || instance.instanceId}</strong><br/>
+          ${instance.origin} → ${instance.dest}<br/>
           <span style="color: ${loadColor}">
-            ${pos.loadFactor ? 
-              `Load: ${Math.round(pos.loadFactor * 100)}%` : 
-              'No load data'}
-          </span>
+            Carga: ${loaded} / ${instance.capacity} (${Math.round(loadFactor * 100)}%)
+          </span><br/>
+          Progreso: ${Math.round(progress * 100)}%
         `
         marker.bindTooltip(tooltipContent, { permanent: false })
-        marker.addTo(layerRef.current)
+        if (layerRef.current) {
+          marker.addTo(layerRef.current)
+        }
 
-        markers[f.id] = {
+        markers[instance.instanceId] = {
           marker,
-          lastActive: pos.active,
-          lastUpdate: Date.now(),
-          state
+          instanceId: instance.instanceId
         }
       } else {
-        flightMarker.marker.setLatLng(L.latLng(pos.lat, pos.lng))
-        flightMarker.lastActive = pos.active
-        flightMarker.lastUpdate = Date.now()
-        flightMarker.state = state
+        // Actualizar posición existente
+        const flightMarker = markers[instance.instanceId]
+        flightMarker.marker.setLatLng(L.latLng(lat, lon))
 
-        // Actualiza el tooltip con la información actual
         const tooltipContent = `
-          <strong>${f.id}</strong><br/>
-          ${f.from} → ${f.to}<br/>
+          <strong>${instance.flightId || instance.instanceId}</strong><br/>
+          ${instance.origin} → ${instance.dest}<br/>
           <span style="color: ${loadColor}">
-            ${pos.loadFactor ? 
-              `Load: ${Math.round(pos.loadFactor * 100)}%` : 
-              'No load data'}
-          </span>
-          ${pos.active ? 
-            `<br/>Progress: ${Math.round(state.progress! * 100)}%` : 
-            ''}
+            Carga: ${loaded} / ${instance.capacity} (${Math.round(loadFactor * 100)}%)
+          </span><br/>
+          Progreso: ${Math.round(progress * 100)}%
         `
         flightMarker.marker.setTooltipContent(tooltipContent)
       }
-    }
-  }, [simTime, loading])
-
-  if (loading) {
-    return (
-      <div className="absolute bottom-4 right-4 bg-blue-50 border border-blue-400 text-blue-700 px-4 py-3 rounded z-[40]" role="alert">
-        Loading flight data...
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="absolute bottom-4 right-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded z-[40]" role="alert">
-        <strong className="font-bold">Error: </strong>
-        <span className="block sm:inline">{error}</span>
-      </div>
-    )
-  }
+    })
+  }, [simTime, instances])
 
   return null // La capa se maneja a través de los refs
 }
-
-
