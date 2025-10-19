@@ -16,7 +16,6 @@ export default function FileUploadDialog({
   open, onOpenChange, onConfirm,
   acceptFlights = '.csv,.json',
   acceptAirports = '.csv,.json',
-  acceptOrders = '.csv,.json',
 }: FileUploadDialogProps) {
 
   const [files, setFiles] = React.useState<FilesState>({});

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import type { SimConfig, ISODateTime } from './types'
+import type { SimConfig, ISODateTime } from '../types'
 
 interface SimContextType {
   simTime: Date

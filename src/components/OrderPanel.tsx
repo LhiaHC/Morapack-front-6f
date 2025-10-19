@@ -3,7 +3,7 @@ import type {
   AssignmentByOrder, 
   FlightInstance, 
   TimelineEvent 
-} from '../sim/types'
+} from '../types'
 
 interface OrderPanelProps {
   assignments: AssignmentByOrder[]

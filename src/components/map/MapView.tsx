@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import FlightLayer from './FlightLayer'
-import type { AirportICAO, FlightInstance, AssignmentByOrder, TimelineEvent } from '../../sim/types'
+import type { AirportICAO, FlightInstance, AssignmentByOrder, TimelineEvent } from '../../types'
 
 // @ts-ignore
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png'

@@ -8,7 +8,7 @@ import type {
   FlightInstance, 
   AssignmentByOrder, 
   TimelineEvent 
-} from './types'
+} from '../types'
 
 /**
  * Carga aeropuertos desde /public/airports_icao.json

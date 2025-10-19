@@ -14,7 +14,7 @@ import type {
   FlightInstance, 
   AssignmentByOrder, 
   TimelineEvent 
-} from '../sim/types'
+} from '../types'
 
 function MapPageContent() {
   const [airports, setAirports] = useState<AirportICAO[]>([])

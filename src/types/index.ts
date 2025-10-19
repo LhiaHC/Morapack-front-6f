@@ -1,29 +1,89 @@
-export type OrderStatus = 'pending' | 'in_flight' | 'delivered'
+/* ============================================================
+ * Tipos centralizados del proyecto MoraPack
+ * ============================================================
+ * Exportaciones organizadas por dominio para facilitar el uso
+ * ============================================================ */
 
-export type Order = {
-  id: string
-  customer: string
-  products: number
-  origin: string
-  destination: string
-  status: OrderStatus
-  createdAt?: string
-  eta?: string
-}
+// ========== Utilidades y Tiempo ==========
+export type {
+  AirportCode,
+  FlightId,
+  ClientId,
+  ISODateTime,
+  HHMM,
+  DayDD,
+  UTCMillis,
+  TimeRange,
+} from './utils/time.types'
 
-export type FlightDTO = {
-  id: string
-  from: string
-  to: string
-  lat: number
-  lng: number
-  etd: string // fecha/hora programada de salida (ISO)
-  eta: string // fecha/hora programada de llegada (ISO)
-}
+// ========== Dominio ==========
+export type {
+  Airport,
+  AirportICAO,
+} from './domain/airport.types'
 
-/** Indicadores de Rightbar */
-export type OpsStats = {
-  flights: number
-  orders: number
-  etaDelays: number
-}
+export type {
+  FlightDef,
+  ScheduledFlight,
+  FlightInstance,
+  FlightLoad,
+  FlightDTO,
+} from './domain/flight.types'
+
+export type {
+  Order,
+  OrderStatus,
+} from './domain/order.types'
+
+export type {
+  Cancellation,
+} from './domain/cancellation.types'
+
+// ========== Simulación ==========
+export type {
+  SimConfig,
+  TimeControls,
+} from './simulation/config.types'
+
+export type {
+  AssignmentLeg,
+  LineRef,
+  AssignmentSplit,
+  AssignmentByOrder,
+  OrderAssignment,
+  FlightSplit,
+  TimelineEvent,
+} from './simulation/assignment.types'
+
+export type {
+  AirportCapacityWindow,
+  AllocationResult,
+} from './simulation/allocation.types'
+
+export type {
+  SimTelemetry,
+  DailyFlightPlan,
+  WeeklyPlan,
+} from './simulation/telemetry.types'
+
+// ========== UI ==========
+export type {
+  LatLng,
+  FlightMarkerState,
+  RoutePolyline,
+} from './ui/map.types'
+
+export type {
+  OpsStats,
+} from './ui/stats.types'
+
+// ========== API ==========
+export type {
+  SimInitResponse,
+  SimRunResponse,
+} from './api/dto.types'
+
+export type {
+  ApiError,
+  ApiResult,
+} from './api/response.types'
