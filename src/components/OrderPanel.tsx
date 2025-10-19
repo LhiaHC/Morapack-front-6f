@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import type { 
   AssignmentByOrder, 
   FlightInstance, 
@@ -9,12 +9,35 @@ interface OrderPanelProps {
   assignments: AssignmentByOrder[]
   instances: FlightInstance[]
   timeline: TimelineEvent[]
+  onOrderSelect?: (orderId: string | null) => void
+  selectedOrderId?: string | null
 }
 
-export default function OrderPanel({ assignments, instances, timeline }: OrderPanelProps) {
+export default function OrderPanel({ 
+  assignments, 
+  instances, 
+  timeline, 
+  onOrderSelect,
+  selectedOrderId: externalSelectedOrderId 
+}: OrderPanelProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+
+  // Sincronizar con selección externa
+  useEffect(() => {
+    if (externalSelectedOrderId !== undefined) {
+      setSelectedOrderId(externalSelectedOrderId)
+    }
+  }, [externalSelectedOrderId])
+
+  // Manejar selección de pedido
+  const handleOrderSelect = (orderId: string | null) => {
+    setSelectedOrderId(orderId)
+    if (onOrderSelect) {
+      onOrderSelect(orderId)
+    }
+  }
 
   // Crear mapa de instancias para búsqueda rápida
   const instanceMap = useMemo(() => {
@@ -96,25 +119,39 @@ export default function OrderPanel({ assignments, instances, timeline }: OrderPa
               <div className="text-xs text-gray-500 mb-3 font-medium">
                 {filteredOrders.length} resultado(s)
               </div>
-              {filteredOrders.map(order => (
-                <button
-                  key={order.orderId}
-                  onClick={() => setSelectedOrderId(order.orderId)}
-                  className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group"
-                >
-                  <div className="font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">
-                    {order.orderId}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                      </svg>
-                      {order.splits.length} split(s)
-                    </span>
-                  </div>
-                </button>
-              ))}
+              {filteredOrders.map(order => {
+                const isSelected = order.orderId === selectedOrderId
+                return (
+                  <button
+                    key={order.orderId}
+                    onClick={() => handleOrderSelect(order.orderId)}
+                    className={`w-full text-left p-4 rounded-xl border transition-all group ${
+                      isSelected 
+                        ? 'border-indigo-500 bg-indigo-100/70 shadow-md' 
+                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50'
+                    }`}
+                  >
+                    <div className={`font-semibold transition-colors ${
+                      isSelected ? 'text-indigo-700' : 'text-gray-900 group-hover:text-indigo-700'
+                    }`}>
+                      {order.orderId}
+                      {isSelected && (
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-indigo-500 text-white rounded-full">
+                          Ver ruta
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        {order.splits.length} split(s)
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
               {filteredOrders.length === 0 && (
                 <div className="text-center py-12">
                   <div className="text-gray-400 mb-2">
@@ -131,38 +168,76 @@ export default function OrderPanel({ assignments, instances, timeline }: OrderPa
           {/* Detalle del pedido seleccionado */}
           {selectedOrder && (
             <div className="flex-1 overflow-y-auto p-4">
-              <button
-                onClick={() => setSelectedOrderId(null)}
-                className="mb-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium text-sm transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Volver a la lista
-              </button>
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => handleOrderSelect(null)}
+                  className="flex-1 flex items-center justify-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium text-sm transition-colors py-2 rounded-lg hover:bg-indigo-50"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Volver a la lista
+                </button>
+                <button
+                  onClick={() => handleOrderSelect(null)}
+                  className="px-4 py-2 bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-medium text-sm rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+                  title="Ocultar rutas en el mapa"
+                >
+                  Ocultar rutas
+                </button>
+              </div>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
                 <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 {selectedOrder.orderId}
               </h3>
+              
+              {selectedOrder.splits.length > 1 && (
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-xs text-amber-800">
+                    <strong>Pedido Particionado:</strong> Este pedido está dividido en {selectedOrder.splits.length} envíos que convergen al mismo destino. Cada color en el mapa representa un split diferente.
+                  </div>
+                </div>
+              )}
 
               {/* Splits */}
               <div className="space-y-4">
-                {selectedOrder.splits.map((split, splitIdx) => (
-                  <div key={split.consignmentId} className="rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 border-b border-gray-200">
-                      <div className="font-semibold text-indigo-900 mb-1 flex items-center gap-2">
-                        <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                          {splitIdx + 1}
+                {selectedOrder.splits.map((split, splitIdx) => {
+                  // Colores que coinciden con FlightLayer
+                  const colors = ['#8b5cf6', '#ec4899', '#06b6d4', '#f59e0b', '#10b981']
+                  const borderColors = ['border-purple-500', 'border-pink-500', 'border-cyan-500', 'border-amber-500', 'border-emerald-500']
+                  const bgColors = ['from-purple-50 to-indigo-50', 'from-pink-50 to-rose-50', 'from-cyan-50 to-blue-50', 'from-amber-50 to-orange-50', 'from-emerald-50 to-teal-50']
+                  const textColors = ['text-purple-900', 'text-pink-900', 'text-cyan-900', 'text-amber-900', 'text-emerald-900']
+                  const badgeColors = ['bg-purple-600', 'bg-pink-600', 'bg-cyan-600', 'bg-amber-600', 'bg-emerald-600']
+                  
+                  const splitColor = colors[splitIdx % colors.length]
+                  const borderColor = borderColors[splitIdx % borderColors.length]
+                  const bgColor = bgColors[splitIdx % bgColors.length]
+                  const textColor = textColors[splitIdx % textColors.length]
+                  const badgeColor = badgeColors[splitIdx % badgeColors.length]
+                  
+                  return (
+                    <div key={split.consignmentId} className={`rounded-xl border-2 ${borderColor} overflow-hidden`}>
+                      <div className={`bg-gradient-to-br ${bgColor} p-4 border-b-2 ${borderColor}`}>
+                        <div className={`font-semibold ${textColor} mb-1 flex items-center gap-2`}>
+                          <div className={`w-6 h-6 ${badgeColor} text-white rounded-full flex items-center justify-center text-xs font-bold shadow-sm`}>
+                            {splitIdx + 1}
+                          </div>
+                          {split.consignmentId}
                         </div>
-                        {split.consignmentId}
+                        <div className={`text-sm ${textColor} font-medium flex items-center gap-2`}>
+                          <div 
+                            className="w-3 h-3 rounded-full border-2 border-white shadow-sm" 
+                            style={{ backgroundColor: splitColor }}
+                          ></div>
+                          Cantidad: <span className="font-bold">{split.qty}</span> unidades
+                        </div>
                       </div>
-                      <div className="text-sm text-indigo-700 font-medium">
-                        Cantidad: <span className="font-bold">{split.qty}</span> unidades
-                      </div>
-                    </div>
 
                     <div className="p-4 bg-white space-y-3">
                       {/* Line References */}
@@ -214,7 +289,8 @@ export default function OrderPanel({ assignments, instances, timeline }: OrderPa
                       </div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Timeline (si existe) */}

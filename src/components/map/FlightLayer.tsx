@@ -14,6 +14,7 @@ interface FlightLayerProps {
   instances: FlightInstance[]
   assignments: AssignmentByOrder[]
   timeline: TimelineEvent[]
+  selectedOrderId?: string | null
 }
 
 // Icono personalizado para vuelos
@@ -89,13 +90,20 @@ function calculateRotation(fromLat: number, fromLon: number, toLat: number, toLo
   return (Math.atan2(dLng, dLat) * 180) / Math.PI
 }
 
-export default function FlightLayer({ map, airports, instances, assignments }: FlightLayerProps) {
+export default function FlightLayer({ 
+  map, 
+  airports, 
+  instances, 
+  assignments, 
+  selectedOrderId
+}: FlightLayerProps) {
   const { simTime } = useSimulation()
   const layerRef = useRef<L.LayerGroup | null>(null)
   const markersRef = useRef<Record<string, FlightMarker>>({})
   const airportMarkersRef = useRef<L.Marker[]>([])
   const selectedRouteRef = useRef<L.Polyline | null>(null)
   const selectedInstanceRef = useRef<string | null>(null)
+  const selectedOrderInstancesRef = useRef<Set<string>>(new Set())
 
   // Crear mapa de aeropuertos por ICAO
   const airportMap = useRef<Record<string, AirportICAO>>({})
@@ -236,7 +244,16 @@ export default function FlightLayer({ map, airports, instances, assignments }: F
         
         const element = marker.getElement()
         if (element) {
-          element.style.transform = `rotate(${rotation}deg)`
+          const isHighlighted = selectedOrderInstancesRef.current.has(instance.instanceId)
+          if (isHighlighted) {
+            element.style.transform = `rotate(${rotation}deg) scale(1.5)`
+            element.style.filter = 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.8))'
+            element.style.zIndex = '1000'
+          } else {
+            element.style.transform = `rotate(${rotation}deg)`
+            element.style.filter = 'none'
+            element.style.zIndex = '500'
+          }
         }
 
         const tooltipContent = `
@@ -315,5 +332,44 @@ export default function FlightLayer({ map, airports, instances, assignments }: F
     })
   }, [simTime, instances])
 
+  // Efecto para resaltar aviones de un pedido seleccionado
+  useEffect(() => {
+    // Crear set de instanceIds del pedido seleccionado
+    const orderInstances = new Set<string>()
+    
+    if (selectedOrderId) {
+      const order = assignments.find(a => a.orderId === selectedOrderId)
+      if (order) {
+        order.splits.forEach(split => {
+          split.legs.forEach(leg => {
+            orderInstances.add(leg.instanceId)
+          })
+        })
+      }
+    }
+    
+    selectedOrderInstancesRef.current = orderInstances
+    
+    // Forzar actualización de los marcadores existentes
+    Object.values(markersRef.current).forEach(({ marker, instanceId }) => {
+      const element = marker.getElement()
+      if (element) {
+        if (orderInstances.has(instanceId)) {
+          // Avión seleccionado: resaltar con borde y escala
+          element.style.transform = `${element.style.transform.includes('rotate') ? element.style.transform : ''} scale(1.5)`
+          element.style.filter = 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.8))'
+          element.style.zIndex = '1000'
+        } else {
+          // Avión no seleccionado: estilo normal
+          const rotation = element.style.transform.match(/rotate\(([^)]+)\)/)?.[1] || '0deg'
+          element.style.transform = `rotate(${rotation})`
+          element.style.filter = 'none'
+          element.style.zIndex = '500'
+        }
+      }
+    })
+  }, [selectedOrderId, assignments])
+
   return null // La capa se maneja a través de los refs
 }
+

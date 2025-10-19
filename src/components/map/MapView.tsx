@@ -14,9 +14,10 @@ interface MapViewProps {
   instances: FlightInstance[]
   assignments: AssignmentByOrder[]
   timeline: TimelineEvent[]
+  selectedOrderId?: string | null
 }
 
-export default function MapView({ airports, instances, assignments, timeline }: MapViewProps){
+export default function MapView({ airports, instances, assignments, timeline, selectedOrderId }: MapViewProps){
   const [map, setMap] = useState<L.Map | null>(null)
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function MapView({ airports, instances, assignments, timeline }: 
           instances={instances}
           assignments={assignments}
           timeline={timeline}
+          selectedOrderId={selectedOrderId}
         />
       )}
     </div>

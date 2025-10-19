@@ -23,6 +23,7 @@ function MapPageContent() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const { setMinTime, setMaxTime, setSimTime } = useSimulation()
 
   // Cargar datos estáticos al montar
@@ -89,11 +90,14 @@ function MapPageContent() {
         instances={instances}
         assignments={assignments}
         timeline={timeline}
+        selectedOrderId={selectedOrderId}
       />
       <OrderPanel 
         assignments={assignments}
         instances={instances}
         timeline={timeline}
+        onOrderSelect={setSelectedOrderId}
+        selectedOrderId={selectedOrderId}
       />
       <SimControls />
     </div>
