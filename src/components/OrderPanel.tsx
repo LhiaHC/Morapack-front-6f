@@ -240,20 +240,7 @@ export default function OrderPanel({
                       </div>
 
                     <div className="p-4 bg-white space-y-3">
-                      {/* Line References */}
-                      {split.lineRefs && split.lineRefs.length > 0 && (
-                        <div>
-                          <div className="text-xs font-semibold text-gray-500 mb-2">Líneas:</div>
-                          {split.lineRefs.map(lineRef => (
-                            <div key={lineRef.lineId} className="text-xs ml-2 flex items-center gap-2 text-gray-600">
-                              <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                              {lineRef.lineId}: {lineRef.qty} unidades
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Legs */}
+                      {/* Trayectos */}
                       <div>
                         <div className="text-xs font-semibold text-gray-500 mb-2">Trayectos:</div>
                         {split.legs.map(leg => {
