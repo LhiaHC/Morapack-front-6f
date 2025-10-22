@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { SimConfig, ISODateTime } from '../types'
 
 interface SimContextType {
@@ -32,24 +32,22 @@ export function SimProvider({ children }: { children: React.ReactNode }) {
   const [simTime, setSimTime] = useState(() => new Date(config.startDateISO))
   const [minTime, setMinTime] = useState<Date | null>(null)
   const [maxTime, setMaxTime] = useState<Date | null>(null)
-  const [lastRealTime, setLastRealTime] = useState(() => Date.now())
   
+  // ✅ usamos un ref en lugar de un estado
+  const lastRealRef = useRef(Date.now())
+
   // Actualiza el tiempo de simulación
   useEffect(() => {
-    if (!playing) {
-      setLastRealTime(Date.now())
-      return
-    }
-    
+    if (!playing) return
+
     const timer = setInterval(() => {
       const now = Date.now()
-      const deltaReal = (now - lastRealTime) / 1000 // segundos reales transcurridos
-      setLastRealTime(now)
-      
+      const deltaReal = (now - lastRealRef.current) / 1000
+      lastRealRef.current = now
+
       setSimTime(prevTime => {
         const newTime = new Date(prevTime.getTime() + deltaReal * timeScale * 1000)
-        
-        // Limitar al rango si está definido
+
         if (maxTime && newTime > maxTime) {
           setPlaying(false)
           return maxTime
@@ -57,13 +55,13 @@ export function SimProvider({ children }: { children: React.ReactNode }) {
         if (minTime && newTime < minTime) {
           return minTime
         }
-        
+
         return newTime
       })
-    }, 250) // Actualizar cada 250ms
-    
+    }, 250)
+
     return () => clearInterval(timer)
-  }, [playing, timeScale, minTime, maxTime, lastRealTime])
+  }, [playing, timeScale, minTime, maxTime]) // ❌ eliminamos lastRealTime de dependencias
 
   const reset = () => {
     setSimTime(minTime || new Date(config.startDateISO))

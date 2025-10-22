@@ -1,12 +1,15 @@
 import axios from 'axios'
 import type { FlightDTO, OpsStats } from '../types'
 
+/* ==============================================
+   🔧 CONFIGURACIÓN BASE DE AXIOS
+   ============================================== */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
-  timeout: 15000,
+  timeout: 180000,
 })
 
-// Interceptor de ejemplo (headers comunes)
+// Interceptor opcional (headers comunes)
 api.interceptors.request.use((cfg) => {
   cfg.headers.set('X-Client', 'MoraPack-UI')
   return cfg
@@ -14,7 +17,9 @@ api.interceptors.request.use((cfg) => {
 
 export default api
 
-// ==== Tipos para los datos ====
+/* ==============================================
+   📦 TIPOS DE DATOS
+   ============================================== */
 export interface FlightData {
   origin: string
   destination: string
@@ -42,7 +47,9 @@ export interface UploadResponse {
   count?: number
 }
 
-// ==== Funciones de parsing ====
+/* ==============================================
+   🧩 PARSERS CSV → JSON (solo si los necesitas)
+   ============================================== */
 export const parseFlightsCSV = (csvContent: string): FlightData[] => {
   const lines = csvContent.trim().split('\n')
   return lines.map(line => {
@@ -76,18 +83,42 @@ export const parseAirportsCSV = (csvContent: string): AirportData[] => {
   })
 }
 
-// ==== Servicios de operaciones (ejemplo) ====
+/* ==============================================
+   📊 SERVICIO DE OPERACIONES / ESTADÍSTICAS
+   ============================================== */
 export const OpsService = {
+  /** Obtiene indicadores operativos generales */
   stats: () => api.get<OpsStats>('/ops/stats'),
-  flights: () => api.get<FlightDTO[]>('/ops/flights'),
+
+  /** Obtiene lista de vuelos activos o simulados */
+  flights: () => api.get<FlightDTO[]>('/vuelos'),
+
+  /** Obtiene lista de pedidos (cuando se implemente en backend) */
   orders: () => api.get('/orders'),
 }
 
-// ==== Servicios de carga de datos ====
+/* ==============================================
+   🚀 SERVICIOS DE CARGA Y CONSULTA DE DATOS REALES
+   ============================================== */
 export const UploadService = {
-  uploadFlights: (flights: FlightData[]) =>
-    api.post<UploadResponse>('/upload/flights', { flights }),
+  uploadFlights: (file: File) => {
+    const formData = new FormData();
+    formData.append("archivo", file); // 🔑 nombre exacto del parámetro en el backend
+    return api.post("/vuelos/archivo", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 
-  uploadAirports: (airports: AirportData[]) =>
-    api.post<UploadResponse>('/upload/airports', { airports }),
-}
+  uploadAirports: (file: File) => {
+    const formData = new FormData();
+    formData.append("archivo", file);
+    return api.post("/aeropuertos/archivo", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
+  // 👇 NUEVO: obtener todos los aeropuertos desde backend
+  getAllAirports: () => {
+    return api.get("/aeropuertos");
+  },
+};
