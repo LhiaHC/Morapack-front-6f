@@ -56,30 +56,40 @@ function loadOrders() {
   const content = fs.readFileSync(path.join(__dirname, 'public/data/pedidos.txt'), 'utf-8');
   const lines = content.trim().split('\n');
   
-  return lines.map((line, idx) => {
-    const parts = line.split('-');
-    const day = parseInt(parts[0], 10);
-    const hour = parseInt(parts[1], 10);
-    const minute = parseInt(parts[2], 10);
-    const dest = parts[3];
-    const qty = parseInt(parts[4], 10);
-    const clientId = parts[5];
-    
-    // Asignar origen aleatorio desde un hub
-    const origin = HUBS[Math.floor(Math.random() * HUBS.length)];
-    
-    return {
-      day,
-      hour,
-      minute,
-      origin, // Nuevo campo
-      dest,
-      qty,
-      clientId,
-      orderId: `ORD-${String(idx + 1).padStart(3, '0')}`,
-      date: null // Se calculará en base a startDate
-    };
-  });
+  return lines
+    .map((line, idx) => {
+      const parts = line.split('-');
+      const day = parseInt(parts[0], 10);
+      const hour = parseInt(parts[1], 10);
+      const minute = parseInt(parts[2], 10);
+      const dest = parts[3];
+      const qty = parseInt(parts[4], 10);
+      const clientId = parts[5];
+      
+      // Asignar origen aleatorio desde un hub
+      const origin = HUBS[Math.floor(Math.random() * HUBS.length)];
+      
+      return {
+        day,
+        hour,
+        minute,
+        origin,
+        dest,
+        qty,
+        clientId,
+        orderId: `ORD-${String(idx + 1).padStart(3, '0')}`,
+        date: null, // Se calculará en base a startDate
+        lineIndex: idx // Para tracking
+      };
+    })
+    .filter((order) => {
+      // FILTRAR pedidos que tienen como destino un HUB (fuente infinita)
+      if (HUBS.includes(order.dest)) {
+        console.log(`⚠️  Pedido ignorado (línea ${order.lineIndex + 1}): destino ${order.dest} es una fuente infinita`);
+        return false;
+      }
+      return true;
+    });
 }
 
 // Generar instancias de vuelos para 7 días
@@ -90,13 +100,14 @@ function generateFlightInstances(flights, startDate) {
   for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
     flights.forEach(flight => {
       const currentDate = new Date(startDate);
-      currentDate.setDate(currentDate.getDate() + dayOffset);
+      currentDate.setUTCDate(currentDate.getUTCDate() + dayOffset);
       
-      // Convertir hora local a UTC
-      const depUtc = localToUTC(currentDate, flight.depTime, TIMEZONE_OFFSETS[flight.origin] || 0);
+      // Usar hora directamente como UTC (sin conversiones de zona horaria)
+      const [depH, depM] = parseTime(flight.depTime);
+      const depUtc = new Date(currentDate);
+      depUtc.setUTCHours(depH, depM, 0, 0);
       
       // Calcular duración del vuelo
-      const [depH, depM] = parseTime(flight.depTime);
       const [arrH, arrM] = parseTime(flight.arrTime);
       let durationMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
       
@@ -282,10 +293,6 @@ function generateAssignments(orders, instances, startDate) {
       const splits = [{
         consignmentId: `C-${order.orderId.split('-')[1]}-1`,
         qty: order.qty,
-        lineRefs: [{
-          lineId: `${order.orderId}-L1`,
-          qty: order.qty
-        }],
         legs
       }];
       
@@ -325,10 +332,6 @@ function generateAssignments(orders, instances, startDate) {
         splits.push({
           consignmentId: `C-${order.orderId.split('-')[1]}-${String.fromCharCode(65 + splitIdx)}`,
           qty: splitQty,
-          lineRefs: [{
-            lineId: `${order.orderId}-L${splitIdx + 1}`,
-            qty: splitQty
-          }],
           legs
         });
       });
@@ -467,6 +470,144 @@ function main() {
     JSON.stringify(timeline, null, 2)
   );
   console.log('   ✅ timeline_split_icao.json');
+
+  // ========== VALIDACIÓN DE COHERENCIA ==========
+  console.log('\n🔍 Validando coherencia de datos...');
+  
+  let errors = 0;
+  let warnings = 0;
+
+  // 1. Verificar que todos los instanceIds en assignments existen en instances
+  console.log('\n1️⃣ Validando instanceIds en asignaciones...');
+  const instanceIds = new Set(instances.map(i => i.instanceId));
+  assignments.forEach(assignment => {
+    assignment.splits.forEach((split, splitIdx) => {
+      split.legs.forEach((leg, legIdx) => {
+        if (!instanceIds.has(leg.instanceId)) {
+          console.error(`   ❌ ERROR: Pedido ${assignment.orderId}, split ${splitIdx}, leg ${legIdx}: instanceId ${leg.instanceId} no existe`);
+          errors++;
+        }
+      });
+    });
+  });
+  if (errors === 0) console.log('   ✅ Todos los instanceIds son válidos');
+
+  // 2. Verificar que todos los vuelos parten o llegan a un HUB
+  console.log('\n2️⃣ Validando que vuelos conectan con HUBs...');
+  let hubWarnings = 0;
+  instances.forEach(inst => {
+    const hasHub = HUBS.includes(inst.origin) || HUBS.includes(inst.dest);
+    if (!hasHub) {
+      if (hubWarnings < 5) {
+        console.warn(`   ⚠️  WARNING: Vuelo ${inst.instanceId} (${inst.origin} → ${inst.dest}) no conecta con ningún HUB`);
+      }
+      hubWarnings++;
+    }
+  });
+  if (hubWarnings === 0) {
+    console.log('   ✅ Todos los vuelos conectan con HUBs');
+  } else {
+    console.log(`   ⚠️  ${hubWarnings} vuelos no conectan con HUBs`);
+    warnings += hubWarnings;
+  }
+
+  // 3. Verificar que los pedidos particionados llegan al mismo destino
+  console.log('\n3️⃣ Validando convergencia de pedidos particionados...');
+  let partitionErrors = 0;
+  assignments.forEach(assignment => {
+    if (assignment.splits.length > 1) {
+      const destinations = assignment.splits.map(split => {
+        const lastLeg = split.legs[split.legs.length - 1];
+        const instance = instances.find(i => i.instanceId === lastLeg.instanceId);
+        return instance ? instance.dest : null;
+      });
+      
+      const uniqueDests = new Set(destinations.filter(d => d !== null));
+      if (uniqueDests.size > 1) {
+        console.error(`   ❌ ERROR: Pedido ${assignment.orderId} tiene splits con destinos diferentes: ${Array.from(uniqueDests).join(', ')}`);
+        partitionErrors++;
+      }
+    }
+  });
+  if (partitionErrors === 0) {
+    console.log('   ✅ Todos los pedidos particionados convergen al mismo destino');
+  }
+  errors += partitionErrors;
+
+  // 4. Verificar que eventos en timeline corresponden a asignaciones válidas
+  console.log('\n4️⃣ Validando eventos del timeline...');
+  const consignmentIds = new Set();
+  assignments.forEach(a => {
+    a.splits.forEach(split => {
+      consignmentIds.add(split.consignmentId);
+    });
+  });
+  
+  let timelineErrors = 0;
+  timeline.forEach(event => {
+    if (!consignmentIds.has(event.consignmentId)) {
+      if (timelineErrors < 5) {
+        console.error(`   ❌ ERROR: Evento con consignmentId ${event.consignmentId} no existe en asignaciones`);
+      }
+      timelineErrors++;
+    }
+    if (event.instanceId && !instanceIds.has(event.instanceId)) {
+      if (timelineErrors < 5) {
+        console.error(`   ❌ ERROR: Evento con instanceId ${event.instanceId} no existe en vuelos`);
+      }
+      timelineErrors++;
+    }
+  });
+  if (timelineErrors === 0) {
+    console.log('   ✅ Todos los eventos del timeline son válidos');
+  } else {
+    console.log(`   ❌ ${timelineErrors} errores en el timeline`);
+    errors += timelineErrors;
+  }
+
+  // 5. Verificar duración de la simulación (7 días)
+  console.log('\n5️⃣ Validando duración de simulación...');
+  const departureDates = instances
+    .map(i => new Date(i.depUtc))
+    .filter(d => !isNaN(d.getTime()));
+  
+  if (departureDates.length > 0) {
+    const minDep = new Date(Math.min(...departureDates));
+    const maxDep = new Date(Math.max(...departureDates));
+    
+    // Calcular días calendario (no redondear)
+    const depDays = Math.floor((maxDep - minDep) / (1000 * 60 * 60 * 24));
+    
+    // Calcular rango total incluyendo llegadas
+    const allDates = instances
+      .flatMap(i => [new Date(i.depUtc), new Date(i.arrUtc)])
+      .filter(d => !isNaN(d.getTime()));
+    const minDate = new Date(Math.min(...allDates));
+    const maxDate = new Date(Math.max(...allDates));
+    const totalDays = Math.floor((maxDate - minDate) / (1000 * 60 * 60 * 24));
+    
+    console.log(`   📅 Días de despegues: ${depDays + 1} días calendario (${minDep.toISOString().split('T')[0]} a ${maxDep.toISOString().split('T')[0]})`);
+    console.log(`   📅 Rango total (con llegadas): ${totalDays + 1} días (${minDate.toISOString().split('T')[0]} a ${maxDate.toISOString().split('T')[0]})`);
+    
+    if (depDays < 7) {
+      console.log(`   ✅ Duración de 7 días de simulación confirmada (${depDays + 1} días calendario)`);
+    } else {
+      console.warn(`   ⚠️  WARNING: Simulación debería generar vuelos en 7 días, pero genera en ${depDays + 1} días`);
+      warnings++;
+    }
+  } else {
+    console.error('   ❌ ERROR: No hay fechas válidas en las instancias de vuelos');
+    errors++;
+  }
+
+  // Resumen final
+  console.log('\n' + '='.repeat(60));
+  if (errors === 0 && warnings === 0) {
+    console.log('✅ VALIDACIÓN EXITOSA: Todos los datos son coherentes');
+  } else {
+    console.log(`⚠️  VALIDACIÓN COMPLETADA con ${errors} errores y ${warnings} advertencias`);
+  }
+  console.log('='.repeat(60));
   
   console.log('\n🎉 ¡Generación completa!\n');
   console.log('📊 Resumen:');

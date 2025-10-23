@@ -73,8 +73,8 @@ export interface TopbarProps {
   setOpenRight: (open: boolean) => void;
   uploadOpen: boolean;
   setUploadOpen: (open: boolean) => void;
-  uploadMessages: {flights?: string, airports?: string};
-  setUploadMessages: React.Dispatch<React.SetStateAction<{flights?: string, airports?: string}>>;
+  uploadMessages: {flights?: string, airports?: string, orders?: string};
+  setUploadMessages: React.Dispatch<React.SetStateAction<{flights?: string, airports?: string, orders?: string}>>;
   handleUploadConfirm: (files: { flights?: File | null; airports?: File | null; orders?: File | null }) => Promise<void>;
   SidebarContent?: React.ComponentType<{ collapsed?: boolean }>;
 }
@@ -179,7 +179,7 @@ export default function Topbar({
       />
 
       {/* Mensajes de carga */}
-      {(uploadMessages.flights || uploadMessages.airports) && (
+      {(uploadMessages.flights || uploadMessages.airports || uploadMessages.orders) && (
         <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border p-4 min-w-[300px] z-50">
           <h3 className="font-semibold text-gray-800 mb-2">Resultado de carga</h3>
           {uploadMessages.flights && (
@@ -187,6 +187,9 @@ export default function Topbar({
           )}
           {uploadMessages.airports && (
             <p className="text-sm text-gray-600 mb-1">{uploadMessages.airports}</p>
+          )}
+          {uploadMessages.orders && (
+            <p className="text-sm text-gray-600 mb-1">{uploadMessages.orders}</p>
           )}
           <button
             onClick={() => setUploadMessages({})}

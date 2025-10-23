@@ -39,7 +39,7 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
   const [openRight, setOpenRight] = React.useState(false)
 
   const [uploadOpen, setUploadOpen] = React.useState(false)
-  const [uploadMessages, setUploadMessages] = React.useState<{ flights?: string; airports?: string }>({})
+  const [uploadMessages, setUploadMessages] = React.useState<{ flights?: string; airports?: string; orders?: string }>({})
 
   // ✅ Mover handleUploadConfirm aquí dentro
   const handleUploadConfirm = async (files: { flights?: File | null; airports?: File | null; orders?: File | null }) => {
@@ -57,6 +57,12 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
               ? `✅ Vuelos cargados correctamente (${response.data.count} registros)`
               : `❌ Error al cargar vuelos: ${response.data.message}`
           }))
+
+          // Disparar evento para refrescar el mapa
+          if (response.data.success) {
+            window.dispatchEvent(new CustomEvent('flights-uploaded'))
+            console.log('🔔 Evento flights-uploaded disparado')
+          }
         } catch (error) {
           console.error('Error al subir vuelos:', error)
           setUploadMessages(prev => ({
@@ -77,6 +83,12 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
   ? `✅ Aeropuertos cargados correctamente (${response.data.data?.totalAeropuertosCargados ?? 0} registros)`
               : `❌ Error al cargar aeropuertos: ${response.data.message}`
           }))
+
+          // Disparar evento para refrescar el mapa
+          if (response.data.success) {
+            window.dispatchEvent(new CustomEvent('airports-uploaded'))
+            console.log('🔔 Evento airports-uploaded disparado')
+          }
         } catch (error) {
           console.error('Error al subir aeropuertos:', error)
           setUploadMessages(prev => ({
@@ -86,15 +98,38 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         }
       }
 
+      // === Pedidos ===
       if (files.orders) {
-        console.log('Archivo de pedidos seleccionado:', files.orders.name)
+        try {
+          const response = await UploadService.uploadOrders(files.orders)
+          console.log('Respuesta pedidos:', response.data)
+          setUploadMessages(prev => ({
+            ...prev,
+            orders: response.data.status === 'success'
+              ? `✅ Pedidos cargados correctamente (${response.data.data?.totalGuardados ?? 0} registros)`
+              : `❌ Error al cargar pedidos: ${response.data.mensaje}`
+          }))
+
+          // Disparar evento para refrescar el mapa
+          if (response.data.status === 'success') {
+            window.dispatchEvent(new CustomEvent('orders-uploaded'))
+            console.log('🔔 Evento orders-uploaded disparado')
+          }
+        } catch (error) {
+          console.error('Error al subir pedidos:', error)
+          setUploadMessages(prev => ({
+            ...prev,
+            orders: '❌ Error de conexión al cargar pedidos'
+          }))
+        }
       }
 
     } catch (error) {
       console.error('Error procesando archivos:', error)
       setUploadMessages({
         flights: '❌ Error al procesar el archivo de vuelos',
-        airports: '❌ Error al procesar el archivo de aeropuertos'
+        airports: '❌ Error al procesar el archivo de aeropuertos',
+        orders: '❌ Error al procesar el archivo de pedidos'
       })
     }
   }
