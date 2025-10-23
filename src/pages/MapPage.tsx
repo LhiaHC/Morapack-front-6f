@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import MapView from "../components/map/MapView"
 import SimControls from '../components/sim/SimControls'
 import OrderPanel from '../components/OrderPanel'
 import { SimProvider, useSimulation } from '../sim/SimContext'
-import { 
-  loadAirports, 
-  loadInstances, 
-  loadAssignmentsSplit, 
-  loadTimeline 
+import {
+  loadAirports,
+  loadInstances,
+  loadAssignmentsSplit,
+  loadTimeline
 } from '../sim/staticSource'
-import type { 
-  AirportICAO, 
-  FlightInstance, 
-  AssignmentByOrder, 
-  TimelineEvent 
+import type {
+  AirportICAO,
+  FlightInstance,
+  AssignmentByOrder,
+  TimelineEvent
 } from '../types'
 
 function MapPageContent() {
@@ -21,56 +21,86 @@ function MapPageContent() {
   const [instances, setInstances] = useState<FlightInstance[]>([])
   const [assignments, setAssignments] = useState<AssignmentByOrder[]>([])
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const { setMinTime, setMaxTime, setSimTime } = useSimulation()
 
-  // Cargar datos estáticos al montar
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [airportsData, instancesData, assignmentsData, timelineData] = await Promise.all([
-          loadAirports(),
-          loadInstances(),
-          loadAssignmentsSplit(),
-          loadTimeline()
+  // Función para cargar/refrescar datos desde la API
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      console.log('🔄 MapPage: Cargando datos desde API...')
+
+      const [airportsData, instancesData, assignmentsData, timelineData] = await Promise.all([
+        loadAirports(),
+        loadInstances(),
+        loadAssignmentsSplit(),
+        loadTimeline()
+      ])
+
+      console.log('📍 MapPage: Aeropuertos cargados:', airportsData.length)
+      console.log('✈️ MapPage: Instancias cargadas:', instancesData.length)
+
+      setAirports(airportsData)
+      setInstances(instancesData)
+      setAssignments(assignmentsData)
+      setTimeline(timelineData)
+
+      // Calcular rango de tiempo desde las instancias
+      if (instancesData.length > 0) {
+        const times = instancesData.flatMap(i => [
+          new Date(i.depUtc).getTime(),
+          new Date(i.arrUtc).getTime()
         ])
-        
-        setAirports(airportsData)
-        setInstances(instancesData)
-        setAssignments(assignmentsData)
-        setTimeline(timelineData)
+        const min = new Date(Math.min(...times))
+        const max = new Date(Math.max(...times))
 
-        // Calcular rango de tiempo desde las instancias
-        if (instancesData.length > 0) {
-          const times = instancesData.flatMap(i => [
-            new Date(i.depUtc).getTime(),
-            new Date(i.arrUtc).getTime()
-          ])
-          const min = new Date(Math.min(...times))
-          const max = new Date(Math.max(...times))
-          
-          setMinTime(min)
-          setMaxTime(max)
-          setSimTime(min) // Iniciar en el tiempo mínimo
-        }
-
-        setLoading(false)
-      } catch (err) {
-        console.error('Error loading simulation data:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load simulation data')
-        setLoading(false)
+        setMinTime(min)
+        setMaxTime(max)
+        setSimTime(min)
       }
+
+      setLoading(false)
+    } catch (err) {
+      console.error('❌ MapPage: Error loading data:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load simulation data')
+      setLoading(false)
+    }
+  }, [setMinTime, setMaxTime, setSimTime])
+
+  // Cargar datos al montar (intentará API primero, fallback a JSON)
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // Listener para refrescar cuando se cargan archivos
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('🔄 MapPage: Evento de refresco detectado')
+      loadData()
     }
 
-    loadData()
-  }, [setMinTime, setMaxTime, setSimTime])
+    window.addEventListener('airports-uploaded', handleRefresh)
+    window.addEventListener('flights-uploaded', handleRefresh)
+    window.addEventListener('orders-uploaded', handleRefresh)
+
+    return () => {
+      window.removeEventListener('airports-uploaded', handleRefresh)
+      window.removeEventListener('flights-uploaded', handleRefresh)
+      window.removeEventListener('orders-uploaded', handleRefresh)
+    }
+  }, [loadData])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Cargando simulación...</div>
+        <div className="text-center">
+          <div className="text-lg mb-2">🔄 Cargando datos desde API backend...</div>
+          <div className="text-sm text-gray-500">Conectando con http://localhost:8080</div>
+        </div>
       </div>
     )
   }
@@ -78,21 +108,29 @@ function MapPageContent() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-red-600">Error: {error}</div>
+        <div className="text-center">
+          <div className="text-red-600 mb-2">❌ Error: {error}</div>
+          <button
+            onClick={loadData}
+            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            🔄 Reintentar
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="relative w-full h-screen">
-      <MapView 
+      <MapView
         airports={airports}
         instances={instances}
         assignments={assignments}
         timeline={timeline}
         selectedOrderId={selectedOrderId}
       />
-      <OrderPanel 
+      <OrderPanel
         assignments={assignments}
         instances={instances}
         timeline={timeline}
@@ -100,6 +138,38 @@ function MapPageContent() {
         selectedOrderId={selectedOrderId}
       />
       <SimControls />
+
+      {/* Botón de refresco */}
+      <button
+        onClick={loadData}
+        disabled={loading}
+        className="absolute top-20 right-4 z-[1000] bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        title="Refrescar datos desde el backend"
+      >
+        <span className={loading ? 'animate-spin' : ''}>🔄</span>
+        {loading ? 'Cargando...' : 'Refrescar Mapa'}
+      </button>
+
+      {/* Indicador de aeropuertos */}
+      {airports.length > 0 ? (
+        <div className="absolute top-20 left-4 z-[1000] bg-white text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200">
+          <div className="text-sm font-medium">
+            📍 {airports.length} aeropuertos
+            {airports.filter(a => a.infiniteSource).length > 0 && (
+              <span className="ml-2 text-orange-600">
+                ⭐ {airports.filter(a => a.infiniteSource).length} HUBs
+              </span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="absolute top-20 left-4 z-[1000] bg-yellow-50 text-yellow-800 px-4 py-3 rounded-lg shadow-lg border border-yellow-200">
+          <div className="text-sm font-medium mb-1">⚠️ No hay aeropuertos cargados</div>
+          <div className="text-xs">
+            Use el botón "Cargar data" para subir archivos al backend
+          </div>
+        </div>
+      )}
     </div>
   )
 }

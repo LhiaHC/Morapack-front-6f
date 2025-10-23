@@ -117,8 +117,16 @@ export const UploadService = {
     });
   },
 
+  uploadOrders: (file: File) => {
+    const formData = new FormData();
+    formData.append("archivo", file);
+    return api.post("/pedidos/cargar_archivo", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
   // 👇 NUEVO: obtener todos los aeropuertos desde backend
   getAllAirports: () => {
-    return api.get("/aeropuertos");
+    return api.get("/aeropuertos/todos");
   },
 };

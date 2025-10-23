@@ -1,24 +1,45 @@
 /**
- * Carga de datos estáticos desde JSON en /public
- * Todos los datos usan códigos ICAO exclusivamente (SPIM, EBCI, UBBB, etc.)
+ * Carga de datos EXCLUSIVAMENTE desde API backend
+ * NO usa archivos JSON locales - solo API
  */
 
-import type { 
-  AirportICAO, 
-  FlightInstance, 
-  AssignmentByOrder, 
-  TimelineEvent 
+import type {
+  AirportICAO,
+  FlightInstance,
+  AssignmentByOrder,
+  TimelineEvent
 } from '../types'
+import { UploadService } from '../services/api'
 
 /**
- * Carga aeropuertos desde /public/airports_icao.json
+ * Carga aeropuertos SOLO desde la API del backend
+ * Si no hay datos en la API, retorna array vacío
  */
 export async function loadAirports(): Promise<AirportICAO[]> {
-  const response = await fetch('/airports_icao.json')
-  if (!response.ok) {
-    throw new Error(`Failed to load airports: ${response.statusText}`)
+  try {
+    console.log('🔄 Cargando aeropuertos desde API backend...')
+    const response = await UploadService.getAllAirports()
+
+    console.log('📊 Respuesta de API aeropuertos:', response)
+
+    if (response.data && Array.isArray(response.data)) {
+      if (response.data.length > 0) {
+        console.log(`✅ Aeropuertos cargados desde API: ${response.data.length} registros`)
+        console.log('📍 Primer aeropuerto:', response.data[0])
+      } else {
+        console.log('ℹ️ API respondió con array vacío. No hay aeropuertos cargados en el backend.')
+      }
+      return response.data
+    }
+
+    console.warn('⚠️ Formato inesperado de API, retornando array vacío')
+    console.warn('Datos recibidos:', response.data)
+    return []
+  } catch (error) {
+    console.error('❌ Error al cargar aeropuertos desde API:', error)
+    console.error('⚠️ Retornando array vacío. El mapa estará sin aeropuertos.')
+    return []
   }
-  return response.json()
 }
 
 /**
