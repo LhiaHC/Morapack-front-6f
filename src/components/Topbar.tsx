@@ -73,23 +73,21 @@ export interface TopbarProps {
   setOpenRight: (open: boolean) => void;
   uploadOpen: boolean;
   setUploadOpen: (open: boolean) => void;
-  uploadMessages: {flights?: string, airports?: string, orders?: string};
-  setUploadMessages: React.Dispatch<React.SetStateAction<{flights?: string, airports?: string, orders?: string}>>;
   handleUploadConfirm: (files: { flights?: File | null; airports?: File | null; orders?: File | null }) => Promise<void>;
   SidebarContent?: React.ComponentType<{ collapsed?: boolean }>;
+  dataAlreadyLoaded?: boolean;
 }
 
-export default function Topbar({ 
-  openLeft, 
-  setOpenLeft, 
-  openRight, 
+export default function Topbar({
+  openLeft,
+  setOpenLeft,
+  openRight,
   setOpenRight,
   uploadOpen,
   setUploadOpen,
-  uploadMessages,
-  setUploadMessages,
   handleUploadConfirm,
-  SidebarContent
+  SidebarContent,
+  dataAlreadyLoaded = false
 }: TopbarProps) {
 
 
@@ -139,11 +137,13 @@ export default function Topbar({
           {/* Botón Cargar data (opcional, solo en desktop) */}
           <Button
             variant="ghost"
-            className="text-white hover:bg-gray-500 whitespace-nowrap hidden sm:flex"
+            className="text-white hover:bg-gray-500 whitespace-nowrap hidden sm:flex disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setUploadOpen(true)}
+            disabled={dataAlreadyLoaded}
+            title={dataAlreadyLoaded ? "Los datos ya han sido cargados" : "Cargar archivos al backend"}
           >
-            <span className="mr-2">📁</span>
-            <span>Cargar data</span>
+            <span className="mr-2">{dataAlreadyLoaded ? '✅' : '📁'}</span>
+            <span>{dataAlreadyLoaded ? 'Datos cargados' : 'Cargar data'}</span>
           </Button>
 
           {/* Más información */}
@@ -176,29 +176,8 @@ export default function Topbar({
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         onConfirm={handleUploadConfirm}
+        dataAlreadyLoaded={dataAlreadyLoaded}
       />
-
-      {/* Mensajes de carga */}
-      {(uploadMessages.flights || uploadMessages.airports || uploadMessages.orders) && (
-        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border p-4 min-w-[300px] z-50">
-          <h3 className="font-semibold text-gray-800 mb-2">Resultado de carga</h3>
-          {uploadMessages.flights && (
-            <p className="text-sm text-gray-600 mb-1">{uploadMessages.flights}</p>
-          )}
-          {uploadMessages.airports && (
-            <p className="text-sm text-gray-600 mb-1">{uploadMessages.airports}</p>
-          )}
-          {uploadMessages.orders && (
-            <p className="text-sm text-gray-600 mb-1">{uploadMessages.orders}</p>
-          )}
-          <button
-            onClick={() => setUploadMessages({})}
-            className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
-          >
-            Cerrar
-          </button>
-        </div>
-      )}
     </header>
   );
 }

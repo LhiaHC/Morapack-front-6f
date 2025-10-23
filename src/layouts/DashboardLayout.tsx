@@ -39,98 +39,133 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
   const [openRight, setOpenRight] = React.useState(false)
 
   const [uploadOpen, setUploadOpen] = React.useState(false)
-  const [uploadMessages, setUploadMessages] = React.useState<{ flights?: string; airports?: string; orders?: string }>({})
+  const [dataAlreadyLoaded, setDataAlreadyLoaded] = React.useState(false)
+  const [checkingDataStatus, setCheckingDataStatus] = React.useState(true)
+  const [uploading, setUploading] = React.useState(false)
+  const [uploadProgress, setUploadProgress] = React.useState<{
+    current: string;
+    completed: string[];
+    total: number;
+  }>({ current: '', completed: [], total: 0 })
+
+  // Verificar si ya hay datos cargados al montar
+  React.useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const status = await UploadService.checkDataStatus()
+        console.log('📊 Estado de datos en backend:', status)
+        setDataAlreadyLoaded(status.hasData)
+
+        if (status.hasData) {
+          console.log(`ℹ️ Ya hay datos cargados: ${status.airportsCount} aeropuertos, ${status.flightsCount} vuelos`)
+        }
+      } catch (error) {
+        console.error('Error verificando estado de datos:', error)
+      } finally {
+        setCheckingDataStatus(false)
+      }
+    }
+
+    checkStatus()
+  }, [])
 
   // ✅ Mover handleUploadConfirm aquí dentro
   const handleUploadConfirm = async (files: { flights?: File | null; airports?: File | null; orders?: File | null }) => {
-    setUploadMessages({}) // Limpiar mensajes anteriores
+    setUploading(true) // Activar overlay de carga
+
+    // Calcular total de archivos a cargar
+    const filesToUpload = [files.flights, files.airports, files.orders].filter(f => f !== null && f !== undefined)
+    const totalFiles = filesToUpload.length
+
+    setUploadProgress({
+      current: '',
+      completed: [],
+      total: totalFiles
+    })
 
     try {
       // === Vuelos ===
       if (files.flights) {
+        setUploadProgress(prev => ({ ...prev, current: 'Cargando vuelos...' }))
         try {
-          const response = await UploadService.uploadFlights(files.flights) // Enviamos el archivo real
-          console.log('Respuesta vuelos:', response.data)
-          setUploadMessages(prev => ({
-            ...prev,
-            flights: response.data.success
-              ? `✅ Vuelos cargados correctamente (${response.data.count} registros)`
-              : `❌ Error al cargar vuelos: ${response.data.message}`
-          }))
+          const response = await UploadService.uploadFlights(files.flights)
+          console.log('✅ Vuelos:', response.data)
 
-          // Disparar evento para refrescar el mapa
-          if (response.data.success) {
-            window.dispatchEvent(new CustomEvent('flights-uploaded'))
-            console.log('🔔 Evento flights-uploaded disparado')
-          }
-        } catch (error) {
-          console.error('Error al subir vuelos:', error)
-          setUploadMessages(prev => ({
+          setUploadProgress(prev => ({
             ...prev,
-            flights: '❌ Error de conexión al cargar vuelos'
+            completed: [...prev.completed, 'vuelos'],
+            current: ''
+          }))
+        } catch (error) {
+          console.error('❌ Error al subir vuelos:', error)
+          setUploadProgress(prev => ({
+            ...prev,
+            completed: [...prev.completed, 'vuelos'],
+            current: ''
           }))
         }
       }
 
       // === Aeropuertos ===
       if (files.airports) {
+        setUploadProgress(prev => ({ ...prev, current: 'Cargando aeropuertos...' }))
         try {
           const response = await UploadService.uploadAirports(files.airports)
-          console.log('Respuesta aeropuertos:', response.data)
-          setUploadMessages(prev => ({
-            ...prev,
-            airports: response.data.success
-  ? `✅ Aeropuertos cargados correctamente (${response.data.data?.totalAeropuertosCargados ?? 0} registros)`
-              : `❌ Error al cargar aeropuertos: ${response.data.message}`
-          }))
+          console.log('✅ Aeropuertos:', response.data)
 
-          // Disparar evento para refrescar el mapa
-          if (response.data.success) {
-            window.dispatchEvent(new CustomEvent('airports-uploaded'))
-            console.log('🔔 Evento airports-uploaded disparado')
-          }
-        } catch (error) {
-          console.error('Error al subir aeropuertos:', error)
-          setUploadMessages(prev => ({
+          setUploadProgress(prev => ({
             ...prev,
-            airports: '❌ Error de conexión al cargar aeropuertos'
+            completed: [...prev.completed, 'aeropuertos'],
+            current: ''
+          }))
+        } catch (error) {
+          console.error('❌ Error al subir aeropuertos:', error)
+          setUploadProgress(prev => ({
+            ...prev,
+            completed: [...prev.completed, 'aeropuertos'],
+            current: ''
           }))
         }
       }
 
       // === Pedidos ===
       if (files.orders) {
+        setUploadProgress(prev => ({ ...prev, current: 'Cargando pedidos...' }))
         try {
           const response = await UploadService.uploadOrders(files.orders)
-          console.log('Respuesta pedidos:', response.data)
-          setUploadMessages(prev => ({
-            ...prev,
-            orders: response.data.status === 'success'
-              ? `✅ Pedidos cargados correctamente (${response.data.data?.totalGuardados ?? 0} registros)`
-              : `❌ Error al cargar pedidos: ${response.data.mensaje}`
-          }))
+          console.log('✅ Pedidos:', response.data)
 
-          // Disparar evento para refrescar el mapa
-          if (response.data.status === 'success') {
-            window.dispatchEvent(new CustomEvent('orders-uploaded'))
-            console.log('🔔 Evento orders-uploaded disparado')
-          }
-        } catch (error) {
-          console.error('Error al subir pedidos:', error)
-          setUploadMessages(prev => ({
+          setUploadProgress(prev => ({
             ...prev,
-            orders: '❌ Error de conexión al cargar pedidos'
+            completed: [...prev.completed, 'pedidos'],
+            current: ''
+          }))
+        } catch (error) {
+          console.error('❌ Error al subir pedidos:', error)
+          setUploadProgress(prev => ({
+            ...prev,
+            completed: [...prev.completed, 'pedidos'],
+            current: ''
           }))
         }
       }
 
     } catch (error) {
-      console.error('Error procesando archivos:', error)
-      setUploadMessages({
-        flights: '❌ Error al procesar el archivo de vuelos',
-        airports: '❌ Error al procesar el archivo de aeropuertos',
-        orders: '❌ Error al procesar el archivo de pedidos'
-      })
+      console.error('❌ Error procesando archivos:', error)
+    } finally {
+      // Después de cargar archivos, marcar que ya hay datos
+      if (files.airports || files.flights || files.orders) {
+        setDataAlreadyLoaded(true)
+        console.log('✅ Datos marcados como cargados, botón deshabilitado')
+      }
+
+      // Esperar 800ms antes de ocultar el overlay y disparar el refresco final
+      setTimeout(() => {
+        setUploading(false)
+        // Disparar evento para que el mapa se refresque DESPUÉS de ocultar el overlay
+        window.dispatchEvent(new CustomEvent('upload-complete'))
+        console.log('🎉 Carga completa, mapa se refrescará')
+      }, 800)
     }
   }
 
@@ -145,16 +180,78 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         setOpenRight={setOpenRight}
         uploadOpen={uploadOpen}
         setUploadOpen={setUploadOpen}
-        uploadMessages={uploadMessages}
-        setUploadMessages={setUploadMessages}
         handleUploadConfirm={handleUploadConfirm}
         SidebarContent={SidebarContent}
+        dataAlreadyLoaded={dataAlreadyLoaded}
       />
 
       {/* Main content */}
       <main className="absolute top-14 left-0 right-0 bottom-0 overflow-hidden">
         <div className="w-full h-full">{children ? children : <Outlet />}</div>
       </main>
+
+      {/* Overlay de carga de archivos */}
+      {uploading && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                <span className="text-3xl animate-bounce">📦</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Cargando archivos al backend
+              </h3>
+              <p className="text-sm text-gray-600">
+                Por favor espere mientras se procesan los datos...
+              </p>
+            </div>
+
+            {/* Progreso */}
+            <div className="space-y-4">
+              {/* Barra de progreso */}
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${(uploadProgress.completed.length / uploadProgress.total) * 100}%`
+                  }}
+                />
+              </div>
+
+              {/* Texto de progreso */}
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-700">
+                  {uploadProgress.current || 'Procesando...'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {uploadProgress.completed.length} de {uploadProgress.total} archivos completados
+                </p>
+              </div>
+
+              {/* Lista de completados */}
+              {uploadProgress.completed.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {uploadProgress.completed.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 text-sm text-gray-600 bg-green-50 px-3 py-2 rounded-lg"
+                    >
+                      <span className="text-green-600">✓</span>
+                      <span className="capitalize">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Spinner */}
+            <div className="mt-6 flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
