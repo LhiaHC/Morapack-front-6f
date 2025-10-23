@@ -129,4 +129,34 @@ export const UploadService = {
   getAllAirports: () => {
     return api.get("/aeropuertos/todos");
   },
+
+  // 👇 Verificar si hay datos cargados en el backend
+  checkDataStatus: async () => {
+    try {
+      const [airportsRes, flightsRes] = await Promise.all([
+        api.get("/aeropuertos/todos"),
+        api.get("/vuelos")
+      ]);
+
+      const hasAirports = airportsRes.data && Array.isArray(airportsRes.data) && airportsRes.data.length > 0;
+      const hasFlights = flightsRes.data?.data?.vuelos && Array.isArray(flightsRes.data.data.vuelos) && flightsRes.data.data.vuelos.length > 0;
+
+      return {
+        hasData: hasAirports || hasFlights,
+        hasAirports,
+        hasFlights,
+        airportsCount: hasAirports ? airportsRes.data.length : 0,
+        flightsCount: hasFlights ? flightsRes.data.data.vuelos.length : 0
+      };
+    } catch (error) {
+      console.error('Error checking data status:', error);
+      return {
+        hasData: false,
+        hasAirports: false,
+        hasFlights: false,
+        airportsCount: 0,
+        flightsCount: 0
+      };
+    }
+  },
 };

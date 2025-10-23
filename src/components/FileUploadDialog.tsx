@@ -10,6 +10,7 @@ export type FileUploadDialogProps = {
   acceptFlights?: string;
   acceptAirports?: string;
   acceptOrders?: string;
+  dataAlreadyLoaded?: boolean;
 };
 
 export default function FileUploadDialog({
@@ -17,6 +18,7 @@ export default function FileUploadDialog({
   acceptFlights = '.csv,.txt,.json',
   acceptAirports = '.csv,.txt,.json',
   acceptOrders = '.csv,.txt,.json',
+  dataAlreadyLoaded = false,
 }: FileUploadDialogProps) {
 
   const [files, setFiles] = React.useState<FilesState>({});
@@ -83,6 +85,22 @@ export default function FileUploadDialog({
       <DialogHeader>Cargar Archivos</DialogHeader>
 
       <DialogBody>
+        {dataAlreadyLoaded && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">ℹ️</span>
+              <div>
+                <div className="font-semibold text-blue-900 mb-1">
+                  Los datos ya han sido cargados
+                </div>
+                <div className="text-sm text-blue-700">
+                  Esta es una carga inicial que solo se realiza una vez. Los archivos ya fueron procesados y almacenados en el backend.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6">
           <FileRow
             label="Archivo para vuelos"

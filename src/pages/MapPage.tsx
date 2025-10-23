@@ -76,21 +76,17 @@ function MapPageContent() {
     loadData()
   }, [loadData])
 
-  // Listener para refrescar cuando se cargan archivos
+  // Listener para refrescar SOLO cuando la carga completa termine
   useEffect(() => {
-    const handleRefresh = () => {
-      console.log('🔄 MapPage: Evento de refresco detectado')
+    const handleUploadComplete = () => {
+      console.log('🎉 MapPage: Carga completa detectada, refrescando mapa...')
       loadData()
     }
 
-    window.addEventListener('airports-uploaded', handleRefresh)
-    window.addEventListener('flights-uploaded', handleRefresh)
-    window.addEventListener('orders-uploaded', handleRefresh)
+    window.addEventListener('upload-complete', handleUploadComplete)
 
     return () => {
-      window.removeEventListener('airports-uploaded', handleRefresh)
-      window.removeEventListener('flights-uploaded', handleRefresh)
-      window.removeEventListener('orders-uploaded', handleRefresh)
+      window.removeEventListener('upload-complete', handleUploadComplete)
     }
   }, [loadData])
 
