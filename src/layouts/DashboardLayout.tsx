@@ -84,29 +84,7 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
     })
 
     try {
-      // === Vuelos ===
-      if (files.flights) {
-        setUploadProgress(prev => ({ ...prev, current: 'Cargando vuelos...' }))
-        try {
-          const response = await UploadService.uploadFlights(files.flights)
-          console.log('✅ Vuelos:', response.data)
-
-          setUploadProgress(prev => ({
-            ...prev,
-            completed: [...prev.completed, 'vuelos'],
-            current: ''
-          }))
-        } catch (error) {
-          console.error('❌ Error al subir vuelos:', error)
-          setUploadProgress(prev => ({
-            ...prev,
-            completed: [...prev.completed, 'vuelos'],
-            current: ''
-          }))
-        }
-      }
-
-      // === Aeropuertos ===
+      // === Aeropuertos === (PRIMERO: sin dependencias)
       if (files.airports) {
         setUploadProgress(prev => ({ ...prev, current: 'Cargando aeropuertos...' }))
         try {
@@ -128,7 +106,29 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         }
       }
 
-      // === Pedidos ===
+      // === Vuelos === (SEGUNDO: dependen de aeropuertos)
+      if (files.flights) {
+        setUploadProgress(prev => ({ ...prev, current: 'Cargando vuelos...' }))
+        try {
+          const response = await UploadService.uploadFlights(files.flights)
+          console.log('✅ Vuelos:', response.data)
+
+          setUploadProgress(prev => ({
+            ...prev,
+            completed: [...prev.completed, 'vuelos'],
+            current: ''
+          }))
+        } catch (error) {
+          console.error('❌ Error al subir vuelos:', error)
+          setUploadProgress(prev => ({
+            ...prev,
+            completed: [...prev.completed, 'vuelos'],
+            current: ''
+          }))
+        }
+      }
+
+      // === Pedidos === (TERCERO: dependen de vuelos)
       if (files.orders) {
         setUploadProgress(prev => ({ ...prev, current: 'Cargando pedidos...' }))
         try {

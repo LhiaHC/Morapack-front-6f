@@ -104,25 +104,19 @@ export const UploadService = {
   uploadFlights: (file: File) => {
     const formData = new FormData();
     formData.append("archivo", file); // 🔑 nombre exacto del parámetro en el backend
-    return api.post("/vuelos/archivo", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return api.post("/vuelos/archivo", formData);
   },
 
   uploadAirports: (file: File) => {
     const formData = new FormData();
     formData.append("archivo", file);
-    return api.post("/aeropuertos/archivo", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return api.post("/aeropuertos/archivo", formData);
   },
 
   uploadOrders: (file: File) => {
     const formData = new FormData();
     formData.append("archivo", file);
-    return api.post("/pedidos/cargar_archivo", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return api.post("/pedidos/cargar_archivo", formData);
   },
 
   // 👇 NUEVO: obtener todos los aeropuertos desde backend
