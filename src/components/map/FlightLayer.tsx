@@ -188,8 +188,10 @@ export default function FlightLayer({
 
     // Actualizar o crear markers para cada instancia en vuelo
     instances.forEach(instance => {
-      const depTime = new Date(instance.depUtc).getTime()
-      const arrTime = new Date(instance.arrUtc).getTime()
+      // ✅ FORZAR INTERPRETACIÓN UTC: Usar Date.parse() en lugar de new Date()
+      // Esto evita conversión automática a zona horaria local
+      const depTime = Date.parse(instance.depUtc)
+      const arrTime = Date.parse(instance.arrUtc)
       
       // Verificar si el vuelo está activo
       const isActive = now >= depTime && now <= arrTime
@@ -218,6 +220,15 @@ export default function FlightLayer({
       if (!originAirport || !destAirport) return
 
       const progress = clamp((now - depTime) / (arrTime - depTime), 0, 1)
+      
+      // Validar que las fechas estén en orden correcto
+      if (arrTime < depTime) {
+        console.error(`❌ ERROR: Vuelo ${instance.instanceId} tiene fechas invertidas!`)
+        console.error(`   depUtc: ${instance.depUtc} → timestamp: ${depTime}`)
+        console.error(`   arrUtc: ${instance.arrUtc} → timestamp: ${arrTime}`)
+        return
+      }
+      
       const lat = lerp(originAirport.lat, destAirport.lat, progress)
       const lon = lerp(originAirport.lon, destAirport.lon, progress)
 

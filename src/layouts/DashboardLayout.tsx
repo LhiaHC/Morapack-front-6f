@@ -40,7 +40,6 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
 
   const [uploadOpen, setUploadOpen] = React.useState(false)
   const [dataAlreadyLoaded, setDataAlreadyLoaded] = React.useState(false)
-  const [checkingDataStatus, setCheckingDataStatus] = React.useState(true)
   const [uploading, setUploading] = React.useState(false)
   const [uploadProgress, setUploadProgress] = React.useState<{
     current: string;
@@ -61,8 +60,6 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         }
       } catch (error) {
         console.error('Error verificando estado de datos:', error)
-      } finally {
-        setCheckingDataStatus(false)
       }
     }
 

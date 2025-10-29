@@ -124,6 +124,21 @@ export const UploadService = {
     return api.get("/aeropuertos/todos");
   },
 
+  // 👇 NUEVO: obtener instancias de vuelos desde backend
+  getFlightInstances: (page: number = 0, size: number = 10000) => {
+    return api.get(`/vuelos/instances2?page=${page}&size=${size}`);
+  },
+
+  // 👇 NUEVO: obtener asignaciones (planificación semanal) desde backend
+  getAssignments: () => {
+    return api.get("/asignaciones");
+  },
+
+  // 👇 NUEVO: obtener timeline desde backend (opcional)
+  getTimeline: () => {
+    return api.get("/timeline");
+  },
+
   // 👇 Verificar si hay datos cargados en el backend
   checkDataStatus: async () => {
     try {
@@ -152,5 +167,48 @@ export const UploadService = {
         flightsCount: 0
       };
     }
+  },
+
+  // 👇 NUEVO: Cargar pedidos semanales
+  uploadWeeklyOrders: (file: File) => {
+    const formData = new FormData();
+    formData.append("archivo", file);
+    return api.post("/semanal/cargar", formData);
+  },
+
+  // 👇 NUEVO: Cargar cancelaciones
+  uploadCancellations: (file: File) => {
+    const formData = new FormData();
+    formData.append("archivo", file);
+    return api.post("/planificacion/cancelaciones", formData);
+  },
+};
+
+/* ==============================================
+   🗓️ SERVICIOS DE PLANIFICACIÓN SEMANAL
+   ============================================== */
+export const PlanningService = {
+  /**
+   * Obtiene las instancias de vuelos para la semana (7 días)
+   * @returns Lista de instancias de vuelos con formato Flight_instances_DTO
+   */
+  getFlightInstances: () => {
+    return api.get("/vuelos/instances");
+  },
+
+  /**
+   * Obtiene la planificación semanal de pedidos
+   * @returns Lista de asignaciones por pedido (assignments_split_icao)
+   */
+  getWeeklyPlanning: () => {
+    return api.get("/semanal/planificacion");
+  },
+
+  /**
+   * Obtiene la planificación de pedidos con el nuevo formato
+   * @returns Lista de OrderPlanDTO con orderId, splits y legs
+   */
+  getOrderPlanning: () => {
+    return api.get("/planificacion/pedidos");
   },
 };
