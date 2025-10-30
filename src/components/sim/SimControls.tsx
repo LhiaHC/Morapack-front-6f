@@ -1,12 +1,12 @@
 import { useSimulation } from '../../sim/SimContext'
 
-export default function SimControls() {
-  const { 
-    simTime, 
-    playing, 
-    setPlaying, 
-    timeScale, 
-    setTimeScale, 
+export default function SimControls({ onClose }: { onClose?: () => void }) {
+  const {
+    simTime,
+    playing,
+    setPlaying,
+    timeScale,
+    setTimeScale,
     reset,
     setSimTime,
     minTime,
@@ -25,13 +25,13 @@ export default function SimControls() {
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
-      <div className="bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200/50 p-4">
+      <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-lg border border-neutral-custom-200 p-4 relative">
         <div className="flex items-center gap-4">
           {/* Botones de control */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setPlaying(!playing)}
-              className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl active:scale-95"
+              className="w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all duration-200 shadow-sm active:scale-95"
               title={playing ? 'Pausar' : 'Reproducir'}
             >
               {playing ? (
@@ -47,7 +47,7 @@ export default function SimControls() {
 
             <button
               onClick={reset}
-              className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg hover:shadow-xl active:scale-95"
+              className="w-12 h-12 flex items-center justify-center bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200 shadow-sm active:scale-95"
               title="Reiniciar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,8 +59,8 @@ export default function SimControls() {
           {/* Información de tiempo y slider */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-medium text-gray-500">Tiempo de Simulación</div>
-              <div className="text-sm font-mono font-semibold text-gray-900">
+              <div className="text-xs font-medium text-neutral-custom-600">Tiempo de Simulación</div>
+              <div className="text-sm font-mono font-semibold text-neutral-custom-800">
                 {simTime.toISOString().slice(0, 19).replace('T', ' ')} UTC
               </div>
             </div>
@@ -74,16 +74,16 @@ export default function SimControls() {
                   max={maxTimestamp}
                   value={currentTimestamp}
                   onChange={handleSliderChange}
-                  className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer slider-thumb"
+                  className="w-full h-2 bg-neutral-custom-200 rounded-full appearance-none cursor-pointer slider-thumb"
                   style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${
+                    background: `linear-gradient(to right, #00897B 0%, #00897B ${
                       ((currentTimestamp - minTimestamp) / (maxTimestamp - minTimestamp)) * 100
-                    }%, #e5e7eb ${
+                    }%, #D1D5D8 ${
                       ((currentTimestamp - minTimestamp) / (maxTimestamp - minTimestamp)) * 100
-                    }%, #e5e7eb 100%)`
+                    }%, #D1D5D8 100%)`
                   }}
                 />
-                <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                <div className="flex justify-between text-[10px] text-neutral-custom-500 mt-1">
                   <span>{minTime.toISOString().slice(5, 16)}</span>
                   <span>{maxTime.toISOString().slice(5, 16)}</span>
                 </div>
@@ -93,11 +93,11 @@ export default function SimControls() {
 
           {/* Selector de velocidad */}
           <div className="shrink-0">
-            <div className="text-[10px] font-medium text-gray-500 mb-1 text-center">Velocidad</div>
+            <div className="text-[10px] font-medium text-neutral-custom-600 mb-1 text-center">Velocidad</div>
             <select
               value={timeScale}
               onChange={e => setTimeScale(Number(e.target.value))}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-xl bg-white hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors cursor-pointer"
+              className="px-3 py-2 text-sm border border-neutral-custom-200 rounded-lg bg-white hover:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-all duration-200 cursor-pointer text-neutral-custom-800"
             >
               <option value="30">30s/s</option>
               <option value="60">1min/s</option>
@@ -108,6 +108,17 @@ export default function SimControls() {
               <option value="3600">1h/s</option>
             </select>
           </div>
+
+          {/* Botón cerrar simulación - al final de la fila */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg hover:bg-neutral-custom-100 transition-all duration-200 shadow-sm active:scale-95 border border-neutral-custom-200"
+              title="Cerrar simulación"
+            >
+              <span className="text-2xl font-bold leading-none">×</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -117,28 +128,28 @@ export default function SimControls() {
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          background: #00897B;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(0, 137, 123, 0.4);
+          transition: all 0.3s;
         }
         .slider-thumb::-webkit-slider-thumb:hover {
           transform: scale(1.2);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+          box-shadow: 0 4px 12px rgba(0, 137, 123, 0.6);
         }
         .slider-thumb::-moz-range-thumb {
           width: 18px;
           height: 18px;
           border: none;
           border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          background: #00897B;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(0, 137, 123, 0.4);
+          transition: all 0.3s;
         }
         .slider-thumb::-moz-range-thumb:hover {
           transform: scale(1.2);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+          box-shadow: 0 4px 12px rgba(0, 137, 123, 0.6);
         }
       `}</style>
     </div>

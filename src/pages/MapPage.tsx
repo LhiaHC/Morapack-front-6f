@@ -3,6 +3,7 @@ import MapView from "../components/map/MapView"
 import SimControls from '../components/sim/SimControls'
 import OrderPanel from '../components/OrderPanel'
 import { SimProvider, useSimulation } from '../sim/SimContext'
+import { useUpload } from '../layouts/DashboardLayout'
 import {
   loadAirports,
   loadInstances,
@@ -29,6 +30,7 @@ function MapPageContent() {
   const [simulationStarted, setSimulationStarted] = useState(false)
   const [planningLoading, setPlanningLoading] = useState(false)
   const { setMinTime, setMaxTime, setSimTime } = useSimulation()
+  const { setUploadOpen, dataAlreadyLoaded } = useUpload()
 
   // Función para cargar datos básicos (aeropuertos, vuelos, pedidos)
   const loadData = useCallback(async () => {
@@ -125,6 +127,12 @@ function MapPageContent() {
     }
   }, [])
 
+  // Función para cerrar la simulación y volver al estado inicial
+  const closeSimulation = useCallback(() => {
+    setSimulationStarted(false)
+    console.log('🔙 MapPage: Simulación cerrada, volviendo a vista inicial')
+  }, [])
+
   // Listener para refrescar SOLO cuando la carga completa termine
   useEffect(() => {
     const handleUploadComplete = () => {
@@ -142,7 +150,7 @@ function MapPageContent() {
   // NO cargar datos automáticamente - esperar a que el usuario haga clic en "Cargar Datos"
 
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full h-screen bg-neutral-custom-50">
       <MapView
         airports={airports}
         instances={instances}
@@ -159,53 +167,61 @@ function MapPageContent() {
       />
 
       {/* SimControls solo se muestra si la simulación ha sido iniciada */}
-      {simulationStarted && <SimControls />}
+      {simulationStarted && <SimControls onClose={closeSimulation} />}
 
       {/* Botones de control - ocupan el mismo espacio que SimControls cuando este no está visible */}
       {!simulationStarted && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
-          <div className="bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200/50 p-4">
-            <div className="flex items-center justify-center gap-3">
-              {/* Botón Cargar Datos */}
-              <button
-                onClick={loadData}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium active:scale-95"
-                title="Cargar aeropuertos, vuelos y pedidos desde el backend"
-              >
-                <span className={loading ? 'animate-spin' : ''}>📥</span>
-                {loading ? 'Cargando...' : 'Cargar Datos'}
-              </button>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] flex items-center justify-center gap-3 px-4 backdrop-blur-sm">
+          {/* Botón 1: Cargar Datos (abrir diálogo upload - los datos se visualizan automáticamente) */}
+          <button
+            onClick={() => setUploadOpen(true)}
+            disabled={dataAlreadyLoaded}
+            className="h-11 px-6 bg-teal-600 hover:bg-teal-700 text-white font-semibold flex items-center gap-2 rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-[250ms] hover:shadow-[0_4px_8px_rgba(0,0,0,0.15)] active:scale-98"
+            title={dataAlreadyLoaded ? "Los datos ya han sido cargados y están visibles en el mapa" : "Cargar archivos al backend y visualizar en el mapa"}
+            style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            <span>{dataAlreadyLoaded ? '✅ Datos cargados' : 'Cargar Datos'}</span>
+          </button>
 
-              {/* Botón Iniciar Simulación - solo se habilita si hay datos cargados */}
-              <button
-                onClick={startSimulation}
-                disabled={!dataLoaded || planningLoading}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium active:scale-95"
-                title="Ejecutar planificación e iniciar simulación"
-              >
-                <span className={planningLoading ? 'animate-spin' : ''}>🚀</span>
-                {planningLoading ? 'Planificando...' : 'Iniciar Simulación'}
-              </button>
-            </div>
-          </div>
+          {/* Botón 2: Iniciar Simulación (planificación + simulación) */}
+          <button
+            onClick={startSimulation}
+            disabled={!dataAlreadyLoaded || planningLoading}
+            className="h-11 px-6 bg-teal-600 hover:bg-teal-700 text-white font-semibold flex items-center gap-2 rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-[250ms] hover:shadow-[0_4px_8px_rgba(0,0,0,0.15)] active:scale-98"
+            title="Ejecutar planificación e iniciar simulación"
+            style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
+          >
+            {planningLoading ? (
+              <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            )}
+            <span>{planningLoading ? 'Planificando...' : 'Iniciar Simulación'}</span>
+          </button>
         </div>
       )}
 
       {/* Indicador de aeropuertos */}
       {airports.length > 0 ? (
-        <div className="absolute top-20 left-4 z-[1000] bg-white text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200">
+        <div className="absolute top-20 left-4 z-10 bg-white text-neutral-custom-800 px-4 py-2 rounded-lg shadow-md border border-neutral-custom-200">
           <div className="text-sm font-medium">
             📍 {airports.length} aeropuertos
             {airports.filter(a => a.infiniteSource).length > 0 && (
-              <span className="ml-2 text-orange-600">
+              <span className="ml-2 text-teal-600">
                 ⭐ {airports.filter(a => a.infiniteSource).length} HUBs
               </span>
             )}
           </div>
         </div>
       ) : (
-        <div className="absolute top-20 left-4 z-[1000] bg-yellow-50 text-yellow-800 px-4 py-3 rounded-lg shadow-lg border border-yellow-200">
+        <div className="absolute top-20 left-4 z-10 bg-amber-50 text-amber-800 px-4 py-3 rounded-lg shadow-md border border-amber-200">
           <div className="text-sm font-medium mb-1">⚠️ No hay datos cargados</div>
           <div className="text-xs">
             Use el botón "Cargar Datos" para cargar información desde el backend
@@ -215,7 +231,7 @@ function MapPageContent() {
 
       {/* Mensaje de error flotante */}
       {error && (
-        <div className="absolute top-20 right-4 z-[1000] bg-red-50 text-red-800 px-4 py-3 rounded-lg shadow-lg border border-red-200 max-w-md">
+        <div className="absolute top-20 right-4 z-10 bg-red-50 text-red-800 px-4 py-3 rounded-lg shadow-md border border-red-200 max-w-md">
           <div className="text-sm font-medium mb-1">❌ Error</div>
           <div className="text-xs">{error}</div>
         </div>
