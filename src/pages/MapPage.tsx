@@ -9,6 +9,7 @@ import {
   loadAssignmentsSplit,
   loadTimeline
 } from '../sim/staticSource'
+import { PlanningService } from '../services/api'
 import type {
   AirportICAO,
   FlightInstance,
@@ -24,9 +25,12 @@ function MapPageContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+  const [dataLoaded, setDataLoaded] = useState(false)
+  const [simulationStarted, setSimulationStarted] = useState(false)
+  const [planningLoading, setPlanningLoading] = useState(false)
   const { setMinTime, setMaxTime, setSimTime } = useSimulation()
 
-  // Función para cargar/refrescar datos desde la API
+  // Función para cargar datos básicos (aeropuertos, vuelos, pedidos)
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
@@ -48,6 +52,7 @@ function MapPageContent() {
       setInstances(instancesData)
       setAssignments(assignmentsData)
       setTimeline(timelineData)
+      setDataLoaded(true)
 
       // Calcular rango de tiempo desde las instancias
       if (instancesData.length > 0) {
@@ -71,10 +76,54 @@ function MapPageContent() {
     }
   }, [setMinTime, setMaxTime, setSimTime])
 
-  // Cargar datos al montar (intentará API primero, fallback a JSON)
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  // Función para iniciar la simulación con planificación
+  const startSimulation = useCallback(async () => {
+    try {
+      setPlanningLoading(true)
+      setError(null)
+
+      console.log('🚀 MapPage: Iniciando simulación con planificación...')
+
+      // Llamar a la API de planificación
+      const response = await PlanningService.getWeeklyPlanning()
+
+      console.log('📊 MapPage: Respuesta de planificación:', response)
+
+      // Procesar la respuesta de planificación
+      // Dependiendo del formato de la respuesta, actualizar la estructura de datos
+      if (response.data) {
+        // Aquí procesamos la respuesta de planificación
+        // El formato exacto depende de lo que retorne el backend
+        // Por ahora asumimos que retorna la misma estructura que loadAssignmentsSplit
+
+        let planningData: AssignmentByOrder[] = []
+
+        if (response.data.data?.assignments) {
+          planningData = response.data.data.assignments
+        } else if (response.data.assignments) {
+          planningData = response.data.assignments
+        } else if (Array.isArray(response.data)) {
+          planningData = response.data
+        }
+
+        console.log('📦 MapPage: Planificación procesada:', planningData.length, 'pedidos')
+
+        // Actualizar assignments con los datos de planificación
+        if (planningData.length > 0) {
+          setAssignments(planningData)
+        }
+      }
+
+      setSimulationStarted(true)
+      setPlanningLoading(false)
+
+      console.log('✅ MapPage: Simulación iniciada exitosamente')
+    } catch (err) {
+      console.error('❌ MapPage: Error al iniciar simulación:', err)
+      setError(err instanceof Error ? err.message : 'Failed to start simulation')
+      setPlanningLoading(false)
+    }
+  }, [])
 
   // Listener para refrescar SOLO cuando la carga completa termine
   useEffect(() => {
@@ -90,32 +139,7 @@ function MapPageContent() {
     }
   }, [loadData])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="text-lg mb-2">🔄 Cargando datos desde API backend...</div>
-          <div className="text-sm text-gray-500">Conectando con http://localhost:8080</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="text-red-600 mb-2">❌ Error: {error}</div>
-          <button
-            onClick={loadData}
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            🔄 Reintentar
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // NO cargar datos automáticamente - esperar a que el usuario haga clic en "Cargar Datos"
 
   return (
     <div className="relative w-full h-screen">
@@ -133,18 +157,40 @@ function MapPageContent() {
         onOrderSelect={setSelectedOrderId}
         selectedOrderId={selectedOrderId}
       />
-      <SimControls />
 
-      {/* Botón de refresco */}
-      <button
-        onClick={loadData}
-        disabled={loading}
-        className="absolute top-20 right-4 z-[1000] bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        title="Refrescar datos desde el backend"
-      >
-        <span className={loading ? 'animate-spin' : ''}>🔄</span>
-        {loading ? 'Cargando...' : 'Refrescar Mapa'}
-      </button>
+      {/* SimControls solo se muestra si la simulación ha sido iniciada */}
+      {simulationStarted && <SimControls />}
+
+      {/* Botones de control - ocupan el mismo espacio que SimControls cuando este no está visible */}
+      {!simulationStarted && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
+          <div className="bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200/50 p-4">
+            <div className="flex items-center justify-center gap-3">
+              {/* Botón Cargar Datos */}
+              <button
+                onClick={loadData}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium active:scale-95"
+                title="Cargar aeropuertos, vuelos y pedidos desde el backend"
+              >
+                <span className={loading ? 'animate-spin' : ''}>📥</span>
+                {loading ? 'Cargando...' : 'Cargar Datos'}
+              </button>
+
+              {/* Botón Iniciar Simulación - solo se habilita si hay datos cargados */}
+              <button
+                onClick={startSimulation}
+                disabled={!dataLoaded || planningLoading}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium active:scale-95"
+                title="Ejecutar planificación e iniciar simulación"
+              >
+                <span className={planningLoading ? 'animate-spin' : ''}>🚀</span>
+                {planningLoading ? 'Planificando...' : 'Iniciar Simulación'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Indicador de aeropuertos */}
       {airports.length > 0 ? (
@@ -160,10 +206,18 @@ function MapPageContent() {
         </div>
       ) : (
         <div className="absolute top-20 left-4 z-[1000] bg-yellow-50 text-yellow-800 px-4 py-3 rounded-lg shadow-lg border border-yellow-200">
-          <div className="text-sm font-medium mb-1">⚠️ No hay aeropuertos cargados</div>
+          <div className="text-sm font-medium mb-1">⚠️ No hay datos cargados</div>
           <div className="text-xs">
-            Use el botón "Cargar data" para subir archivos al backend
+            Use el botón "Cargar Datos" para cargar información desde el backend
           </div>
+        </div>
+      )}
+
+      {/* Mensaje de error flotante */}
+      {error && (
+        <div className="absolute top-20 right-4 z-[1000] bg-red-50 text-red-800 px-4 py-3 rounded-lg shadow-lg border border-red-200 max-w-md">
+          <div className="text-sm font-medium mb-1">❌ Error</div>
+          <div className="text-xs">{error}</div>
         </div>
       )}
     </div>
