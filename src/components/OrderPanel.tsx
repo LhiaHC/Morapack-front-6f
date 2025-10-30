@@ -74,7 +74,7 @@ export default function OrderPanel({
       {/* Botón flotante para abrir/cerrar */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed top-20 right-4 z-[45] w-12 h-12 flex items-center justify-center bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-full shadow-2xl hover:from-indigo-600 hover:to-indigo-700 transition-all hover:scale-110 active:scale-95 ${
+        className={`fixed top-20 right-4 z-[45] w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full shadow-lg hover:bg-teal-700 transition-all duration-300 hover:scale-110 active:scale-95 ${
           isOpen ? 'rotate-180' : ''
         }`}
         title={isOpen ? 'Ocultar panel de pedidos' : 'Mostrar panel de pedidos'}
@@ -86,16 +86,16 @@ export default function OrderPanel({
 
       {/* Panel lateral deslizante */}
       <div
-        className={`fixed top-20 right-4 bottom-20 w-96 z-[44] transition-transform duration-300 ease-out ${
+        className={`fixed top-20 right-4 bottom-20 w-96 z-[44] transition-all duration-300 ${
           isOpen ? 'translate-x-0' : 'translate-x-[calc(100%+1rem)]'
         }`}
       >
-        <div className="h-full bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200/50 flex flex-col overflow-hidden">
+        <div className="h-full bg-white/95 backdrop-blur-md rounded-lg shadow-lg border border-neutral-custom-200 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200/50 bg-gradient-to-br from-indigo-50 to-white">
+          <div className="p-4 border-b border-neutral-custom-200 bg-gradient-to-br from-teal-50 to-white">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-gray-900">Pedidos</h2>
-              <div className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">
+              <h2 className="text-lg font-bold text-neutral-custom-800">Pedidos</h2>
+              <div className="px-2 py-1 bg-teal-100 text-teal-700 text-xs font-semibold rounded-lg">
                 {assignments.length}
               </div>
             </div>
@@ -105,9 +105,9 @@ export default function OrderPanel({
                 placeholder="Buscar por Order ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                className="w-full pl-10 pr-4 py-2.5 border border-neutral-custom-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-all duration-200 text-sm text-neutral-custom-800 bg-white"
               />
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-custom-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -116,7 +116,7 @@ export default function OrderPanel({
           {/* Lista de pedidos */}
           {!selectedOrder && (
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              <div className="text-xs text-gray-500 mb-3 font-medium">
+              <div className="text-xs text-neutral-custom-500 mb-3 font-medium">
                 {filteredOrders.length} resultado(s)
               </div>
               {filteredOrders.map(order => {
@@ -125,23 +125,23 @@ export default function OrderPanel({
                   <button
                     key={order.orderId}
                     onClick={() => handleOrderSelect(order.orderId)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all group ${
-                      isSelected 
-                        ? 'border-indigo-500 bg-indigo-100/70 shadow-md' 
-                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50'
+                    className={`w-full text-left p-4 rounded-lg border transition-all duration-200 group ${
+                      isSelected
+                        ? 'border-teal-600 bg-teal-50 shadow-sm'
+                        : 'border-neutral-custom-200 hover:border-teal-600 hover:bg-teal-50/50'
                     }`}
                   >
-                    <div className={`font-semibold transition-colors ${
-                      isSelected ? 'text-indigo-700' : 'text-gray-900 group-hover:text-indigo-700'
+                    <div className={`font-semibold transition-all duration-200 ${
+                      isSelected ? 'text-teal-700' : 'text-neutral-custom-800 group-hover:text-teal-700'
                     }`}>
                       {order.orderId}
                       {isSelected && (
-                        <span className="ml-2 text-xs px-2 py-0.5 bg-indigo-500 text-white rounded-full">
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-teal-600 text-white rounded-lg">
                           Ver ruta
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                    <div className="text-sm text-neutral-custom-600 mt-1 flex items-center gap-2">
                       <span className="inline-flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -154,12 +154,12 @@ export default function OrderPanel({
               })}
               {filteredOrders.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 mb-2">
+                  <div className="text-neutral-custom-300 mb-2">
                     <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <p className="text-gray-500 text-sm">No se encontraron pedidos</p>
+                  <p className="text-neutral-custom-500 text-sm">No se encontraron pedidos</p>
                 </div>
               )}
             </div>
@@ -171,7 +171,7 @@ export default function OrderPanel({
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => handleOrderSelect(null)}
-                  className="flex-1 flex items-center justify-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium text-sm transition-colors py-2 rounded-lg hover:bg-indigo-50"
+                  className="flex-1 flex items-center justify-center gap-2 text-teal-600 hover:text-teal-700 font-medium text-sm transition-all duration-200 py-2 rounded-lg hover:bg-teal-50"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -180,15 +180,15 @@ export default function OrderPanel({
                 </button>
                 <button
                   onClick={() => handleOrderSelect(null)}
-                  className="px-4 py-2 bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-medium text-sm rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+                  className="px-4 py-2 bg-teal-600 text-white font-medium text-sm rounded-lg hover:bg-teal-700 transition-all duration-200 shadow-sm"
                   title="Ocultar rutas en el mapa"
                 >
                   Ocultar rutas
                 </button>
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <h3 className="text-xl font-bold text-neutral-custom-800 mb-2 flex items-center gap-2">
+                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 {selectedOrder.orderId}

@@ -17,13 +17,16 @@ interface FlightLayerProps {
   selectedOrderId?: string | null
 }
 
-// Icono personalizado para vuelos
-const PLANE_ICON = L.divIcon({
-  className: 'plane-marker',
-  html: '<div style="font-size: 24px;">✈</div>',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-})
+// Función para crear icono de avión con color personalizado
+const createPlaneIcon = (isHighlighted: boolean = false) => {
+  const color = isHighlighted ? '#3b82f6' : '#000000' // Azul si está resaltado, negro por defecto
+  return L.divIcon({
+    className: 'plane-marker',
+    html: `<div style="font-size: 24px; color: ${color}; transition: color 0.3s ease;">✈</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  })
+}
 
 // Iconos para aeropuertos
 const AIRPORT_ICON = L.divIcon({
@@ -188,8 +191,10 @@ export default function FlightLayer({
 
     // Actualizar o crear markers para cada instancia en vuelo
     instances.forEach(instance => {
-      const depTime = new Date(instance.depUtc).getTime()
-      const arrTime = new Date(instance.arrUtc).getTime()
+      // ✅ FORZAR INTERPRETACIÓN UTC: Usar Date.parse() en lugar de new Date()
+      // Esto evita conversión automática a zona horaria local
+      const depTime = Date.parse(instance.depUtc)
+      const arrTime = Date.parse(instance.arrUtc)
       
       // Verificar si el vuelo está activo
       const isActive = now >= depTime && now <= arrTime
@@ -218,6 +223,15 @@ export default function FlightLayer({
       if (!originAirport || !destAirport) return
 
       const progress = clamp((now - depTime) / (arrTime - depTime), 0, 1)
+      
+      // Validar que las fechas estén en orden correcto
+      if (arrTime < depTime) {
+        console.error(`❌ ERROR: Vuelo ${instance.instanceId} tiene fechas invertidas!`)
+        console.error(`   depUtc: ${instance.depUtc} → timestamp: ${depTime}`)
+        console.error(`   arrUtc: ${instance.arrUtc} → timestamp: ${arrTime}`)
+        return
+      }
+      
       const lat = lerp(originAirport.lat, destAirport.lat, progress)
       const lon = lerp(originAirport.lon, destAirport.lon, progress)
 
@@ -232,8 +246,9 @@ export default function FlightLayer({
 
       // Crear o actualizar marker
       if (!markers[instance.instanceId]) {
+        const isHighlighted = selectedOrderInstancesRef.current.has(instance.instanceId)
         const marker = L.marker([lat, lon], {
-          icon: PLANE_ICON,
+          icon: createPlaneIcon(isHighlighted),
           title: instance.instanceId
         })
 
@@ -241,13 +256,12 @@ export default function FlightLayer({
           originAirport.lat, originAirport.lon,
           destAirport.lat, destAirport.lon
         )
-        
+
         const element = marker.getElement()
         if (element) {
-          const isHighlighted = selectedOrderInstancesRef.current.has(instance.instanceId)
           if (isHighlighted) {
             element.style.transform = `rotate(${rotation}deg) scale(1.5)`
-            element.style.filter = 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.8))'
+            element.style.filter = 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))'
             element.style.zIndex = '1000'
           } else {
             element.style.transform = `rotate(${rotation}deg)`
@@ -336,7 +350,7 @@ export default function FlightLayer({
   useEffect(() => {
     // Crear set de instanceIds del pedido seleccionado
     const orderInstances = new Set<string>()
-    
+
     if (selectedOrderId) {
       const order = assignments.find(a => a.orderId === selectedOrderId)
       if (order) {
@@ -347,21 +361,29 @@ export default function FlightLayer({
         })
       }
     }
-    
+
     selectedOrderInstancesRef.current = orderInstances
-    
+
     // Forzar actualización de los marcadores existentes
     Object.values(markersRef.current).forEach(({ marker, instanceId }) => {
+      const isHighlighted = orderInstances.has(instanceId)
+
+      // Actualizar icono con el color correspondiente
+      marker.setIcon(createPlaneIcon(isHighlighted))
+
       const element = marker.getElement()
       if (element) {
-        if (orderInstances.has(instanceId)) {
-          // Avión seleccionado: resaltar con borde y escala
-          element.style.transform = `${element.style.transform.includes('rotate') ? element.style.transform : ''} scale(1.5)`
-          element.style.filter = 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.8))'
+        // Obtener la rotación actual
+        const rotationMatch = element.style.transform.match(/rotate\(([^)]+)\)/)
+        const rotation = rotationMatch ? rotationMatch[1] : '0deg'
+
+        if (isHighlighted) {
+          // Avión seleccionado: resaltar con azul, sombra azul y escala
+          element.style.transform = `rotate(${rotation}) scale(1.5)`
+          element.style.filter = 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))'
           element.style.zIndex = '1000'
         } else {
           // Avión no seleccionado: estilo normal
-          const rotation = element.style.transform.match(/rotate\(([^)]+)\)/)?.[1] || '0deg'
           element.style.transform = `rotate(${rotation})`
           element.style.filter = 'none'
           element.style.zIndex = '500'

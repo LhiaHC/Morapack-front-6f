@@ -12,10 +12,10 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant = 'default', size = 'md', ...props }, ref) => {
-  const base = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+  const base = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
   const variants = {
-    default: 'bg-gray-600 text-white hover:bg-gray-500 focus:ring-gray-400',
-    ghost: 'bg-transparent text-inherit hover:bg-black/10 dark:hover:bg-white/10 focus:ring-gray-400',
+    default: 'bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-500 shadow-sm',
+    ghost: 'bg-transparent text-inherit hover:bg-white/20 focus:ring-teal-500',
   } as const;
   const sizes = { md: 'h-9 px-3 text-sm', lg: 'h-11 px-6 text-base' } as const;
   return <button ref={ref} className={cn(base, variants[variant], sizes[size], className)} {...props} />;
@@ -54,8 +54,8 @@ function SheetContent({ className, children, side }: { className?: string; child
 
   return (
     <>
-      <div aria-hidden onClick={() => ctx.setOpen(false)} className={cn('fixed inset-0 z-[60] bg-black/40 transition-opacity', ctx.open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none')} />
-      <aside role="dialog" aria-modal="true" className={cn('sheet-content fixed top-0 z-[70] h-screen w-80 bg-[hsl(var(--sidebar-bg))] dark:bg-neutral-900 shadow-xl transition-transform', realSide === 'left' ? 'left-0' : 'right-0', ctx.open ? 'translate-x-0' : realSide === 'left' ? '-translate-x-full' : 'translate-x-full', className)}>
+      <div aria-hidden onClick={() => ctx.setOpen(false)} className={cn('fixed inset-0 z-[60] bg-black/40 transition-all duration-300', ctx.open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none')} />
+      <aside role="dialog" aria-modal="true" className={cn('sheet-content fixed top-0 z-[70] h-screen w-80 bg-white shadow-xl transition-all duration-300', realSide === 'left' ? 'left-0' : 'right-0', ctx.open ? 'translate-x-0' : realSide === 'left' ? '-translate-x-full' : 'translate-x-full', className)}>
         {children}
       </aside>
     </>
@@ -63,8 +63,8 @@ function SheetContent({ className, children, side }: { className?: string; child
 }
 
 function SheetHeader({ className, children }: { className?: string; children?: React.ReactNode }) { return <div className={cn('px-4 py-3', className)}>{children}</div>; }
-function SheetTitle({ className, children }: { className?: string; children?: React.ReactNode }) { return <h2 className={cn('text-lg font-semibold', className)}>{children}</h2>; }
-function Separator({ className = '' }: { className?: string }) { return <div className={cn('h-px w-full bg-neutral-200 dark:bg-neutral-800', className)} />; }
+function SheetTitle({ className, children }: { className?: string; children?: React.ReactNode }) { return <h2 className={cn('text-lg font-semibold text-neutral-custom-800', className)}>{children}</h2>; }
+function Separator({ className = '' }: { className?: string }) { return <div className={cn('h-px w-full bg-neutral-custom-200', className)} />; }
 
 export interface TopbarProps {
   openLeft: boolean;
@@ -94,7 +94,7 @@ export default function Topbar({
   return (
     <header
       data-testid="topbar"
-      className="fixed inset-x-0 top-0 z-50 h-14 bg-gray-600 text-white shadow"
+      className="fixed inset-x-0 top-0 z-50 h-14 bg-teal-600 text-white shadow-md"
     >
       <div className="grid h-full w-full grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:px-4 md:px-6">
 
@@ -105,7 +105,7 @@ export default function Topbar({
               <Button
                 data-testid="open-sidebar"
                 variant="ghost"
-                className="text-white hover:bg-gray-500"
+                className="text-white hover:bg-teal-700"
                 aria-label="Abrir menú"
                 title="Abrir menú"
               >
@@ -113,9 +113,9 @@ export default function Topbar({
               </Button>
             </SheetTrigger>
             {/* Panel del sidebar */}
-            <SheetContent className="w-[260px] sm:w-[280px] p-0 bg-[hsl(var(--sidebar-bg))]">
+            <SheetContent className="w-[260px] sm:w-[280px] p-0 bg-white">
               <SheetHeader>
-                <SheetTitle className="text-left text-[hsl(var(--sidebar-foreground))]">
+                <SheetTitle className="text-left text-neutral-custom-800">
                   Menú principal
                 </SheetTitle>
               </SheetHeader>
@@ -129,30 +129,18 @@ export default function Topbar({
 
         {/* CENTRO: Título simple */}
         <div className="flex items-center justify-center">
-          <h1 className="text-lg font-semibold text-white">MoraPack</h1>
+          <h1 className="text-lg font-semibold text-white tracking-wide">MoraPack</h1>
         </div>
 
-        {/* DERECHA: Más información y Cargar data */}
+        {/* DERECHA: Más información */}
         <div className="flex items-center justify-end gap-2">
-          {/* Botón Cargar data (opcional, solo en desktop) */}
-          <Button
-            variant="ghost"
-            className="text-white hover:bg-gray-500 whitespace-nowrap hidden sm:flex disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => setUploadOpen(true)}
-            disabled={dataAlreadyLoaded}
-            title={dataAlreadyLoaded ? "Los datos ya han sido cargados" : "Cargar archivos al backend"}
-          >
-            <span className="mr-2">{dataAlreadyLoaded ? '✅' : '📁'}</span>
-            <span>{dataAlreadyLoaded ? 'Datos cargados' : 'Cargar data'}</span>
-          </Button>
-
           {/* Más información */}
           <Sheet open={openRight} onOpenChange={setOpenRight} side="right">
             <SheetTrigger asChild>
               <Button
                 data-testid="open-info"
                 variant="ghost"
-                className="text-white hover:bg-gray-500"
+                className="text-white hover:bg-teal-700"
                 aria-label="Abrir información"
                 title="Más información"
               >

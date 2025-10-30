@@ -8,6 +8,23 @@ function cn(...v: (string | false | null | undefined)[]) {
   return v.filter(Boolean).join(' ')
 }
 
+// Context para compartir estado de upload con las páginas
+type UploadContextType = {
+  uploadOpen: boolean
+  setUploadOpen: (open: boolean) => void
+  dataAlreadyLoaded: boolean
+}
+
+export const UploadContext = React.createContext<UploadContextType | null>(null)
+
+export function useUpload() {
+  const context = React.useContext(UploadContext)
+  if (!context) {
+    throw new Error('useUpload debe usarse dentro de DashboardLayout')
+  }
+  return context
+}
+
 // --- UI mínimos (Button, Sheet, Separator, ScrollArea) - implementaciones pequeñas y autocontenidas
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'default' | 'ghost';
@@ -40,7 +57,6 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
 
   const [uploadOpen, setUploadOpen] = React.useState(false)
   const [dataAlreadyLoaded, setDataAlreadyLoaded] = React.useState(false)
-  const [checkingDataStatus, setCheckingDataStatus] = React.useState(true)
   const [uploading, setUploading] = React.useState(false)
   const [uploadProgress, setUploadProgress] = React.useState<{
     current: string;
@@ -61,8 +77,6 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         }
       } catch (error) {
         console.error('Error verificando estado de datos:', error)
-      } finally {
-        setCheckingDataStatus(false)
       }
     }
 
@@ -84,29 +98,7 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
     })
 
     try {
-      // === Vuelos ===
-      if (files.flights) {
-        setUploadProgress(prev => ({ ...prev, current: 'Cargando vuelos...' }))
-        try {
-          const response = await UploadService.uploadFlights(files.flights)
-          console.log('✅ Vuelos:', response.data)
-
-          setUploadProgress(prev => ({
-            ...prev,
-            completed: [...prev.completed, 'vuelos'],
-            current: ''
-          }))
-        } catch (error) {
-          console.error('❌ Error al subir vuelos:', error)
-          setUploadProgress(prev => ({
-            ...prev,
-            completed: [...prev.completed, 'vuelos'],
-            current: ''
-          }))
-        }
-      }
-
-      // === Aeropuertos ===
+      // === Aeropuertos === (PRIMERO: sin dependencias)
       if (files.airports) {
         setUploadProgress(prev => ({ ...prev, current: 'Cargando aeropuertos...' }))
         try {
@@ -128,7 +120,29 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         }
       }
 
-      // === Pedidos ===
+      // === Vuelos === (SEGUNDO: dependen de aeropuertos)
+      if (files.flights) {
+        setUploadProgress(prev => ({ ...prev, current: 'Cargando vuelos...' }))
+        try {
+          const response = await UploadService.uploadFlights(files.flights)
+          console.log('✅ Vuelos:', response.data)
+
+          setUploadProgress(prev => ({
+            ...prev,
+            completed: [...prev.completed, 'vuelos'],
+            current: ''
+          }))
+        } catch (error) {
+          console.error('❌ Error al subir vuelos:', error)
+          setUploadProgress(prev => ({
+            ...prev,
+            completed: [...prev.completed, 'vuelos'],
+            current: ''
+          }))
+        }
+      }
+
+      // === Pedidos === (TERCERO: dependen de vuelos)
       if (files.orders) {
         setUploadProgress(prev => ({ ...prev, current: 'Cargando pedidos...' }))
         try {
@@ -171,24 +185,25 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
 
   // === Render principal ===
   return (
-    <div className="fixed inset-0 bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-      {/* Topbar */}
-      <Topbar
-        openLeft={openLeft}
-        setOpenLeft={setOpenLeft}
-        openRight={openRight}
-        setOpenRight={setOpenRight}
-        uploadOpen={uploadOpen}
-        setUploadOpen={setUploadOpen}
-        handleUploadConfirm={handleUploadConfirm}
-        SidebarContent={SidebarContent}
-        dataAlreadyLoaded={dataAlreadyLoaded}
-      />
+    <UploadContext.Provider value={{ uploadOpen, setUploadOpen, dataAlreadyLoaded }}>
+      <div className="fixed inset-0 bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+        {/* Topbar */}
+        <Topbar
+          openLeft={openLeft}
+          setOpenLeft={setOpenLeft}
+          openRight={openRight}
+          setOpenRight={setOpenRight}
+          uploadOpen={uploadOpen}
+          setUploadOpen={setUploadOpen}
+          handleUploadConfirm={handleUploadConfirm}
+          SidebarContent={SidebarContent}
+          dataAlreadyLoaded={dataAlreadyLoaded}
+        />
 
-      {/* Main content */}
-      <main className="absolute top-14 left-0 right-0 bottom-0 overflow-hidden">
-        <div className="w-full h-full">{children ? children : <Outlet />}</div>
-      </main>
+        {/* Main content */}
+        <main className="absolute top-14 left-0 right-0 bottom-0 overflow-hidden">
+          <div className="w-full h-full">{children ? children : <Outlet />}</div>
+        </main>
 
       {/* Overlay de carga de archivos */}
       {uploading && (
@@ -200,7 +215,7 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
                 <span className="text-3xl animate-bounce">📦</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Cargando archivos al backend
+                Cargando archivos al sistema
               </h3>
               <p className="text-sm text-gray-600">
                 Por favor espere mientras se procesan los datos...
@@ -253,5 +268,6 @@ export default function DashboardLayout({ children, SidebarContent }: DashboardL
         </div>
       )}
     </div>
+    </UploadContext.Provider>
   )
 }

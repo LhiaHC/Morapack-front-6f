@@ -43,47 +43,118 @@ export async function loadAirports(): Promise<AirportICAO[]> {
 }
 
 /**
- * Carga instancias de vuelos desde /public/flight_instances_icao.json
+ * Carga instancias de vuelos desde la API del backend
+ * GET /api/vuelos/instances2 (con paginación)
  */
 export async function loadInstances(): Promise<FlightInstance[]> {
-  const response = await fetch('/flight_instances_icao.json')
-  if (!response.ok) {
-    throw new Error(`Failed to load flight instances: ${response.statusText}`)
-  }
-  return response.json()
-}
-
-/**
- * Carga asignaciones por pedido (split-aware) desde /public/assignments_split_icao.json
- */
-export async function loadAssignmentsSplit(): Promise<AssignmentByOrder[]> {
-  const response = await fetch('/assignments_split_icao.json')
-  if (!response.ok) {
-    throw new Error(`Failed to load assignments: ${response.statusText}`)
-  }
-  return response.json()
-}
-
-/**
- * Carga eventos de timeline (opcional) desde /public/timeline_split_icao.json
- * Si el archivo no existe, retorna array vacío
- */
-export async function loadTimeline(): Promise<TimelineEvent[]> {
   try {
-    const response = await fetch('/timeline_split_icao.json')
-    if (!response.ok) {
-      console.warn('Timeline file not found, using empty timeline')
+    console.log('🔄 Cargando instancias de vuelos desde API backend...')
+    
+    // Usar UploadService.getFlightInstances que llama a /api/vuelos/instances2
+    const response = await UploadService.getFlightInstances(0, 50000)
+
+    console.log('📊 Respuesta de API instancias (raw):', response)
+    console.log('📊 response.data:', response.data)
+
+    // El backend retorna: { status, mensaje, data: { vuelos: [...], totalItems: N } }
+    // Necesitamos acceder a data.data.vuelos
+    let instances: FlightInstance[] = []
+
+    if (response.data?.data?.vuelos) {
+      // Formato: { data: { vuelos: [...] } }
+      instances = response.data.data.vuelos
+      console.log(`✅ Instancias de vuelos desde data.data.vuelos: ${instances.length} registros`)
+    } else if (response.data?.vuelos) {
+      // Formato alternativo: { vuelos: [...] }
+      instances = response.data.vuelos
+      console.log(`✅ Instancias de vuelos desde vuelos: ${instances.length} registros`)
+    } else if (Array.isArray(response.data)) {
+      // Formato directo: [...]
+      instances = response.data
+      console.log(`✅ Instancias de vuelos (array directo): ${instances.length} registros`)
+    } else {
+      console.warn('⚠️ Formato inesperado de API instancias')
+      console.warn('Estructura recibida:', JSON.stringify(response.data, null, 2))
       return []
     }
-    return response.json()
+
+    if (instances.length > 0) {
+      console.log('✈️ Primera instancia:', instances[0])
+      console.log('✈️ Última instancia:', instances[instances.length - 1])
+    } else {
+      console.warn('⚠️ No se encontraron instancias de vuelos')
+    }
+
+    return instances
   } catch (error) {
-    console.warn('Failed to load timeline, using empty timeline:', error)
+    console.error('❌ Error al cargar instancias de vuelos desde API:', error)
+    console.error('⚠️ Retornando array vacío.')
     return []
   }
 }
 
 /**
- * Alternativa: carga todo desde un único archivo bundle
+ * Carga asignaciones por pedido (split-aware) desde la API del backend
+ * GET /api/asignaciones
+ */
+export async function loadAssignmentsSplit(): Promise<AssignmentByOrder[]> {
+  try {
+    console.log('🔄 Cargando asignaciones desde API backend...')
+    
+    // Usar UploadService.getAssignments que llama a /api/asignaciones
+    const response = await UploadService.getAssignments()
+
+    console.log('📊 Respuesta de API asignaciones:', response)
+
+    // El backend retorna: { status, mensaje, data: { assignments: [...] } }
+    let assignments: AssignmentByOrder[] = []
+
+    if (response.data?.data?.assignments) {
+      // Formato: { data: { assignments: [...] } }
+      assignments = response.data.data.assignments
+      console.log(`✅ Asignaciones desde data.data.assignments: ${assignments.length} pedidos`)
+    } else if (response.data?.assignments) {
+      // Formato alternativo: { assignments: [...] }
+      assignments = response.data.assignments
+      console.log(`✅ Asignaciones desde assignments: ${assignments.length} pedidos`)
+    } else if (Array.isArray(response.data)) {
+      // Formato directo: [...]
+      assignments = response.data
+      console.log(`✅ Asignaciones (array directo): ${assignments.length} pedidos`)
+    } else {
+      console.warn('⚠️ Formato inesperado de API asignaciones')
+      console.warn('Estructura recibida:', JSON.stringify(response.data, null, 2))
+      return []
+    }
+
+    if (assignments.length > 0) {
+      const planned = assignments.filter(a => a.splits && a.splits.length > 0).length
+      console.log(`📦 ${assignments.length} pedidos totales (${planned} con planificación)`)
+      console.log('📦 Primera asignación:', assignments[0])
+    } else {
+      console.warn('⚠️ No se encontraron asignaciones')
+    }
+
+    return assignments
+  } catch (error) {
+    console.error('❌ Error al cargar asignaciones desde API:', error)
+    console.error('⚠️ Retornando array vacío.')
+    return []
+  }
+}
+
+/**
+ * Carga eventos de timeline (opcional)
+ * Por ahora retorna array vacío - se puede implementar endpoint específico si se necesita
+ */
+export async function loadTimeline(): Promise<TimelineEvent[]> {
+  console.log('ℹ️ Timeline no implementado, retornando array vacío')
+  return []
+}
+
+/**
+ * Carga todos los datos necesarios para la simulación desde el backend
+ * Equivalente al bundle anterior pero usando APIs individuales
  */
 export async function loadBundle(): Promise<{
   airports: AirportICAO[]
@@ -91,9 +162,30 @@ export async function loadBundle(): Promise<{
   assignments_split: AssignmentByOrder[]
   timeline_split: TimelineEvent[]
 }> {
-  const response = await fetch('/bundle_split_icao.json')
-  if (!response.ok) {
-    throw new Error(`Failed to load bundle: ${response.statusText}`)
+  console.log('📦 Cargando bundle completo desde APIs del backend...')
+
+  try {
+    const [airports, flight_instances, assignments_split, timeline_split] = await Promise.all([
+      loadAirports(),
+      loadInstances(),
+      loadAssignmentsSplit(),
+      loadTimeline()
+    ])
+
+    console.log('✅ Bundle cargado exitosamente desde APIs:')
+    console.log(`   - Aeropuertos: ${airports.length}`)
+    console.log(`   - Instancias de vuelos: ${flight_instances.length}`)
+    console.log(`   - Asignaciones: ${assignments_split.length}`)
+    console.log(`   - Eventos timeline: ${timeline_split.length}`)
+
+    return {
+      airports,
+      flight_instances,
+      assignments_split,
+      timeline_split
+    }
+  } catch (error) {
+    console.error('❌ Error cargando bundle desde APIs:', error)
+    throw error
   }
-  return response.json()
 }

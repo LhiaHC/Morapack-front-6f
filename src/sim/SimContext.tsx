@@ -17,7 +17,7 @@ interface SimContextType {
 }
 
 const defaultConfig: SimConfig = {
-  startDateISO: '2025-10-20T00:00:00Z' as ISODateTime,
+  startDateISO: '2025-10-29T00:00:00Z' as ISODateTime, // Actualizado a hoy
   days: 7,
   timeScale: 120, // 1s real = 2min simulados
   airportCapacityWindowMin: 60,
