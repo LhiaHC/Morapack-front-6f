@@ -1,0 +1,269 @@
+.info-vuelos-contenedor {
+    width: 300px;
+    background-color: white;
+    padding: 20px;
+    padding-bottom: 8px;
+    border-radius: 20px;
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    transform: translateX(0);
+    opacity: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .info-vuelos-contenedor.visible {
+    transform: translateX(5%);
+    opacity: 1;
+  }
+  
+  .info-vuelos-contenedor.hidden {
+    transform: translateX(-20%);
+    opacity: 0;
+  }
+
+
+.resumen-vuelos {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    margin-top: 6px;
+}
+
+.resumen-item {
+    text-align: center;
+    place-content: center;
+}
+
+.resumen-valor {
+    display: block;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.resumen-etiqueta {
+    display: block;
+    font-size: 14px;
+    color: #555;
+}
+
+.column .resumen-valor {
+    font-size: 16px;
+}
+
+.column .resumen-etiqueta {
+    font-size: 12px;
+}
+
+.info-fecha {
+    margin-bottom: 4px;
+}
+
+.fecha-item {
+    margin-bottom: 6px;
+    margin-top: 6px;    
+}
+
+.fecha-etiqueta {
+    display: block;
+    font-size: 14px;
+    color: #7a7a7a;
+}
+
+.fecha-valor {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.leyenda {
+    margin-top: 5px;
+}
+
+.leyenda-titulo {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.leyenda-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.icono-leyenda {
+    width: 20px;
+    height: 20px;
+    place-self: center;
+}
+
+.vuelo-seleccionado {
+    background-color: #0F62FE;
+}
+
+.ruta-vuelo-seleccionado {
+    width: 20px;
+    height: 2px;
+    background-color: #FF7F09;
+    border-top: 2px dotted #FF7F09;
+    margin-right: 10px;
+    place-self: center;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+  }
+
+.carga-titulos {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.carga-titulo {
+    flex: 1;
+    text-align: center;
+}
+
+.leyenda-etiqueta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    text-align: center;
+}
+
+.toggle-button {
+    background-color: #fff;
+    border-radius: 0 50% 50% 0;
+    width: 30px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: black;
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1);
+    margin: 0px;
+    transition: transform 0.3s ease;
+    z-index: 9;
+    font-weight: bold;
+  }
+
+  .toggle-button:hover {
+    transform: scale(1.1);
+  }
+  
+  .info-vuelos-contenedor.hidden + .toggle-button {
+    transform: translateX(0);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+  }
+  
+  .info-vuelos-contenedor.hidden + .toggle-button:hover {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+  }
+  
+  .info-vuelos-contenedor.visible + .toggle-button {
+    margin-left: -1px;
+    transform: translateX(-100%);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+  }
+  
+  .info-vuelos-contenedor.visible + .toggle-button:hover {
+    transform: translateX(-100%) scale(1.1);
+    transition: transform 0.3s ease;
+  }
+
+.info-vuelos-wrapper {
+    position: absolute;
+    top: 25%;
+    left: 2.5%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}
+
+.leyenda-wrapper {
+    position: absolute;
+    bottom: 25%;
+    left: 2.5%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}
+
+.leyenda-contenedor {
+    width: 300px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    transform: translateX(0);
+    opacity: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.leyenda-contenedor.visible {
+    transform: translateX(5%);
+    opacity: 1;
+}
+
+.leyenda-contenedor.hidden {
+    transform: translateX(-20%);
+    opacity: 0;
+}
+
+
+.info-vuelos-contenedor.hidden + .toggle-button,
+.leyenda-contenedor.hidden + .toggle-button {
+    transform: translateX(0);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.info-vuelos-contenedor.hidden + .toggle-button:hover,
+.leyenda-contenedor.hidden + .toggle-button:hover {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+}
+
+.info-vuelos-contenedor.visible + .toggle-button,
+.leyenda-contenedor.visible + .toggle-button {
+    margin-left: -1px;
+    transform: translateX(-100%);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.info-vuelos-contenedor.visible + .toggle-button:hover,
+.leyenda-contenedor.visible + .toggle-button:hover {
+    transform: translateX(-100%) scale(1.1);
+    transition: transform 0.3s ease;
+}
+
+.sidebar-container {
+    position: absolute;
+    top: 25%;
+    left: 2.2%;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-vuelos-wrapper, .leyenda-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    z-index: auto;
+}
