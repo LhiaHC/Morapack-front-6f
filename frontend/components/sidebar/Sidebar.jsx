@@ -22,11 +22,7 @@ const Sidebar = () => {
   const pathname = usePathname();
 
   const isActive = (route) => {
-    // Si estamos en la raíz "/", marca como activo "En vivo"
-    if (pathname === "/" && route === "/vuelosEnVivo") {
-      return true;
-    }
-    return pathname.startsWith(route);
+    return pathname.startsWith(route) && pathname !== "/";
   };
 
   const toggleSidebar = () => {
@@ -42,7 +38,7 @@ const Sidebar = () => {
       {/* Toggle Button - Fixed position */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 bg-[#55BBBB] text-white p-3 rounded-lg shadow-lg hover:bg-[#4AABAB] transition-colors duration-200"
+        className="fixed top-4 left-4 z-50 bg-primary text-white p-3 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200"
         aria-label="Toggle menu"
       >
         {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -63,7 +59,7 @@ const Sidebar = () => {
         }`}
       >
         {/* Logo Section */}
-        <div className="bg-[#55BBBB] px-6 py-4 mt-16">
+        <div className="bg-primary px-6 py-4 mt-16">
           <Link href="/" onClick={closeSidebar}>
             <div className="flex items-center justify-center">
               <RedExIcon className="w-32 h-auto" />
@@ -88,8 +84,8 @@ const Sidebar = () => {
         </nav>
 
         {/* Footer Section */}
-        <div className="px-6 py-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">DP1 - RedEx</p>
+        <div className="px-6 py-4 border-t border-neutral-custom-200">
+          <p className="text-xs text-neutral-custom-500 text-center font-sans">DP1 - Morapack</p>
         </div>
       </aside>
     </>

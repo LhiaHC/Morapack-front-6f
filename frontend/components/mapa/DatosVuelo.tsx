@@ -7,6 +7,7 @@ import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { Envio } from "@/types/Envio";
 import { aHoraMinutos, convertirHoraVuelo, mostrarTiempoEnZonaHoraria, tiempoFaltante, utcStringToZonedDate } from "@/utils/FuncionesTiempo";
 import { Paquete } from "@/types/Paquete";
+import { FaSearch, FaPlane, FaWarehouse, FaBox, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 type DatosVueloProps = {
   vuelo: Vuelo | null;
@@ -29,8 +30,42 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
   const [busqueda, setBusqueda] = useState<string>("");
   const [filtros, setFiltros] = useState<{idPaquete: number, ciudad: string, idEnvio: string}>({idPaquete: 0, ciudad: "", idEnvio: ""});
 
-  const toggleVisibility = () => {
-    setVisible(!visible);
+  // Estados para búsqueda por navbar
+  const [searchAlmacen, setSearchAlmacen] = useState<string>("");
+  const [searchVuelo, setSearchVuelo] = useState<string>("");
+  const [searchEnvio, setSearchEnvio] = useState<string>("");
+
+  const handleSearchAlmacen = () => {
+    if (!searchAlmacen.trim()) return;
+    const almacen = aeropuertos.current?.get(searchAlmacen.toUpperCase());
+    if (almacen) {
+      setOpcion(2);
+      setVisible(true);
+    }
+  };
+
+  const handleSearchVuelo = () => {
+    if (!searchVuelo.trim()) return;
+    const vueloId = parseInt(searchVuelo);
+    const vueloData = vuelos.current?.get(vueloId);
+    if (vueloData) {
+      const claveProgramacion = `${vueloId}-${simulationTime.toISOString().slice(0,10)}`;
+      const fechaAyer = new Date(simulationTime);
+      fechaAyer.setDate(fechaAyer.getDate() - 1);
+      const claveProgramacionManana = `${vueloId}-${fechaAyer.toISOString().slice(0,10)}`;
+      setProgramacionVuelo(programacionVuelos.current?.get(claveProgramacion) ?? programacionVuelos.current?.get(claveProgramacionManana) ?? null);
+      setOpcion(1);
+      setVisible(true);
+    }
+  };
+
+  const handleSearchEnvio = () => {
+    if (!searchEnvio.trim()) return;
+    const envioData = envios.current?.get(searchEnvio);
+    if (envioData) {
+      setOpcion(3);
+      setVisible(true);
+    }
   };
 
   useEffect(() => {
@@ -148,58 +183,106 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
 
 
   return (
-    <div className="datos-vuelo-wrapper">
-      <button className="toggle-button-datos-vuelo" onClick={toggleVisibility}>
-        {visible ? "▼" : "▲"}
-      </button>
+    <>
+      {/* Navbar de búsqueda */}
+      <div className="search-navbar">
+        <div className="search-input-group">
+          <FaWarehouse className="search-icon" />
+          <input
+            type="text"
+            placeholder="ID Almacén"
+            value={searchAlmacen}
+            onChange={(e) => setSearchAlmacen(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearchAlmacen()}
+          />
+        </div>
 
-      <div
-        className={`datos-vuelo-contenedor ${visible ? "visible" : "hidden"} ${
-          opcion == 3 ? "envio" : ""
-        }`}
-      >
+        <div className="search-input-group">
+          <FaPlane className="search-icon" />
+          <input
+            type="text"
+            placeholder="ID Vuelo"
+            value={searchVuelo}
+            onChange={(e) => setSearchVuelo(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearchVuelo()}
+          />
+        </div>
+
+        <div className="search-input-group">
+          <FaBox className="search-icon" />
+          <input
+            type="text"
+            placeholder="ID Envío"
+            value={searchEnvio}
+            onChange={(e) => setSearchEnvio(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearchEnvio()}
+          />
+        </div>
+
+        <button
+          onClick={() => {
+            handleSearchAlmacen();
+            handleSearchVuelo();
+            handleSearchEnvio();
+          }}
+          className="boton-busqueda"
+          style={{ borderRadius: '50%', width: '40px', height: '40px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <FaSearch />
+        </button>
+      </div>
+
+      {/* Panel flotante lateral */}
+      <div className="datos-vuelo-wrapper">
+        <div
+          className={`datos-vuelo-contenedor ${visible ? "visible" : "hidden"}`}
+        >
         {vuelo && opcion == 1 ? (
           <>
             <div className="datos-vuelo-header">
-              <img
-                src="/logos/vueloEnhancedBlue.png"
-                alt="Avión"
-                className="icono-vuelo"
-              />
-              <div className="datos-vuelo-info">
-                <h2 className="vuelo-codigo">Vuelo {vuelo.id}</h2>
-                <p className="vuelo-horario">
-                  Salida: {vuelo.origen} -{" "}
-                  {utcStringToZonedDate(
+              <button
+                onClick={() => setVisible(false)}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '30px',
+                  height: '30px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <FaTimes />
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                <FaPlane style={{ fontSize: '32px', color: 'white' }} />
+                <div>
+                  <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>Vuelo {vuelo.id}</h2>
+                </div>
+              </div>
+              <div style={{ color: 'white', fontSize: '14px', lineHeight: '1.6' }}>
+                <p style={{ margin: '5px 0' }}>
+                  <strong>Salida:</strong> {vuelo.origen} - {utcStringToZonedDate(
                     vuelo.fechaHoraSalida,
                     aeropuertos.current?.get(vuelo.origen)?.aeropuerto.gmt ?? 0
                   )}
                 </p>
-                <p className="vuelo-horario">
-                  Llegada: {vuelo.destino} -{" "}
-                  {utcStringToZonedDate(
+                <p style={{ margin: '5px 0' }}>
+                  <strong>Llegada:</strong> {vuelo.destino} - {utcStringToZonedDate(
                     vuelo.fechaHoraLlegada,
                     aeropuertos.current?.get(vuelo.destino)?.aeropuerto.gmt ?? 0
                   )}
                 </p>
-              </div>
-              <div className="datos-vuelo-capacidad">
-                <h2>
-                  Carga: <br /> {programacionVuelo?.cantPaquetes ?? 0} /{" "}
-                  {vuelo.capacidad} paquetes
-                </h2>
-                <p>
-                  {(
-                    ((programacionVuelo?.cantPaquetes ?? 0) / vuelo.capacidad) *
-                    100
-                  ).toFixed(2)}
-                  % lleno
+                <p style={{ margin: '10px 0 0 0' }}>
+                  <strong>Carga:</strong> {programacionVuelo?.cantPaquetes ?? 0} / {vuelo.capacidad} paquetes
+                  ({((((programacionVuelo?.cantPaquetes ?? 0) / vuelo.capacidad) * 100)).toFixed(2)}% lleno)
                 </p>
-                {renderImage(
-                  ((programacionVuelo?.cantPaquetes ?? 0) / vuelo.capacidad) *
-                    100,
-                  "avion"
-                )}
               </div>
             </div>
             <div className="datos-vuelo-content">
@@ -265,129 +348,116 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
         ) : aeropuerto && opcion == 2 ? (
           <>
             <div className="datos-vuelo-header">
-              <img
-                src="/logos/oficinasEnhancedBlue.png"
-                alt="Oficina"
-                className="icono-vuelo"
-              />
-              <div className="datos-vuelo-info">
-                <h2 className="vuelo-codigo">Almacén {aeropuerto.pais}</h2>
-                <h2 className="vuelo-codigo"> {aeropuerto.codigoOACI}</h2>
-                <p className="vuelo-horario">
-                  Hora local:{" "}
-                  {mostrarTiempoEnZonaHoraria(simulationTime, aeropuerto.gmt)}
-                </p>
-              </div>
-              <div className="datos-vuelo-capacidad">
-                <h2>Capacidad:</h2>
-                <h2>
-                  {aeropuerto.cantidadActual}/{aeropuerto.capacidadMaxima}{" "}
-                  paquetes
+              <button
+                onClick={() => setVisible(false)}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '30px',
+                  height: '30px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <FaTimes />
+              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '20px 0' }}>
+                <FaWarehouse style={{ fontSize: '48px', color: 'white', marginBottom: '15px' }} />
+                <h2 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+                  {aeropuerto.ciudad}
                 </h2>
-                <p>
-                  {(
-                    (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) *
-                    100
-                  ).toFixed(2)}
-                  % lleno
+                <p style={{ color: 'rgba(255,255,255,0.9)', margin: '5px 0 0 0', fontSize: '18px' }}>
+                  {aeropuerto.codigoOACI}
                 </p>
-                {renderImage(
-                  (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) *
-                    100,
-                  "edificio"
-                )}
-              </div>
-            </div>
-            <div className="datos-vuelo-content">
-              <div className="datos-vuelo-busqueda">
-                <input
-                  type="text"
-                  placeholder="Ingrese código paquete o ID de envío"
-                  className="input-busqueda"
-                  onChange={(e) => setBusqueda(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      procesarBusqueda();
-                    }
-                  }}
-                />
-                <button className="boton-busqueda" onClick={procesarBusqueda}>
-                  Buscar
-                </button>
-              </div>
-              <div className="datos-vuelo-tabla">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Cód. paquete</th>
-                      <th>Origen</th>
-                      <th>Destino</th>
-                      <th>Cód. envío</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {aeropuerto.paquetes
-                      .filter((paquete) => {
-                        const envio = envios.current?.get(paquete.codigoEnvio);
-                        return (
-                          (filtros.idPaquete === 0 &&
-                            filtros.ciudad === "" &&
-                            filtros.idEnvio === "") ||
-                          (filtros.idPaquete !== 0 &&
-                            paquete.id === filtros.idPaquete) ||
-                          (filtros.ciudad !== "" &&
-                            (envio?.origen.startsWith(filtros.ciudad) ||
-                              envio?.destino.startsWith(filtros.ciudad))) ||
-                          (filtros.idEnvio !== "" &&
-                            paquete.codigoEnvio.startsWith(filtros.idEnvio))
-                        );
-                      })
-                      .map((paquete, index) => {
-                        const envio = envios.current?.get(paquete.codigoEnvio);
-                        return (
-                          <tr key={index}>
-                            <td>{paquete.id}</td>
-                            <td>{envio?.origen ?? "NULL"}</td>
-                            <td>{envio?.destino ?? "NULL"}</td>
-                            <td>{paquete.codigoEnvio}</td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
+                <div style={{ 
+                  marginTop: '20px', 
+                  padding: '15px 30px',
+                  background: 'rgba(255,255,255,0.15)',
+                  borderRadius: '10px',
+                  width: '100%',
+                  maxWidth: '400px'
+                }}>
+                  <p style={{ color: 'white', fontSize: '14px', margin: '0 0 10px 0' }}>
+                    <strong>Hora local:</strong> {mostrarTiempoEnZonaHoraria(simulationTime, aeropuerto.gmt)}
+                  </p>
+                  <p style={{ color: 'white', fontSize: '14px', margin: '0' }}>
+                    <strong>Capacidad:</strong> {aeropuerto.cantidadActual}/{aeropuerto.capacidadMaxima} paquetes
+                  </p>
+                  <div style={{ 
+                    marginTop: '10px',
+                    height: '8px',
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${(aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) * 100}%`,
+                      background: (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.8 
+                        ? '#ef4444' 
+                        : (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.5 
+                        ? '#f59e0b' 
+                        : '#10b981',
+                      transition: 'width 0.3s ease'
+                    }}></div>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', margin: '5px 0 0 0', textAlign: 'center' }}>
+                    {((aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) * 100).toFixed(1)}% ocupado
+                  </p>
+                </div>
               </div>
             </div>
           </>
         ) : envio && opcion == 3 ? (
           <>
             <div className="datos-vuelo-header">
-              <img
-                src="/logos/paqueteCeleste.png"
-                alt="Paquete"
-                className="icono-vuelo"
-              />
-              <div className="datos-vuelo-info">
-                <h2 className="vuelo-codigo">Envío {envio.id}</h2>
-                {/* Cantidad de paquetes */}
-                <h2 className="title-light-bold">
-                  {envio.paquetes.length} paquetes
-                </h2>
-                <p className="vuelo-horario">
-                  <span className="title-light-bold">Recepción:</span>{" "}
-                  <br />
-                  {new Date(envio.fechaHoraSalida * 1000 + ((5+(aeropuertos.current?.get(envio.origen)?.aeropuerto.gmt ?? 0)) * 3600 * 1000)).toLocaleString()}
+              <button
+                onClick={() => setVisible(false)}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '30px',
+                  height: '30px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <FaTimes />
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                <FaBox style={{ fontSize: '32px', color: 'white' }} />
+                <div>
+                  <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
+                    Envío {envio.id}
+                  </h2>
+                  <p style={{ color: 'rgba(255,255,255,0.9)', margin: '5px 0 0 0', fontSize: '16px' }}>
+                    {envio.paquetes.length} paquetes
+                  </p>
+                </div>
+              </div>
+              <div style={{ color: 'white', fontSize: '14px', lineHeight: '1.6' }}>
+                <p style={{ margin: '5px 0' }}>
+                  <strong>Recepción:</strong> {new Date(envio.fechaHoraSalida * 1000 + ((5+(aeropuertos.current?.get(envio.origen)?.aeropuerto.gmt ?? 0)) * 3600 * 1000)).toLocaleString()}
                 </p>
-                <p className="vuelo-horario">
-                  <span className="title-light-bold">Origen:</span> {envio.origen}{" "}
-                  {"(" +
-                    aeropuertos.current?.get(envio.origen)?.aeropuerto.ciudad +
-                    ")"}
+                <p style={{ margin: '5px 0' }}>
+                  <strong>Origen:</strong> {envio.origen} ({aeropuertos.current?.get(envio.origen)?.aeropuerto.ciudad})
                 </p>
-                <p className="vuelo-horario">
-                  <span className="title-light-bold">Destino:</span> {envio.destino}{" "}
-                  {"(" +
-                    aeropuertos.current?.get(envio.destino)?.aeropuerto.ciudad +
-                    ")"}
+                <p style={{ margin: '5px 0' }}>
+                  <strong>Destino:</strong> {envio.destino} ({aeropuertos.current?.get(envio.destino)?.aeropuerto.ciudad})
                 </p>
               </div>
             </div>
@@ -420,42 +490,42 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
           </>
         ) : (
           <>
-            <div
-              className="datos-vuelo-header"
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                textAlign: "center",
-                marginLeft: "28%",
-              }}
-            >
-              <img
-                src="/logos/vueloEnhancedBlue.png"
-                alt="Oficinas"
-                className="icono-vuelo"
-                style={{ marginRight: "10px" }}
-              />
-              <div className="datos-vuelo-info">
-                <h2
-                  className="vuelo-codigo"
-                  style={{ fontWeight: "bold", margin: 0, fontSize: "24px" }}
-                  
-                >
-                  Seleccione un vuelo o almacén
+            <div className="datos-vuelo-header">
+              <button
+                onClick={() => setVisible(false)}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '30px',
+                  height: '30px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <FaTimes />
+              </button>
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <FaSearch style={{ fontSize: '48px', color: 'white', marginBottom: '15px' }} />
+                <h2 style={{ color: 'white', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>
+                  Seleccione un elemento
                 </h2>
+                <p style={{ color: 'rgba(255,255,255,0.8)', marginTop: '10px', fontSize: '14px' }}>
+                  Haga clic en un vuelo, almacén o use la búsqueda
+                </p>
               </div>
-              <img
-                src="/logos/oficinasEnhancedBlue.png"
-                alt="Avión"
-                className="icono-vuelo"
-                style={{ marginLeft: "10px" }}
-              />
             </div>
           </>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

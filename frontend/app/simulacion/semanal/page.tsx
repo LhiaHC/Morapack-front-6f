@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import Mapa from "@/components/mapa/Mapa";
+import SimControls from "@/components/mapa/SimControls";
 import axios from "axios";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
@@ -67,10 +68,21 @@ const Page = () => {
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
     const [colapso, setColapso] = useState(false);
+    const [simulationInterval, setSimulationInterval] = useState(4);
+    const [playing, setPlaying] = useState(true);
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [loadingProgress, setLoadingProgress] = useState(0);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [cargado]);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -80,6 +92,8 @@ const Page = () => {
         } else {
             setHoraInicio(new Date());
         }
+        
+        setLoadingProgress(20);
         
         axios
             .get(`${apiURL}/aeropuerto`)
@@ -94,6 +108,7 @@ const Page = () => {
                     });
                     // console.log("Aeropuertos cargados: ", auxAeropuertos);
                     aeropuertos.current = auxAeropuertos;
+                    setLoadingProgress(50);
                     setCampana(campana + 1);
                 } 
             })
@@ -108,7 +123,10 @@ const Page = () => {
             if (cargado) {
                 return;
             }
-            setCargado(true);
+            setLoadingProgress(100);
+            setTimeout(() => {
+                setCargado(true);
+            }, 300);
             console.log("Cargando datos");
             // console.log("Aeropuertos cargados: ", aeropuertos);
             if (typeof window !== "undefined") {
@@ -162,6 +180,7 @@ const Page = () => {
                         });
                         auxNuevosVuelos.push(vuelo.id);
                     });
+                    setLoadingProgress(75);
                     setCampana(campana + 1);
                     console.log("Vuelos cargados: ", vuelos.current.size);
                 }
@@ -181,6 +200,46 @@ const Page = () => {
     
     return (
         <>
+            {!cargado && (
+                <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+                    <div className="text-center max-w-md px-8">
+                        <div className="mb-8">
+                            <svg
+                                className="w-20 h-20 mx-auto text-primary animate-bounce"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-800 mb-3">
+                            Cargando Simulación
+                        </h2>
+                        <p className="text-gray-600 mb-8">
+                            Preparando el mapa y los datos de vuelos...
+                        </p>
+                        
+                        {/* Barra de progreso */}
+                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                            <div
+                                className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
+                                style={{ width: `${loadingProgress}%` }}
+                            >
+                                <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-3">
+                            {loadingProgress}% completado
+                        </p>
+                    </div>
+                </div>
+            )}
             {cargado && (
                 <div className="w-full h-screen">
                     <Mapa
@@ -188,7 +247,7 @@ const Page = () => {
                         aeropuertos={aeropuertos}
                         programacionVuelos={programacionVuelos}
                         envios={envios}
-                        simulationInterval={4}
+                        simulationInterval={playing ? simulationInterval : 0}
                         horaInicio={horaInicio}
                         nuevosVuelos={nuevosVuelos}
                         semaforo={semaforo}
@@ -197,6 +256,20 @@ const Page = () => {
                         onSimulationTimeChange={setSimulationTime}
                         colapso={colapso}
                         setColapso={setColapso}
+                    />
+                    <SimControls
+                        simulationInterval={simulationInterval}
+                        onSpeedChange={setSimulationInterval}
+                        playing={playing}
+                        onPlayPause={() => setPlaying(!playing)}
+                        onReset={() => {
+                            setSimulationTime(horaInicio);
+                            setPlaying(false);
+                        }}
+                        currentTime={currentTime.toLocaleString()}
+                        simulationTime={simulationTime || horaInicio}
+                        startTime={horaInicio}
+                        isSimulation={true}
                     />
                     <div ref={bottomRef}></div>
                 </div>

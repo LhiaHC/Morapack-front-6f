@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ["latin"] });
 const montserrat = Montserrat({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "DP1 RedEx",
-    description: "Proyecto del curso DP1",
+    title: "DP1 Morapack",
+    description: "Sistema de gestión y monitoreo de envíos",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <head>
-                <title>RedEx</title>
+                <title>Morapack</title>
             </head>
 
             <body className={`${inter.className} bg-[#EFEFEF] w-full h-screen`}>

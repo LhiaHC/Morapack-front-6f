@@ -1,6 +1,4 @@
 "use client";
-import Leyenda from "@/components/mapa/Leyenda";
-import Indicadores from "@/components/mapa/Indicadores";
 import DatosVuelo from "@/components/mapa/DatosVuelo";
 import FinSemanal from "@/components/mapa/FinSemanal";
 import VuelosAlmacen from "@/components/mapa/VuelosAlmacen";
@@ -390,17 +388,6 @@ const Mapa = ({
                     simulatedTime={simulationTime}
                     aBorrarEnvios={aBorrarEnvios}
                 />
-                <div className="sidebar-container">
-                   <Indicadores
-                    vuelosEnTransito={contarVuelos(vuelos)}
-                    capacidadAlmacenes={capacidadAlmacenesUsada(aeropuertos)}
-                    fechaHoraActual={currentTime.toLocaleString()}
-                    fechaHoraSimulada={simulationTime}
-                    fechaHoraInicio={horaInicio}
-                    simulacion={simulationInterval!==1/60}
-                    />
-                    <Leyenda />
-                </div>
 
                 <DatosVuelo vuelo={selectedVuelo} aeropuerto={selectedAeropuerto} programacionVuelos={programacionVuelos} simulationTime={simulationTime}
                     envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
@@ -411,7 +398,7 @@ const Mapa = ({
                 {/* Botón "Más información" en esquina superior derecha */}
                 <button
                     onClick={() => setMostrarInfoSidebar(!mostrarInfoSidebar)}
-                    className="fixed top-20 right-8 z-50 bg-[#52489c] text-white px-4 py-2 rounded-lg shadow-lg hover:bg-[#6259b5] transition-colors duration-200 flex items-center gap-2"
+                    className="fixed top-20 right-8 z-50 bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2"
                 >
                     <span className="font-medium">Más información</span>
                     <span className="text-sm">{mostrarInfoSidebar ? '◀' : '▶'}</span>
@@ -423,18 +410,18 @@ const Mapa = ({
                 }`} style={{ width: '380px' }}>
                     <div className="h-full overflow-y-auto">
                         {/* Header */}
-                        <div className="bg-[#52489c] text-white p-6 sticky top-0 z-10">
+                        <div className="bg-primary text-white p-6 sticky top-0 z-10">
                             <h2 className="text-2xl font-bold">Información</h2>
                             <p className="text-sm text-gray-200 mt-1">Guía de uso del mapa</p>
                         </div>
 
                         <div className="p-6 space-y-6">
                             {/* Estadísticas */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-[#52489c] to-[#6259b5] p-4">
-                                    <h3 className="text-xl font-bold text-white">Estadísticas</h3>
-                                </div>
-                                <div className="p-5 space-y-4">
+                            <div>
+                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4">
+                                    Estadísticas
+                                </h3>
+                                <div className="space-y-4">
                                     <div className="bg-blue-50 rounded-lg p-4 text-center">
                                         <p className="text-3xl font-bold text-blue-900">{contarVuelos(vuelos).cuenta}</p>
                                         <p className="text-sm text-gray-700 mt-1">vuelos en tránsito</p>
@@ -444,8 +431,8 @@ const Mapa = ({
                                             <p className="text-2xl font-bold text-green-900">{`${(capacidadAlmacenesUsada(aeropuertos) * 100).toFixed(2)}%`}</p>
                                             <p className="text-xs text-gray-700 mt-1">de almacenes usados</p>
                                         </div>
-                                        <div className="bg-purple-50 rounded-lg p-3 text-center">
-                                            <p className="text-2xl font-bold text-purple-900">{`${Number.isFinite(contarVuelos(vuelos).porcentaje) ? (contarVuelos(vuelos).porcentaje * 100).toFixed(2) : "0.00"}%`}</p>
+                                        <div className="bg-primary-50 rounded-lg p-3 text-center">
+                                            <p className="text-2xl font-bold text-primary-900">{`${Number.isFinite(contarVuelos(vuelos).porcentaje) ? (contarVuelos(vuelos).porcentaje * 100).toFixed(2) : "0.00"}%`}</p>
                                             <p className="text-xs text-gray-700 mt-1">de vuelos usados</p>
                                         </div>
                                     </div>
@@ -453,41 +440,41 @@ const Mapa = ({
                             </div>
 
                             {/* Códigos de color */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-[#52489c] to-[#6259b5] p-4">
-                                    <h3 className="text-xl font-bold text-white">Códigos de color</h3>
-                                </div>
-                                <div className="p-5 space-y-3">
+                            <div>
+                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4">
+                                    Códigos de color
+                                </h3>
+                                <div className="space-y-3">
                                     <p className="text-sm text-gray-600 mb-3">Los colores indican el nivel de ocupación:</p>
 
-                                    <div className="flex items-center gap-3 bg-green-50 rounded-lg p-3">
+                                    <div className="flex items-center justify-center gap-3 bg-green-50 rounded-lg p-3">
                                         <div className="flex gap-2">
                                             <img src="/logos/avionVerde.png" alt="Avión verde" className="w-6 h-6" />
                                             <img src="/logos/edificioVerde.png" alt="Edificio verde" className="w-6 h-6"/>
                                         </div>
-                                        <div className="flex-1">
+                                        <div>
                                             <p className="font-semibold text-green-800">0-33%</p>
                                             <p className="text-xs text-gray-600">Ocupación baja</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-3">
+                                    <div className="flex items-center justify-center gap-3 bg-yellow-50 rounded-lg p-3">
                                         <div className="flex gap-2">
                                             <img src="/logos/avionAmarillo.png" alt="Avión amarillo" className="w-6 h-6" />
                                             <img src="/logos/edificioAmarillo.png" alt="Edificio amarillo" className="w-6 h-6" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div>
                                             <p className="font-semibold text-yellow-800">33-66%</p>
                                             <p className="text-xs text-gray-600">Ocupación media</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 bg-red-50 rounded-lg p-3">
+                                    <div className="flex items-center justify-center gap-3 bg-red-50 rounded-lg p-3">
                                         <div className="flex gap-2">
                                             <img src="/logos/avionRojo.png" alt="Avión rojo" className="w-6 h-6" />
                                             <img src="/logos/edificioRojo.png" alt="Edificio rojo" className="w-6 h-6" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div>
                                             <p className="font-semibold text-red-800">66-100%</p>
                                             <p className="text-xs text-gray-600">Ocupación alta</p>
                                         </div>
@@ -496,11 +483,11 @@ const Mapa = ({
                             </div>
 
                             {/* Elementos especiales */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-[#52489c] to-[#6259b5] p-4">
-                                    <h3 className="text-xl font-bold text-white">Elementos especiales</h3>
-                                </div>
-                                <div className="p-5 space-y-3">
+                            <div>
+                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4">
+                                    Elementos especiales
+                                </h3>
+                                <div className="space-y-3">
                                     <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-3">
                                         <img src="/logos/vueloEnhancedBlue.png" alt="Vuelo seleccionado" className="w-8 h-8" />
                                         <div>

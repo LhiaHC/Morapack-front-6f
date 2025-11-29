@@ -59,7 +59,7 @@ function ConfiguracionModal({ isOpen, onClose }) {
                             <button
                                 className={`py-2 px-4 font-semibold transition-all ${
                                     activeTab === "semanal"
-                                        ? "border-b-4 border-[#52489c] text-[#52489c]"
+                                        ? "border-b-4 border-primary text-primary"
                                         : "text-gray-600 hover:text-gray-800"
                                 }`}
                                 onClick={() => setActiveTab("semanal")}
@@ -69,7 +69,7 @@ function ConfiguracionModal({ isOpen, onClose }) {
                             <button
                                 className={`py-2 px-4 font-semibold transition-all ${
                                     activeTab === "colapso"
-                                        ? "border-b-4 border-[#52489c] text-[#52489c]"
+                                        ? "border-b-4 border-primary text-primary"
                                         : "text-gray-600 hover:text-gray-800"
                                 }`}
                                 onClick={() => setActiveTab("colapso")}
@@ -118,7 +118,7 @@ function ConfiguracionModal({ isOpen, onClose }) {
                                 href={`/simulacion/${activeTab}?startDate=${startDate?.toISOString()}`}
                                 className="flex-1"
                             >
-                                <button className="w-full bg-[#52489c] text-white py-3 rounded-md text-lg font-medium hover:bg-[#6259b5] transition-colors">
+                                <button className="w-full bg-primary text-white py-3 rounded-md text-lg font-medium hover:bg-primary-600 transition-colors">
                                     {buttonText}
                                 </button>
                             </Link>
@@ -168,7 +168,7 @@ export default function SimulacionPage() {
             {/* Botón flotante de configuración */}
             <button
                 onClick={openModal}
-                className="fixed bottom-8 right-8 z-40 bg-[#52489c] text-white p-4 rounded-full shadow-2xl hover:bg-[#6259b5] transition-all duration-200 hover:scale-110 flex items-center gap-3 group"
+                className="fixed bottom-8 right-8 z-40 bg-primary text-white p-4 rounded-full shadow-2xl hover:bg-primary-600 transition-all duration-200 hover:scale-110 flex items-center gap-3 group"
                 aria-label="Configurar simulación"
             >
                 <FaCog size={24} className="group-hover:rotate-90 transition-transform duration-300" />
