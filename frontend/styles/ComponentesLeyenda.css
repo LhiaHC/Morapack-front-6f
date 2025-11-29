@@ -1,7 +1,7 @@
 .info-vuelos-contenedor {
-    width: 300px;
+    width: 220px;
     background-color: white;
-    padding: 20px;
+    padding: 16px;
     padding-bottom: 8px;
     border-radius: 20px;
     box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1);
@@ -61,20 +61,23 @@
 }
 
 .fecha-item {
-    margin-bottom: 6px;
-    margin-top: 6px;    
+    margin-bottom: 8px;
+    margin-top: 8px;
+    text-align: center;
 }
 
 .fecha-etiqueta {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
     color: #7a7a7a;
+    font-weight: 600;
 }
 
 .fecha-valor {
     display: block;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
 }
 
 .leyenda {

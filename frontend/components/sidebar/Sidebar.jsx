@@ -7,8 +7,6 @@ import SidebarItem from "./SidebarItem";
 import Link from "next/link";
 import LogoPlane from "@/public/icons/LogoPlane";
 import LogoSimu from "@/public/icons/LogoSimu";
-import LogoGest from "@/public/icons/LogoGest";
-import LogoConfig from "@/public/icons/LogoConfig";
 import LogoRegEnv from "@/public/icons/LogoRegEnv";
 import { FaBars, FaTimes } from "react-icons/fa";
 
@@ -17,10 +15,8 @@ const Sidebar = () => {
 
   const sidebarItems = [
     { name: "En vivo", route: "/vuelosEnVivo", Icon: LogoPlane },
-    { name: "Gestión", route: "/planeamientoGestion", Icon: LogoGest },
     { name: "Simulación", route: "/simulacion", Icon: LogoSimu },
     { name: "Registro de envíos", route: "/registroEnvios", Icon: LogoRegEnv },
-    { name: "Configuración", route: "/configuracion", Icon: LogoConfig },
   ];
 
   const pathname = usePathname();

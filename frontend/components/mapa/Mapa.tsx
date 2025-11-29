@@ -429,45 +429,24 @@ const Mapa = ({
                         </div>
 
                         <div className="p-6 space-y-6">
-                            {/* Instrucciones de uso */}
+                            {/* Estadísticas */}
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                                 <div className="bg-gradient-to-r from-[#52489c] to-[#6259b5] p-4">
-                                    <h3 className="text-xl font-bold text-white">Cómo usar el mapa</h3>
+                                    <h3 className="text-xl font-bold text-white">Estadísticas</h3>
                                 </div>
                                 <div className="p-5 space-y-4">
-                                    <div className="space-y-3 text-sm">
-                                        <div className="flex items-start gap-3">
-                                            <div className="bg-[#52489c] text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                1
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-800">Seleccionar vuelo o aeropuerto</p>
-                                                <p className="text-gray-600 mt-1">Haz clic en cualquier avión o aeropuerto del mapa para ver su información detallada en el panel inferior.</p>
-                                            </div>
+                                    <div className="bg-blue-50 rounded-lg p-4 text-center">
+                                        <p className="text-3xl font-bold text-blue-900">{contarVuelos(vuelos).cuenta}</p>
+                                        <p className="text-sm text-gray-700 mt-1">vuelos en tránsito</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-green-50 rounded-lg p-3 text-center">
+                                            <p className="text-2xl font-bold text-green-900">{`${(capacidadAlmacenesUsada(aeropuertos) * 100).toFixed(2)}%`}</p>
+                                            <p className="text-xs text-gray-700 mt-1">de almacenes usados</p>
                                         </div>
-
-                                        <div className="flex items-start gap-3">
-                                            <div className="bg-[#52489c] text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                2
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-800">Panel de aeropuertos (izquierda)</p>
-                                                <p className="text-gray-600 mt-1">Usa el botón lateral izquierdo (▶) para ver la lista de aeropuertos con mayor ocupación o vuelos próximos a llegar.</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-start gap-3">
-                                            <div className="bg-[#52489c] text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                3
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-800">Navegación del mapa</p>
-                                                <p className="text-gray-600 mt-1">
-                                                    • <strong>Zoom:</strong> Usa la rueda del mouse<br/>
-                                                    • <strong>Mover:</strong> Mantén clic y arrastra<br/>
-                                                    • <strong>Deseleccionar:</strong> Clic en área vacía
-                                                </p>
-                                            </div>
+                                        <div className="bg-purple-50 rounded-lg p-3 text-center">
+                                            <p className="text-2xl font-bold text-purple-900">{`${Number.isFinite(contarVuelos(vuelos).porcentaje) ? (contarVuelos(vuelos).porcentaje * 100).toFixed(2) : "0.00"}%`}</p>
+                                            <p className="text-xs text-gray-700 mt-1">de vuelos usados</p>
                                         </div>
                                     </div>
                                 </div>

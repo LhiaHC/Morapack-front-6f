@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import "@/styles/ComponentesLeyenda.css"
 import { tiempoEntre, tiempoNumeroADiasHorasMinutos } from "@/utils/FuncionesTiempo";
 
@@ -12,46 +12,17 @@ interface InfoVuelosProps {
     simulacion?: boolean;
   }
   
-  const InfoVuelos: React.FC<InfoVuelosProps> = ({ 
-    vuelosEnTransito, 
-    capacidadAlmacenes, 
-    fechaHoraActual, 
+  const InfoVuelos: React.FC<InfoVuelosProps> = ({
+    vuelosEnTransito,
+    capacidadAlmacenes,
+    fechaHoraActual,
     fechaHoraSimulada ,
     fechaHoraInicio ,
     simulacion = false
   }) => {
-    const [visible, setVisible] = useState<boolean>(false);
-  
-    const toggleVisibility = () => {
-      setVisible(!visible);
-    };
-  
     return (
       <div className="info-vuelos-wrapper">
-        <button className="toggle-button" onClick={toggleVisibility}>
-          {visible ? '◀' : '▶'}
-        </button>
-        <div className={`info-vuelos-contenedor ${visible ? 'visible' : 'hidden'}`}>
-        <hr />
-          <div className="resumen-vuelos">
-            <div className="resumen-item">
-              <span className="resumen-valor">{formatearCantidad(vuelosEnTransito.cuenta)}</span>
-              <span className="resumen-etiqueta">vuelos en tránsito</span>
-            </div>
-            <div className="column">
-              <div className="resumen-item">
-                <span className="resumen-valor">{`${(capacidadAlmacenes * 100).toFixed(2)}%`}</span>
-                <span className="resumen-etiqueta"> de almacenes usados</span>
-              </div>
-              <div className="resumen-item">
-                <span className="resumen-valor">
-                {`${Number.isFinite(vuelosEnTransito.porcentaje) ? (vuelosEnTransito.porcentaje * 100).toFixed(2) : "0.00"}%`}
-                </span>
-                <span className="resumen-etiqueta"> de vuelos usados</span>
-              </div>
-            </div>
-          </div>
-          <hr />
+        <div className="info-vuelos-contenedor visible">
           <div className="info-fecha">
             <div className="fecha-item">
               <span className="fecha-etiqueta">Tiempo real</span>
