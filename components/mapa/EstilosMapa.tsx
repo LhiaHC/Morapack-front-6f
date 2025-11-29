@@ -20,7 +20,7 @@ if(typeof window !== 'undefined') {
             anchorXUnits: 'fraction',
             anchorYUnits: 'fraction',
             src: '/logos/almacenNegro.png',
-            scale: 0.12,
+            scale: 0.02,
         }),
     });
 
@@ -30,7 +30,7 @@ if(typeof window !== 'undefined') {
             anchorXUnits: 'fraction',
             anchorYUnits: 'fraction',
             src: '/logos/almacenVerde.png',
-            scale: 0.12,
+            scale: 0.08,
         }),
         zIndex: 500,
     });
@@ -41,7 +41,7 @@ if(typeof window !== 'undefined') {
             anchorXUnits: 'fraction',
             anchorYUnits: 'fraction',
             src: '/logos/almacenAmarillo.png',
-            scale: 0.12,
+            scale: 0.08,
         }),
         zIndex: 500,
     });
@@ -52,7 +52,7 @@ if(typeof window !== 'undefined') {
             anchorXUnits: 'fraction',
             anchorYUnits: 'fraction',
             src: '/logos/almacenRojo.png',
-            scale: 0.12,
+            scale: 0.08,
         }),
         zIndex: 500,
     });
@@ -63,7 +63,7 @@ if(typeof window !== 'undefined') {
             anchorXUnits: 'fraction',
             anchorYUnits: 'fraction',
             src: '/logos/almacenNegro.png',
-            scale: 0.20,
+            scale: 0.03,
         }),
         zIndex: Infinity,
     });
