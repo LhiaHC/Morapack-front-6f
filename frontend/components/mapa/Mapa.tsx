@@ -1,7 +1,6 @@
 "use client";
 import DatosVuelo from "@/components/mapa/DatosVuelo";
 import FinSemanal from "@/components/mapa/FinSemanal";
-import VuelosAlmacen from "@/components/mapa/VuelosAlmacen";
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import { Map as OLMap } from "ol";
@@ -38,7 +37,6 @@ import {
     desactivarEnvio,
     crearPuntoDeVueloReal,
 } from "@/utils/FuncionesMapa";
-import BarraMapa from "./BarraMapa";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { Envio } from "@/types/Envio";
 import { agregarPaquetesAlmacen, agregarPaquetesAlmacenReal, capacidadAlmacenesUsada, contarVuelos, decidirEstiloAeropuerto, limpiarMapasDeDatos } from "@/utils/FuncionesDatos";
@@ -375,34 +373,21 @@ const Mapa = ({
         <div id="map" style={{ width: "100%", height: "100vh", position: "relative" }}>
             {" "}
             <div>
-                <BarraMapa
-                    setSelectedVuelo={setSelectedVuelo}
-                    setSelectedAeropuerto={setSelectedAeropuerto}
-                    setSelectedEnvio={setSelectedEnvio}
-                    mapRef={mapRef}
-                    selectedFeature={selectedFeature}
-                    vuelos={vuelos}
-                    aeropuertos={aeropuertos.current}
-                    programacionVuelos={programacionVuelos.current}
-                    envios={envios.current}
-                    simulatedTime={simulationTime}
-                    aBorrarEnvios={aBorrarEnvios}
-                />
-
                 <DatosVuelo vuelo={selectedVuelo} aeropuerto={selectedAeropuerto} programacionVuelos={programacionVuelos} simulationTime={simulationTime}
                     envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
                 />
                 {mostrarFinSemanal && <FinSemanal programacionVuelos={programacionVuelos} vuelos={vuelos} colapso={colapso}/>}
-                <VuelosAlmacen selectedAeropuerto={selectedAeropuerto} vuelos={vuelos} simulationTime={simulationTime} programacionVuelos={programacionVuelos} aeropuertos={aeropuertos} />
 
-                {/* Botón "Más información" en esquina superior derecha */}
-                <button
-                    onClick={() => setMostrarInfoSidebar(!mostrarInfoSidebar)}
-                    className="fixed top-20 right-8 z-50 bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2"
-                >
-                    <span className="font-medium">Más información</span>
-                    <span className="text-sm">{mostrarInfoSidebar ? '◀' : '▶'}</span>
-                </button>
+                {/* Botón "Más información" en esquina superior derecha - solo visible cuando está cerrado */}
+                {!mostrarInfoSidebar && (
+                    <button
+                        onClick={() => setMostrarInfoSidebar(true)}
+                        className="fixed top-20 right-8 z-50 bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2"
+                    >
+                        <span className="font-medium">Más información</span>
+                        <span className="text-sm">▶</span>
+                    </button>
+                )}
 
                 {/* Sidebar derecho con información del mapa */}
                 <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-40 transition-transform duration-300 ease-in-out ${
@@ -410,7 +395,16 @@ const Mapa = ({
                 }`} style={{ width: '380px' }}>
                     <div className="h-full overflow-y-auto">
                         {/* Header */}
-                        <div className="bg-primary text-white p-6 sticky top-0 z-10">
+                        <div className="bg-primary text-white p-6 sticky top-0 z-10 relative">
+                            <button
+                                onClick={() => setMostrarInfoSidebar(false)}
+                                className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full p-2 transition-colors duration-200"
+                                aria-label="Cerrar"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                             <h2 className="text-2xl font-bold">Información</h2>
                             <p className="text-sm text-gray-200 mt-1">Guía de uso del mapa</p>
                         </div>
@@ -418,7 +412,7 @@ const Mapa = ({
                         <div className="p-6 space-y-6">
                             {/* Estadísticas */}
                             <div>
-                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4">
+                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4 text-center">
                                     Estadísticas
                                 </h3>
                                 <div className="space-y-4">
@@ -441,7 +435,7 @@ const Mapa = ({
 
                             {/* Códigos de color */}
                             <div>
-                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4">
+                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4 text-center">
                                     Códigos de color
                                 </h3>
                                 <div className="space-y-3">
@@ -484,7 +478,7 @@ const Mapa = ({
 
                             {/* Elementos especiales */}
                             <div>
-                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4">
+                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-4 text-center">
                                     Elementos especiales
                                 </h3>
                                 <div className="space-y-3">
@@ -503,6 +497,46 @@ const Mapa = ({
                                             <p className="text-xs text-gray-600">Línea naranja punteada</p>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Top 5 Aeropuertos con mayor ocupación */}
+                            <div>
+                                <h3 className="text-lg font-bold font-sans text-neutral-custom-800 pb-2 border-b-2 border-primary mb-3 text-center">
+                                    Top 5 - Mayor Ocupación
+                                </h3>
+                                <div className="space-y-2">
+                                    {Array.from(aeropuertos.current?.values() || [])
+                                        .map(item => item.aeropuerto)
+                                        .sort((a, b) => (b.cantidadActual / b.capacidadMaxima) - (a.cantidadActual / a.capacidadMaxima))
+                                        .slice(0, 5)
+                                        .map((aeropuerto, index) => (
+                                            <div key={aeropuerto.codigoOACI} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2 text-sm">
+                                                <div className={`flex items-center justify-center w-6 h-6 rounded-full font-bold text-white text-xs ${
+                                                    index === 0 ? 'bg-yellow-500' : 
+                                                    index === 1 ? 'bg-gray-400' : 
+                                                    index === 2 ? 'bg-orange-400' : 
+                                                    'bg-gray-300'
+                                                }`}>
+                                                    {index + 1}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-semibold text-gray-800 truncate">{aeropuerto.ciudad}</p>
+                                                    <p className="text-xs text-gray-500">{aeropuerto.codigoOACI}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className={`font-bold text-sm ${
+                                                        (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.66 ? 'text-red-600' :
+                                                        (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.33 ? 'text-yellow-600' :
+                                                        'text-green-600'
+                                                    }`}>
+                                                        {((aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) * 100).toFixed(0)}%
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">{aeropuerto.cantidadActual}/{aeropuerto.capacidadMaxima}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    }
                                 </div>
                             </div>
                         </div>

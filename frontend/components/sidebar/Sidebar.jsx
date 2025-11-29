@@ -5,18 +5,18 @@ import { usePathname } from "next/navigation";
 import RedExIcon from "@/public/icons/LogoRedEx";
 import SidebarItem from "./SidebarItem";
 import Link from "next/link";
-import LogoPlane from "@/public/icons/LogoPlane";
-import LogoSimu from "@/public/icons/LogoSimu";
-import LogoRegEnv from "@/public/icons/LogoRegEnv";
 import { FaBars, FaTimes } from "react-icons/fa";
+import FlightTakeoffRoundedIcon from '@mui/icons-material/FlightTakeoffRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const sidebarItems = [
-    { name: "En vivo", route: "/vuelosEnVivo", Icon: LogoPlane },
-    { name: "Simulación", route: "/simulacion", Icon: LogoSimu },
-    { name: "Registro de envíos", route: "/registroEnvios", Icon: LogoRegEnv },
+    { name: "En vivo", route: "/vuelosEnVivo", Icon: FlightTakeoffRoundedIcon },
+    { name: "Simulación", route: "/simulacion", Icon: TuneRoundedIcon },
+    { name: "Registro de envíos", route: "/registroEnvios", Icon: LocalShippingRoundedIcon },
   ];
 
   const pathname = usePathname();
@@ -59,7 +59,7 @@ const Sidebar = () => {
         }`}
       >
         {/* Logo Section */}
-        <div className="bg-primary px-6 py-4 mt-16">
+        <div className="bg-white px-6 py-4 mt-16 border-4 border-primary rounded-lg mx-4">
           <Link href="/" onClick={closeSidebar}>
             <div className="flex items-center justify-center">
               <RedExIcon className="w-32 h-auto" />

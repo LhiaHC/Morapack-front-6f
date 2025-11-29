@@ -1,5 +1,5 @@
 import React from 'react';
-import logoRedEx from '../logos/logo__main_propuesta2_blanco.png'; // Importa la ruta de la imagen
+import logoRedEx from '../logos/logoMorapack.png'; // Importa la ruta de la imagen
 import Image from 'next/image';
 
 const LogoRedEx = () => (

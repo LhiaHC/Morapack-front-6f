@@ -226,9 +226,18 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
             handleSearchEnvio();
           }}
           className="boton-busqueda"
-          style={{ borderRadius: '50%', width: '40px', height: '40px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ 
+            borderRadius: '8px', 
+            minWidth: '44px', 
+            height: '44px', 
+            padding: '0 12px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            transition: 'all 0.2s ease'
+          }}
         >
-          <FaSearch />
+          <FaSearch size={18} />
         </button>
       </div>
 

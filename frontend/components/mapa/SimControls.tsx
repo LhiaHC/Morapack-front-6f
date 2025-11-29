@@ -26,14 +26,14 @@ const SimControls: React.FC<SimControlsProps> = ({
   isSimulation = true,
 }) => {
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-5xl px-4">
-      <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-lg border border-gray-200 p-4 relative">
-        <div className="flex items-center gap-4 justify-between">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
+      <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-lg border border-gray-200 p-3 relative">
+        <div className="flex items-center gap-3 justify-center">
           {/* Botones de control */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={onPlayPause}
-              className="flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all duration-200 shadow-sm active:scale-95"
+              className="flex items-center gap-2 px-3 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all duration-200 shadow-sm active:scale-95"
               title={playing ? "Pausar" : "Reproducir"}
             >
               {playing ? (
@@ -41,7 +41,7 @@ const SimControls: React.FC<SimControlsProps> = ({
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                   </svg>
-                  <span className="font-medium">Pause</span>
+                  <span className="font-medium text-sm">Pause</span>
                 </>
               ) : (
                 <>
@@ -52,7 +52,7 @@ const SimControls: React.FC<SimControlsProps> = ({
                   >
                     <path d="M8 5v14l11-7z" />
                   </svg>
-                  <span className="font-medium">Play</span>
+                  <span className="font-medium text-sm">Play</span>
                 </>
               )}
             </button>
