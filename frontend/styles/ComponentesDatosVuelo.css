@@ -1,0 +1,247 @@
+.datos-vuelo-contenedor {
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform: translateX(-100%);
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    width: 450px;
+    max-height: 600px;
+  }
+
+.datos-vuelo-contenedor.visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.datos-vuelo-contenedor.hidden {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+.datos-vuelo-header {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #00897B 0%, #00796B 100%);
+    border-radius: 15px 15px 0 0;
+}
+
+.datos-vuelo-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+.icono-vuelo {
+    width: 75px;
+    height: 75px;
+    margin-right: 20px;
+}
+
+.datos-vuelo-info {
+    flex: 1;
+}
+
+.vuelo-codigo {
+    color: #59C3C3;
+    margin: 0;
+    font-size: large;
+    font-weight: 600;
+}
+
+.vuelo-horario {
+    margin: 5px 0;
+}
+
+.datos-vuelo-capacidad {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.icono-paquete {
+    width: 70px;
+    height: 70px;
+    margin-top: 10px;
+}
+
+.datos-vuelo-busqueda {
+    display: flex;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ccc;
+    
+}
+
+.input-busqueda {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+    font-size: 12px;
+    
+}
+
+.boton-busqueda {
+    background-color: #00897B;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    flex: 0;
+    transition: background-color 0.2s ease;
+}
+
+.boton-busqueda:hover {
+    background-color: #00796B;
+}
+
+.datos-vuelo-tabla {
+    flex: 1;
+    overflow-y: auto;
+    padding-left: 4%;
+    padding-right: 4%;
+    
+}
+
+
+.datos-vuelo-tabla table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.datos-vuelo-tabla th {
+    background-color: #00897B;
+    color: white;
+    padding: 10px;
+    position: sticky;
+    top: 0;
+}
+
+.datos-vuelo-tabla td {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.datos-envio-tabla {
+    flex: 1;
+    overflow-y: auto;
+    padding-left: 0%;
+    padding-right: 4%;
+}
+
+.datos-envio-tabla table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.datos-envio-tabla th {
+    background-color: #00897B;
+    color: white;
+    padding: 10px;
+    position: sticky;
+    top: 0;
+}
+
+.datos-envio-tabla td {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.toggle-button-datos-vuelo {
+    background-color: #00897B;
+    border-radius: 0 50% 50% 0;
+    width: 40px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-button-datos-vuelo:hover{
+    background-color: #00796B;
+    width: 45px;
+}
+
+
+.datos-vuelo-busqueda {
+    display: flex;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ccc;
+    flex-shrink: 0;
+}
+
+.datos-vuelo-wrapper {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    z-index: 40;
+}
+
+.search-navbar {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 45;
+    background-color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #f5f5f5;
+    border-radius: 25px;
+    transition: background-color 0.2s ease;
+}
+
+.search-input-group:hover {
+    background-color: #e0e0e0;
+}
+
+.search-input-group input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 140px;
+    font-size: 14px;
+    color: #424242;
+}
+
+.search-input-group input::placeholder {
+    color: #9e9e9e;
+}
+
+.search-icon {
+    color: #00897B;
+    font-size: 16px;
+}
+
+.title-light-bold {
+    font-weight: 550;
+  }
