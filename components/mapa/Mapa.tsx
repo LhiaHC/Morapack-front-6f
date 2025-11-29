@@ -444,7 +444,7 @@ const Mapa = ({
                                     <div className="flex items-center justify-center gap-3 bg-green-50 rounded-lg p-3">
                                         <div className="flex gap-2">
                                             <img src="/logos/avionVerde.png" alt="Avión verde" className="w-6 h-6" />
-                                            <img src="/logos/edificioVerde.png" alt="Edificio verde" className="w-6 h-6"/>
+                                            <img src="/logos/almacenVerde.png" alt="Almacén verde" className="w-6 h-6"/>
                                         </div>
                                         <div>
                                             <p className="font-semibold text-green-800">0-33%</p>
@@ -455,7 +455,7 @@ const Mapa = ({
                                     <div className="flex items-center justify-center gap-3 bg-yellow-50 rounded-lg p-3">
                                         <div className="flex gap-2">
                                             <img src="/logos/avionAmarillo.png" alt="Avión amarillo" className="w-6 h-6" />
-                                            <img src="/logos/edificioAmarillo.png" alt="Edificio amarillo" className="w-6 h-6" />
+                                            <img src="/logos/almacenAmarillo.png" alt="Almacén amarillo" className="w-6 h-6" />
                                         </div>
                                         <div>
                                             <p className="font-semibold text-yellow-800">33-66%</p>
@@ -466,7 +466,7 @@ const Mapa = ({
                                     <div className="flex items-center justify-center gap-3 bg-red-50 rounded-lg p-3">
                                         <div className="flex gap-2">
                                             <img src="/logos/avionRojo.png" alt="Avión rojo" className="w-6 h-6" />
-                                            <img src="/logos/edificioRojo.png" alt="Edificio rojo" className="w-6 h-6" />
+                                            <img src="/logos/almacenRojo.png" alt="Almacén rojo" className="w-6 h-6" />
                                         </div>
                                         <div>
                                             <p className="font-semibold text-red-800">66-100%</p>

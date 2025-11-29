@@ -40,7 +40,7 @@ const Leyenda: React.FC = () => {
               <img src="/logos/avionVerde.png" alt="0-33%" className="icono-leyenda" />
             </span>
             <span className="leyenda-etiqueta">
-              <img src="/logos/edificioVerde.png" alt="Oficina 0-33%" className="icono-leyenda"/>
+              <img src="/logos/almacenVerde.png" alt="Oficina 0-33%" className="icono-leyenda"/>
             </span>
             <span className="leyenda-etiqueta">0-33%</span>
           </div>
@@ -49,7 +49,7 @@ const Leyenda: React.FC = () => {
               <img src="/logos/avionAmarillo.png" alt="33-66%" className="icono-leyenda" />
             </span>
             <span className="leyenda-etiqueta">
-              <img src="/logos/edificioAmarillo.png" alt="Oficina 33-66%" className="icono-leyenda" />
+              <img src="/logos/almacenAmarillo.png" alt="Oficina 33-66%" className="icono-leyenda" />
             </span>
             <span className="leyenda-etiqueta">33-66%</span>
           </div>
@@ -58,7 +58,7 @@ const Leyenda: React.FC = () => {
               <img src="/logos/avionRojo.png" alt="66-100%" className="icono-leyenda" />
             </span>
             <span className="leyenda-etiqueta">
-              <img src="/logos/edificioRojo.png" alt="Oficina 66-100%" className="icono-leyenda" />
+              <img src="/logos/almacenRojo.png" alt="Oficina 66-100%" className="icono-leyenda" />
             </span>
             <span className="leyenda-etiqueta">66-100%</span>
           </div>
