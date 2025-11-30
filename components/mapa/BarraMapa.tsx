@@ -147,7 +147,7 @@ const BarraMapa = ({
                         setHelperText("");
                     } else {
                         setError(true);
-                        setHelperText("No se encontró el paquete con código: " + aBuscar);
+                        setHelperText("No se encontró el producto con código: " + aBuscar);
                     }
                 }
             }
@@ -186,7 +186,7 @@ const BarraMapa = ({
                 }
                 else{
                     setError(true);
-                    setHelperText("No se encontró el envío con código: " + aBuscar);
+                    setHelperText("No se encontró el grupo de productos con código: " + aBuscar);
                 }
             }
             
@@ -217,7 +217,7 @@ const BarraMapa = ({
             <TextField
                 fullWidth
                 variant="outlined"
-                placeholder="Ingrese el código de vuelo, aeropuerto, paquete o envío"
+                placeholder="Ingrese el código de vuelo, aeropuerto, producto o grupo de productos"
                 onKeyDown={handleKeyPress}
                 onChange={(e) => setABuscar(e.target.value)}
                 InputProps={{

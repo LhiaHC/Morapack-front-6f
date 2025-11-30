@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import RedExIcon from "@/public/icons/LogoRedEx";
 import SidebarItem from "./SidebarItem";
@@ -12,11 +12,16 @@ import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sidebarItems = [
     { name: "En vivo", route: "/vuelosEnVivo", Icon: FlightTakeoffRoundedIcon },
     { name: "Simulación", route: "/simulacion", Icon: TuneRoundedIcon },
-    { name: "Registro de envíos", route: "/registroEnvios", Icon: LocalShippingRoundedIcon },
+    { name: "Registro de grupos de productos", route: "/registroEnvios", Icon: LocalShippingRoundedIcon },
   ];
 
   const pathname = usePathname();
@@ -32,6 +37,18 @@ const Sidebar = () => {
   const closeSidebar = () => {
     setIsOpen(false);
   };
+
+  if (!mounted) {
+    return (
+      <button
+        className="fixed top-4 left-4 z-50 bg-primary text-white p-3 rounded-lg shadow-lg"
+        aria-label="Toggle menu"
+        disabled
+      >
+        <FaBars size={20} />
+      </button>
+    );
+  }
 
   return (
     <>

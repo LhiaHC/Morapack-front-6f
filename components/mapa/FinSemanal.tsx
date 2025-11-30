@@ -12,7 +12,16 @@ type FinSemanalProps = {
 
 const formatTime = (timeString: string) => {
   const date = new Date(timeString);
-  return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  // Formato: "Jun 25, 2025 a las 12:00"
+  const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const month = monthNames[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${month} ${day}, ${year} a las ${hours}:${minutes}`;
 };
 
 const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, colapso =false }) => {
@@ -258,7 +267,7 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
                       <th className="px-6 py-4 text-left font-semibold font-sans text-sm">Hora llegada</th>
                       <th className="px-6 py-4 text-left font-semibold font-sans text-sm">Ciudad origen</th>
                       <th className="px-6 py-4 text-left font-semibold font-sans text-sm">Ciudad destino</th>
-                      <th className="px-6 py-4 text-left font-semibold font-sans text-sm">Paquetes asignados</th>
+                      <th className="px-6 py-4 text-left font-semibold font-sans text-sm">Productos asignados</th>
                     </tr>
                   </thead>
                   <tbody>

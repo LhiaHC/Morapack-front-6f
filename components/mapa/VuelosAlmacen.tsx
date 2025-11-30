@@ -112,7 +112,7 @@ const VuelosAlmacen: React.FC<VuelosAlmacenProps> = ({ selectedAeropuerto, vuelo
                   <TableRow>
                     <StyledTableCell>Ciudad</StyledTableCell>
                     <StyledTableCell>Capacidad</StyledTableCell>
-                    <StyledTableCell>Paquetes</StyledTableCell>
+                    <StyledTableCell>Productos</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

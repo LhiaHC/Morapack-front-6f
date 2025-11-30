@@ -14,7 +14,7 @@ export default function Home() {
     const slides = [
         {
             title: "Monitoreo en Tiempo Real",
-            description: "Visualiza el estado de todos tus envíos y vuelos en un mapa interactivo. Obtén información detallada sobre ubicación, tiempos de llegada y capacidad de almacenes.",
+            description: "Visualiza el estado de todos tus grupos de productos y vuelos en un mapa interactivo. Obtén información detallada sobre ubicación, tiempos de llegada y capacidad de almacenes.",
             icon: FaMapMarkedAlt,
             color: "primary"
         },
@@ -25,8 +25,8 @@ export default function Home() {
             color: "info"
         },
         {
-            title: "Gestión de Envíos",
-            description: "Administra tu flota de forma eficiente. Controla velocidades de simulación, rastrea paquetes y consulta el historial completo de operaciones.",
+            title: "Gestión de Grupos de Productos",
+            description: "Administra tu flota de forma eficiente. Controla velocidades de simulación, rastrea productos y consulta el historial completo de operaciones.",
             icon: FaBoxOpen,
             color: "primary"
         }
@@ -41,9 +41,11 @@ export default function Home() {
     };
 
     useEffect(() => {
-        const interval = setInterval(nextSlide, 5000);
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [slides.length]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-info-light/10">
