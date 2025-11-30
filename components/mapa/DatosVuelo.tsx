@@ -168,12 +168,12 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
 
   function renderImage(percentage: number, tipo: string) {
     if (percentage < 33) {
-      return <img src={`/logos/${tipo}Verde.png`} alt="Paquete" className="icono-paquete" />
+      return <img src={`/logos/${tipo}Verde.png`} alt="Producto" className="icono-paquete" />
     } else if (percentage < 66) {
-      return <img src={`/logos/${tipo}Amarillo.png`} alt="Paquete" className="icono-paquete" />
+      return <img src={`/logos/${tipo}Amarillo.png`} alt="Producto" className="icono-paquete" />
     }
     else {
-      return <img src={`/logos/${tipo}Rojo.png`} alt="Paquete" className="icono-paquete" />
+      return <img src={`/logos/${tipo}Rojo.png`} alt="Producto" className="icono-paquete" />
     }
   }
 
@@ -212,7 +212,7 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
           <FaBox className="search-icon" />
           <input
             type="text"
-            placeholder="ID Envío"
+            placeholder="ID Grupo de Productos"
             value={searchEnvio}
             onChange={(e) => setSearchEnvio(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearchEnvio()}
@@ -289,7 +289,7 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
                   )}
                 </p>
                 <p style={{ margin: '10px 0 0 0' }}>
-                  <strong>Carga:</strong> {programacionVuelo?.cantPaquetes ?? 0} / {vuelo.capacidad} paquetes
+                  <strong>Carga:</strong> {programacionVuelo?.cantPaquetes ?? 0} / {vuelo.capacidad} productos
                   ({((((programacionVuelo?.cantPaquetes ?? 0) / vuelo.capacidad) * 100)).toFixed(2)}% lleno)
                 </p>
               </div>
@@ -298,7 +298,7 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
               <div className="datos-vuelo-busqueda">
                 <input
                   type="text"
-                  placeholder="Ingrese código paquete, ciudad o ID de envío"
+                  placeholder="Ingrese código producto, ciudad o ID de grupo"
                   className="input-busqueda"
                   onChange={(e) => setBusqueda(e.target.value)}
                   onKeyDown={(e) => {
@@ -315,10 +315,10 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
                 <table>
                   <thead>
                     <tr>
-                      <th>Cód. paquete</th>
+                      <th>Cód. producto</th>
                       <th>Origen</th>
                       <th>Destino</th>
-                      <th>Cód. envío</th>
+                      <th>Cód. grupo</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -472,15 +472,15 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
             </div>
             <div className="datos-vuelo-content">
               <div className="datos-vuelo-busqueda">
-                {/* Detalle de los {envio.paquetes.length} paquetes */}
+                {/* Detalle de los {envio.paquetes.length} productos */}
               </div>
               <div className="datos-envio-tabla">
                 <table>
                   <thead>
                     <tr>
-                      <th>Cód. paquete</th>
+                      <th>Cód. producto</th>
                       <th>Ruta {simulation ? ("(códigos de vuelo)") : ""}</th>
-                      
+
                     </tr>
                   </thead>
                   <tbody>

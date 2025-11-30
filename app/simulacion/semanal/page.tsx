@@ -72,6 +72,8 @@ const Page = () => {
     const [playing, setPlaying] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [loadingProgress, setLoadingProgress] = useState(0);
+    const [loadingStage, setLoadingStage] = useState("Inicializando...");
+    const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -84,6 +86,27 @@ const Page = () => {
         return () => clearInterval(intervalId);
     }, []);
 
+    // Progreso lento mientras espera datos del WebSocket
+    useEffect(() => {
+        if (loadingProgress >= 55 && loadingProgress < 80 && !cargado) {
+            slowProgressInterval.current = setInterval(() => {
+                setLoadingProgress(prev => {
+                    if (prev < 75) return prev + 0.5;
+                    return prev;
+                });
+            }, 400);
+        } else if (slowProgressInterval.current) {
+            clearInterval(slowProgressInterval.current);
+            slowProgressInterval.current = null;
+        }
+
+        return () => {
+            if (slowProgressInterval.current) {
+                clearInterval(slowProgressInterval.current);
+            }
+        };
+    }, [loadingProgress, cargado]);
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const startDate = params.get("startDate");
@@ -92,12 +115,23 @@ const Page = () => {
         } else {
             setHoraInicio(new Date());
         }
-        
-        setLoadingProgress(20);
-        
+
+        setLoadingProgress(10);
+        setLoadingStage("Conectando con el servidor...");
+
+        // Simulación de progreso incremental mientras se carga
+        const progressInterval = setInterval(() => {
+            setLoadingProgress(prev => {
+                if (prev < 30) return prev + 2;
+                if (prev < 50) return prev + 1;
+                return prev;
+            });
+        }, 150);
+
         axios
             .get(`${apiURL}/aeropuerto`)
             .then((response) => {
+                clearInterval(progressInterval);
                 if (response.data) {
                     // console.log("Respuesta de aeropuertos: ", response.data);
                     const auxAeropuertos = new Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>();
@@ -108,13 +142,17 @@ const Page = () => {
                     });
                     // console.log("Aeropuertos cargados: ", auxAeropuertos);
                     aeropuertos.current = auxAeropuertos;
-                    setLoadingProgress(50);
+                    setLoadingProgress(55);
+                    setLoadingStage("Aeropuertos cargados, esperando datos de vuelos...");
                     setCampana(campana + 1);
-                } 
+                }
             })
             .catch((error) => {
+                clearInterval(progressInterval);
                 console.error("Error fetching data from the API: ", error);
             });
+
+        return () => clearInterval(progressInterval);
     }, []);
 
     useEffect(() => {
@@ -123,10 +161,14 @@ const Page = () => {
             if (cargado) {
                 return;
             }
-            setLoadingProgress(100);
+            setLoadingStage("Finalizando carga...");
+            setLoadingProgress(95);
             setTimeout(() => {
-                setCargado(true);
-            }, 300);
+                setLoadingProgress(100);
+                setTimeout(() => {
+                    setCargado(true);
+                }, 200);
+            }, 150);
             console.log("Cargando datos");
             // console.log("Aeropuertos cargados: ", aeropuertos);
             if (typeof window !== "undefined") {
@@ -180,7 +222,8 @@ const Page = () => {
                         });
                         auxNuevosVuelos.push(vuelo.id);
                     });
-                    setLoadingProgress(75);
+                    setLoadingProgress(80);
+                    setLoadingStage("Vuelos cargados, procesando datos iniciales...");
                     setCampana(campana + 1);
                     console.log("Vuelos cargados: ", vuelos.current.size);
                 }
@@ -222,19 +265,19 @@ const Page = () => {
                             Cargando Simulación
                         </h2>
                         <p className="text-gray-600 mb-8">
-                            Preparando el mapa y los datos de vuelos...
+                            {loadingStage}
                         </p>
-                        
+
                         {/* Barra de progreso */}
                         <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                             <div
-                                className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
+                                className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
                                 style={{ width: `${loadingProgress}%` }}
                             >
                                 <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
                             </div>
                         </div>
-                        <p className="text-sm text-gray-500 mt-3">
+                        <p className="text-sm text-gray-500 mt-3 font-medium">
                             {loadingProgress}% completado
                         </p>
                     </div>

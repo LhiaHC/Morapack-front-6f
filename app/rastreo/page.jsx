@@ -18,8 +18,9 @@ const Modal = ({ isOpen, onClose, onTrack, mensajeError }) => {
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <form onSubmit={handleSubmit}>
-          <h2 className="text-2l mb-2 text-[#52489C] text-left font-bold">Inserta el código de tu paquete</h2>
-          <input type="text" name="code" placeholder="Código" required style={styles.input} />
+          <h2 className="text-2l mb-2 text-[#52489C] text-left font-bold">Rastrea tu envío</h2>
+          <p className="text-sm mb-3 text-gray-600">Ingresa el código de producto o el código de grupo de productos</p>
+          <input type="text" name="code" placeholder="Código de producto o grupo" required style={styles.input} />
           {/* <p style={styles.reminderText}>
             ¿No lo recuerdas? <a href="#" style={styles.link}>Haz clic aquí</a>
           </p> */}
@@ -59,30 +60,92 @@ const NewModal = ({ isOpen, onClose, paquete, envio, vuelos, aeropuertos }) => {
     // console.log('Fecha de llegada:', fechaHoraLlegada);
     const llego = fechaHoraLlegada < new Date();
 
+    const tieneEscalas = vuelos.length > 1;
+    const escalas = vuelos.map(vuelo => vuelo.destino).slice(0, -1);
+
     return (
       <div className="flex flex-row">
         <div className="w-2/5 pr-8">
-          <h2 className="text-2xl mb-10 text-[#84A98C] text-left font-bold">
-            Paquete {paquete.id}: {envio.origen} → {envio.destino}
+          <h2 className="text-2xl mb-6 text-[#84A98C] text-left font-bold">
+            Producto {paquete.id}: {envio.origen} → {envio.destino}
           </h2>
-          <h3 className="text-lg mb-5 text-[#52489C] text-left font-medium">
-            <p className="mb-5 pl-10"><strong>Código:</strong> {paquete.id}</p>
-            <p className="mb-5 pl-10"><strong>Ciudad de Origen:</strong> {aeropuertos.get(envio.origen)?.ciudad ?? ''} ({envio.origen})</p>
-            <p className="mb-5 pl-10"><strong>Ciudad de Destino:</strong> {aeropuertos.get(envio.destino)?.ciudad ?? ''} ({envio.destino})</p>
-            <p className="mb-5 pl-10"><strong>Estado:</strong> {!llego ? "En proceso" : "Terminado"}</p>
-            <p className="mb-5 pl-10"><strong>Fecha de envío:</strong> {formattedDate}</p>
-            {/* <p className="mb-5 pl-10"><strong>Fecha de entrega:</strong> {formattedDateArrival}</p> */}
-            <p className="mb-5 pl-10"><strong>Emisor:</strong> {envio.emisor?.nombre ?? ''} {envio.emisor?.apellido ?? ''}</p>
-            <p className="mb-5 pl-10"><strong>Receptor:</strong> {envio.receptor?.nombre ?? ''} {envio.receptor?.apellido ?? ''}</p>
-            <p className="mb-5 pl-10"><strong>Número documento receptor:</strong> {envio.receptor?.numeroDocumento ?? ''}</p>
-          </h3>
+
+          <div className="mb-6 overflow-y-auto" style={{ maxHeight: '420px' }}>
+            <h3 className="text-lg mb-4 text-[#52489C] text-left font-medium">
+              <p className="mb-3 pl-10"><strong>Código:</strong> {paquete.id}</p>
+              <p className="mb-3 pl-10"><strong>Ciudad de Origen:</strong> {aeropuertos.get(envio.origen)?.ciudad ?? ''} ({envio.origen})</p>
+              <p className="mb-3 pl-10"><strong>Ciudad de Destino:</strong> {aeropuertos.get(envio.destino)?.ciudad ?? ''} ({envio.destino})</p>
+              <p className="mb-3 pl-10"><strong>Estado:</strong> {!llego ? "En proceso" : "Terminado"}</p>
+              <p className="mb-3 pl-10"><strong>Fecha de envío:</strong> {formattedDate}</p>
+              {/* <p className="mb-3 pl-10"><strong>Fecha de entrega:</strong> {formattedDateArrival}</p> */}
+              <p className="mb-3 pl-10"><strong>Emisor:</strong> {envio.emisor?.nombre ?? ''} {envio.emisor?.apellido ?? ''}</p>
+              <p className="mb-3 pl-10"><strong>Receptor:</strong> {envio.receptor?.nombre ?? ''} {envio.receptor?.apellido ?? ''}</p>
+              <p className="mb-3 pl-10"><strong>Número documento receptor:</strong> {envio.receptor?.numeroDocumento ?? ''}</p>
+            </h3>
+
+            {/* Sección de detalles de vuelos y escalas */}
+            <div className="mt-6 border-t border-gray-300 pt-4">
+              <h3 className="text-lg mb-4 text-[#52489C] text-left font-bold pl-6">
+                Detalles del Grupo de Productos
+              </h3>
+              <p className="mb-3 pl-10"><strong>Total de vuelos:</strong> {vuelos.length}</p>
+              <p className="mb-3 pl-10"><strong>Tipo de envío:</strong> {tieneEscalas ? `Con escalas (${escalas.length})` : 'Directo'}</p>
+
+              {tieneEscalas && (
+                <div className="mt-4">
+                  <h4 className="text-md mb-3 text-[#52489C] text-left font-semibold pl-10">
+                    Escalas:
+                  </h4>
+                  <div className="pl-12 space-y-2">
+                    {escalas.map((escala, index) => (
+                      <div key={index} className="mb-2 p-2 bg-gray-50 rounded">
+                        <p className="text-sm">
+                          <strong>Escala {index + 1}:</strong> {aeropuertos.get(escala)?.ciudad ?? escala} ({escala})
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          Vuelo {vuelos[index].id} → Vuelo {vuelos[index + 1]?.id}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sección de todos los productos en el grupo */}
+              {envio.paquetes && envio.paquetes.length > 1 && (
+                <div className="mt-6 border-t border-gray-300 pt-4">
+                  <h4 className="text-md mb-3 text-[#52489C] text-left font-semibold pl-6">
+                    Productos en este grupo ({envio.paquetes.length}):
+                  </h4>
+                  <div className="pl-10 space-y-2 max-h-48 overflow-y-auto">
+                    {envio.paquetes.map((paq, index) => (
+                      <div
+                        key={paq.id}
+                        className={`p-3 rounded ${paq.id === paquete.id ? 'bg-[#84A98C]/20 border-l-4 border-[#84A98C]' : 'bg-gray-50'}`}
+                      >
+                        <p className="text-sm font-semibold">
+                          {paq.id === paquete.id && '▸ '}Producto {paq.id}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Estado: {paq.llegoDestino ? 'Entregado' : 'En tránsito'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 pl-6 italic">
+                    Este grupo de productos se dividió en {envio.paquetes.length} productos para su envío
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         <div className="w-3/5 border-l border-gray-300 pl-8">
           <div className="overflow-y-auto" style={{ maxHeight: '450px' }}>
-            <UbicacionDiagrama 
+            <UbicacionDiagrama
               origen={envio.origen}
               destino={envio.destino}
-              escalas={vuelos.map(vuelo => vuelo.destino).slice(0, -1)}
+              escalas={escalas}
               vuelos={vuelos}
               aeropuertos={aeropuertos}
             />
@@ -186,19 +249,37 @@ const App = () => {
   const handleTrack = async (code) => {
     console.log('Tracking code:', code);
     try {
+      // First try to search by product code
       const response = await axios.get(`${apiURL}/paquete/${code}`);
-      if (response.data =="") {
-        setMensajeError('No se encontró un paquete con ese código');
-        return
+      if (response.data && response.data !== "") {
+        setPaquete(response.data);
+        setCargasTerminadas((prev) => prev + 1);
+        console.log(response.data);
+        closeModal();
+        return;
       }
-      setPaquete(response.data);
-      setCargasTerminadas((prev) => prev + 1);
-      console.log(response.data); 
-      closeModal();
     } catch (error) {
-      console.error('Error rastreando el paquete:', error);
-      setMensajeError('Ingrese un código correcto');
+      console.log('Product not found, trying order code...');
     }
+
+    // If product not found, try searching by order code (codigoEnvio)
+    try {
+      const envioResponse = await axios.get(`${apiURL}/envio/codigo/${code}`);
+      if (envioResponse.data && envioResponse.data !== "" && envioResponse.data.paquetes && envioResponse.data.paquetes.length > 0) {
+        // If order found, use the first product of that order
+        const firstPaquete = envioResponse.data.paquetes[0];
+        setPaquete(firstPaquete);
+        setCargasTerminadas((prev) => prev + 1);
+        console.log('Order found with products:', envioResponse.data);
+        closeModal();
+        return;
+      }
+    } catch (error) {
+      console.error('Error searching by order code:', error);
+    }
+
+    // If neither product nor order found, show error
+    setMensajeError('No se encontró un producto o grupo de productos con ese código');
   };
 
   useEffect(() => {
@@ -331,8 +412,8 @@ const App = () => {
           <img src="/logos/pantallaRastreo.jpg" style={imgStyle} />
         </div>
         <div style={textContainerStyle}>
-          <h1 className="text-3m mb-2 text-[#52489C] text-left font-extrabold">¡Rastrea tu paquete aquí!</h1>
-          <p style={paragraphStyle}>Busca y localiza tu paquete en tiempo real mediante el código brindado</p>
+          <h1 className="text-3m mb-2 text-[#52489C] text-left font-extrabold">¡Rastrea tu producto aquí!</h1>
+          <p style={paragraphStyle}>Busca y localiza tu producto en tiempo real mediante el código brindado</p>
           <button
             style={buttonStyle}
             onClick={openModal}

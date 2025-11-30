@@ -1,6 +1,7 @@
 "use client";
 import DatosVuelo from "@/components/mapa/DatosVuelo";
 import FinSemanal from "@/components/mapa/FinSemanal";
+import PedidosPorDia from "@/components/mapa/PedidosPorDia";
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import { Map as OLMap } from "ol";
@@ -99,6 +100,7 @@ const Mapa = ({
     const aBorrarEnvios = useRef<string[]>([]);
     const vuelosEnElAire = useRef<number>(0);
     const [mostrarInfoSidebar, setMostrarInfoSidebar] = useState(false);
+    const [mostrarPedidosPorDia, setMostrarPedidosPorDia] = useState(false);
 
     useEffect(() => {
         if (!mapRef.current) {
@@ -378,16 +380,39 @@ const Mapa = ({
                 />
                 {mostrarFinSemanal && <FinSemanal programacionVuelos={programacionVuelos} vuelos={vuelos} colapso={colapso}/>}
 
-                {/* Botón "Más información" en esquina superior derecha - solo visible cuando está cerrado */}
-                {!mostrarInfoSidebar && (
+                {/* Botones en esquina superior derecha */}
+                <div className="fixed top-20 right-8 z-50 flex flex-col gap-3">
+                    {/* Botón "Más información" - solo visible cuando está cerrado */}
+                    {!mostrarInfoSidebar && (
+                        <button
+                            onClick={() => setMostrarInfoSidebar(true)}
+                            className="bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2"
+                        >
+                            <span className="font-medium">Más información</span>
+                            <span className="text-sm">▶</span>
+                        </button>
+                    )}
+
+                    {/* Botón "Pedidos por día" */}
                     <button
-                        onClick={() => setMostrarInfoSidebar(true)}
-                        className="fixed top-20 right-8 z-50 bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2"
+                        onClick={() => setMostrarPedidosPorDia(true)}
+                        className="bg-info text-white px-4 py-2 rounded-lg shadow-lg hover:bg-info-dark transition-colors duration-200 flex items-center gap-2"
                     >
-                        <span className="font-medium">Más información</span>
-                        <span className="text-sm">▶</span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="font-medium">Pedidos por día</span>
                     </button>
-                )}
+                </div>
+
+                {/* Panel de Pedidos por Día */}
+                <PedidosPorDia
+                    envios={envios}
+                    simulationTime={simulationTime}
+                    startTime={horaInicio}
+                    isOpen={mostrarPedidosPorDia}
+                    onClose={() => setMostrarPedidosPorDia(false)}
+                />
 
                 {/* Sidebar derecho con información del mapa */}
                 <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-40 transition-transform duration-300 ease-in-out ${
