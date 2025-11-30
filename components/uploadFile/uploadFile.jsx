@@ -10,7 +10,7 @@ function UploadFile() {
     const [isDialogOpen, setIsDialogOpen] = React.useState(false);
     const [codigos, setCodigos] = React.useState([]);
 
-    const baseUrl = process.env.REACT_APP_API_URL_BASE;
+    const baseUrl = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
 
     React.useEffect(() => {
         if (estado === 1 || estado === 2) {

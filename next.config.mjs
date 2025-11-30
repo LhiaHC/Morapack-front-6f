@@ -7,10 +7,10 @@ import { createHash } from 'crypto';
 const nextConfig = {
     output: 'standalone',
     env: {
-        REACT_APP_API_URL_BASE: "http://localhost:8081/api",
-        //REACT_APP_API_URL_BASE: "http://200.16.7.177/api",
-        REACT_APP_WS_URL_BASE: "ws://localhost:8081/api",
-        //REACT_APP_WS_URL_BASE: "ws://200.16.7.177/api",
+        NEXT_PUBLIC_MORAPACK_API_URL: "http://localhost:8081/api",
+        //NEXT_PUBLIC_MORAPACK_API_URL: "http://ipMaquinaV/api",
+        NEXT_PUBLIC_MORAPACK_WS_URL: "ws://localhost:8081/api",
+        //NEXT_PUBLIC_MORAPACK_WS_URL: "ws://ipMaquinaV/api",
     },
     // Configuración para mejorar la carga de chunks
     webpack: (config, { isServer }) => {

@@ -232,7 +232,7 @@ const App = () => {
   const [cargasTerminadas, setCargasTerminadas] = useState(0);
   const [mensajeError, setMensajeError] = useState('');
 
-  const apiURL = process.env.REACT_APP_API_URL_BASE;
+  const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
 
   const openModal = () => {
     setIsModalOpen(true);

@@ -20,7 +20,7 @@ type MessageData = {
 
 const Page = () => {
     const bottomRef = useRef<HTMLDivElement>(null);
-    const apiURL = process.env.REACT_APP_API_URL_BASE;
+    const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
     const vuelos = useRef<
         Map<
             number,
@@ -42,7 +42,7 @@ const Page = () => {
     const [campana, setCampana] = useState(0);
     const [simulationTime, setSimulationTime] = useState<Date | null>(null);
     const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(
-        process.env.REACT_APP_WS_URL_BASE + "/socket",
+        process.env.NEXT_PUBLIC_MORAPACK_WS_URL + "/socket",
         {
             onOpen: () => {
                 let auxHoraInicio: Date = new Date();

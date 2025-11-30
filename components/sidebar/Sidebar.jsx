@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import RedExIcon from "@/public/icons/LogoRedEx";
+import Image from "next/image";
 import SidebarItem from "./SidebarItem";
 import Link from "next/link";
 import { FaBars, FaTimes } from "react-icons/fa";
@@ -79,7 +79,13 @@ const Sidebar = () => {
         <div className="bg-white px-6 py-4 mt-16 border-4 border-primary rounded-lg mx-4">
           <Link href="/" onClick={closeSidebar}>
             <div className="flex items-center justify-center">
-              <RedExIcon className="w-32 h-auto" />
+              <Image
+                src="/logos/logoMorapack.png"
+                alt="Morapack Logo"
+                width={128}
+                height={64}
+                className="w-32 h-auto"
+              />
             </div>
           </Link>
         </div>
