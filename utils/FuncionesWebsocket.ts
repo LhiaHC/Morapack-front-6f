@@ -1,6 +1,6 @@
-// On pressing Connect this method will be called 
-export function conectarAWebsocket(): WebSocket { 
-        const url_base: string | undefined = process.env.REACT_APP_WS_URL_BASE;
+// On pressing Connect this method will be called
+export function conectarAWebsocket(): WebSocket {
+        const url_base: string | undefined = process.env.NEXT_PUBLIC_MORAPACK_WS_URL;
         let ws = new WebSocket(url_base+"/socket" ?? '');
         return ws;
 } 

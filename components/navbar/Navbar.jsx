@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from 'next/navigation'
-import RedExIcon from '@/public/icons/LogoRedEx'
+import MorapackIcon from '@/public/icons/LogoMorapack'
 import NavbarItem from './NavbarItem'
 import Link from 'next/link'
 import LogoPlane from '@/public/icons/LogoPlane'
@@ -35,7 +35,7 @@ const Navbar = () => {
 		<nav className="bg-[#55BBBB] px-6 py-2 flex justify-between">
 			<Link href="/">
 				<div className="flex items-center">
-					<RedExIcon className="mr-4" />
+					<MorapackIcon className="mr-4" />
 					<span className="self-center text-2xl font-bold tracking-wider  text-white"></span>
 				</div>
 			</Link>

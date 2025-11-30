@@ -52,7 +52,7 @@ export default function HorizontalLinearStepper() {
   const [numeroDES, setnumeroDES] = React.useState('985632599');
   const [emailDES, setemailDES] = React.useState('miguel.david@gmail.com');
 
-  const apiURL = process.env.REACT_APP_API_URL_BASE;
+  const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
   const [codigosPaquetes, setCodigosPaquetes] = React.useState([]);
   const [isImmediate, setIsImmediate] = React.useState(false);
 
