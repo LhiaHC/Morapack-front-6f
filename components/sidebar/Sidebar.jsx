@@ -84,7 +84,8 @@ const Sidebar = () => {
                 alt="Morapack Logo"
                 width={128}
                 height={64}
-                className="w-32 h-auto"
+                style={{ width: 'auto', height: 'auto' }}
+                className="w-32"
               />
             </div>
           </Link>

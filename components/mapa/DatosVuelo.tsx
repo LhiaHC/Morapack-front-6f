@@ -396,30 +396,46 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
                   <p style={{ color: 'white', fontSize: '14px', margin: '0 0 10px 0' }}>
                     <strong>Hora local:</strong> {mostrarTiempoEnZonaHoraria(simulationTime, aeropuerto.gmt)}
                   </p>
-                  <p style={{ color: 'white', fontSize: '14px', margin: '0' }}>
-                    <strong>Capacidad:</strong> {aeropuerto.cantidadActual}/{aeropuerto.capacidadMaxima} paquetes
-                  </p>
-                  <div style={{ 
-                    marginTop: '10px',
-                    height: '8px',
-                    background: 'rgba(255,255,255,0.2)',
-                    borderRadius: '4px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${(aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) * 100}%`,
-                      background: (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.8 
-                        ? '#ef4444' 
-                        : (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.5 
-                        ? '#f59e0b' 
-                        : '#10b981',
-                      transition: 'width 0.3s ease'
-                    }}></div>
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', margin: '5px 0 0 0', textAlign: 'center' }}>
-                    {((aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) * 100).toFixed(1)}% ocupado
-                  </p>
+                  {/* Mostrar capacidad solo si no es un hub */}
+                  {!['EBCI', 'SPIM', 'UBBB'].includes(aeropuerto.codigoOACI) && (
+                    <>
+                      <p style={{ color: 'white', fontSize: '14px', margin: '0' }}>
+                        <strong>Capacidad:</strong> {aeropuerto.cantidadActual}/{aeropuerto.capacidadMaxima} paquetes
+                      </p>
+                      <div style={{ 
+                        marginTop: '10px',
+                        height: '8px',
+                        background: 'rgba(255,255,255,0.2)',
+                        borderRadius: '4px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${(aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) * 100}%`,
+                          background: (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.8 
+                            ? '#ef4444' 
+                            : (aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) > 0.5 
+                            ? '#f59e0b' 
+                            : '#10b981',
+                          transition: 'width 0.3s ease'
+                        }}></div>
+                      </div>
+                      <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', margin: '5px 0 0 0', textAlign: 'center' }}>
+                        {((aeropuerto.cantidadActual / aeropuerto.capacidadMaxima) * 100).toFixed(1)}% ocupado
+                      </p>
+                    </>
+                  )}
+                  {/* Para los hubs, mostrar mensaje especial */}
+                  {['EBCI', 'SPIM', 'UBBB'].includes(aeropuerto.codigoOACI) && (
+                    <>
+                      <p style={{ color: 'white', fontSize: '14px', margin: '0' }}>
+                        <strong>Paquetes actuales:</strong> {aeropuerto.cantidadActual}
+                      </p>
+                      <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', margin: '10px 0 0 0', textAlign: 'center', fontStyle: 'italic' }}>
+                        ⭐ Hub principal - Capacidad ilimitada
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

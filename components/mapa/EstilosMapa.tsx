@@ -4,6 +4,8 @@ import { Vuelo } from '@/types/Vuelo';
 import Icon from 'ol/style/Icon';
 import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
+import Circle from 'ol/style/Circle';
+import Fill from 'ol/style/Fill';
 
 let airportStyle: Style;
 let selectedAirportStyle: Style;
@@ -12,6 +14,7 @@ let selectedPlaneStyle: Style;
 let greenAirportStyle: Style;
 let yellowAirportStyle: Style;
 let redAirportStyle: Style;
+let hubAirportStyle: Style;
 
 if(typeof window !== 'undefined') {
     airportStyle = new Style({
@@ -56,6 +59,49 @@ if(typeof window !== 'undefined') {
         }),
         zIndex: 500,
     });
+
+    hubAirportStyle = new Style({
+        image: new Icon({
+            anchor: [0.5, 1],
+            anchorXUnits: 'fraction',
+            anchorYUnits: 'fraction',
+            src: '/logos/almacenNegro.png',
+            scale: 0.06,
+            opacity: 1,
+        }),
+        zIndex: 600,
+    });
+
+    // Estilo con punto rojo para los hubs
+    const hubPointStyle = new Style({
+        image: new Circle({
+            radius: 8,
+            fill: new Fill({
+                color: '#ef4444', // Rojo vibrante
+            }),
+            stroke: new Stroke({
+                color: '#ffffff',
+                width: 2,
+            }),
+        }),
+        zIndex: 601,
+    });
+
+    // Combinar ambos estilos para los hubs
+    hubAirportStyle = [
+        new Style({
+            image: new Icon({
+                anchor: [0.5, 1],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'fraction',
+                src: '/logos/almacenNegro.png',
+                scale: 0.06,
+                opacity: 1,
+            }),
+            zIndex: 600,
+        }),
+        hubPointStyle
+    ];
 
     selectedAirportStyle = new Style({
         image: new Icon({
@@ -187,7 +233,7 @@ export function calcularAngulo(item: {vuelo:Vuelo, pointFeature:any, lineFeature
 }
 
 
-export { airportStyle, selectedAirportStyle, planeStyle, selectedPlaneStyle, greenAirportStyle, yellowAirportStyle, redAirportStyle };
+export { airportStyle, selectedAirportStyle, planeStyle, selectedPlaneStyle, greenAirportStyle, yellowAirportStyle, redAirportStyle, hubAirportStyle };
 
 // Invisible line style
 export const invisibleStyle = new Style({

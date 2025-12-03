@@ -47,10 +47,29 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
         const vueloInfo = vuelos.current.get(programacion.idVuelo);
         if (!vueloInfo) return null;
         
+        // Usar la fecha real de programación del vuelo (que contiene el día correcto de la simulación)
+        const fechaSalidaProgramada = new Date(programacion.fechaSalida);
+        
+        // Extraer solo la hora de las fechas base del vuelo
+        const horaSalida = new Date(vueloInfo.vuelo.fechaHoraSalida);
+        const horaLlegada = new Date(vueloInfo.vuelo.fechaHoraLlegada);
+        
+        // Combinar la fecha de programación con las horas del vuelo
+        const fechaHoraSalidaCompleta = new Date(fechaSalidaProgramada);
+        fechaHoraSalidaCompleta.setHours(horaSalida.getHours(), horaSalida.getMinutes(), 0, 0);
+        
+        const fechaHoraLlegadaCompleta = new Date(fechaSalidaProgramada);
+        fechaHoraLlegadaCompleta.setHours(horaLlegada.getHours(), horaLlegada.getMinutes(), 0, 0);
+        
+        // Si hay cambio de día, ajustar la fecha de llegada
+        if (vueloInfo.vuelo.cambioDeDia > 0) {
+          fechaHoraLlegadaCompleta.setDate(fechaHoraLlegadaCompleta.getDate() + vueloInfo.vuelo.cambioDeDia);
+        }
+        
         return {
           code: programacion.idVuelo,
-          departure: formatTime(vueloInfo.vuelo.fechaHoraSalida),
-          arrival: formatTime(vueloInfo.vuelo.fechaHoraLlegada),
+          departure: formatTime(fechaHoraSalidaCompleta.toISOString()),
+          arrival: formatTime(fechaHoraLlegadaCompleta.toISOString()),
           origin: vueloInfo.vuelo.origen,
           destination: vueloInfo.vuelo.destino,
           packages: programacion.cantPaquetes,

@@ -538,6 +538,11 @@ export function decidirEstiloAeropuerto(item: {aeropuerto: Aeropuerto; pointFeat
     // console.log("Decidiendo estilo de aeropuerto", item);
     if (!item) return;
     if (item.pointFeature === null || item.pointFeature.get('seleccionado')) return;
+    
+    // No cambiar el estilo de los hubs
+    const HUBS = ['EBCI', 'SPIM', 'UBBB'];
+    if (HUBS.includes(item.aeropuerto.codigoOACI)) return;
+    
     let razon = item.aeropuerto.cantidadActual / item.aeropuerto.capacidadMaxima;
     // console.log("Razón de ocupación: ", razon);
     // console.log("Aeropuerto: ", item.aeropuerto);
@@ -574,12 +579,16 @@ export function contarVuelos(
 }
 
 export function capacidadAlmacenesUsada(aeropuertos: React.MutableRefObject<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>>): number {
+    const HUBS = ['EBCI', 'SPIM', 'UBBB'];
     let capacidadUsada = 0;
     let capacidadTotal = 0;
     for (let key of aeropuertos.current.keys()) {
+        // Excluir hubs del cálculo porque tienen capacidad ilimitada
+        if (HUBS.includes(key)) continue;
+        
         // console.log("Key: ", key);
         capacidadUsada += aeropuertos.current.get(key)?.aeropuerto.cantidadActual ?? 0;
         capacidadTotal += aeropuertos.current.get(key)?.aeropuerto.capacidadMaxima ?? 0;
     }
-    return capacidadUsada/capacidadTotal;
+    return capacidadTotal > 0 ? capacidadUsada/capacidadTotal : 0;
 }

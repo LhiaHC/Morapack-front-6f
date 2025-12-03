@@ -24,6 +24,7 @@ import {
     selectedLineStyle,
     dinamicPlaneStyle,
     dinamicSelectedPlaneStle,
+    hubAirportStyle,
 } from "./EstilosMapa";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
@@ -156,6 +157,7 @@ const Mapa = ({
         });
         vuelosEnElAire.current = cuenta;
 
+        const HUBS = ['EBCI', 'SPIM', 'UBBB'];
         const aeropuertoFeatures = Array.from(aeropuertos.current.values()).map(
             (item) => {
                 const point = new Point(
@@ -165,6 +167,12 @@ const Mapa = ({
                     geometry: point,
                 });
                 feature.set('aeropuertoId', item.aeropuerto.codigoOACI);// era OACI y no id, 1h para darme cuenta
+                
+                // Aplicar estilo especial para los hubs
+                if (HUBS.includes(item.aeropuerto.codigoOACI)) {
+                    feature.setStyle(hubAirportStyle);
+                }
+                
                 aeropuertos.current.set(item.aeropuerto.codigoOACI, {...item, pointFeature: feature});
                 decidirEstiloAeropuerto(aeropuertos.current.get(item.aeropuerto.codigoOACI));
                 return feature;
