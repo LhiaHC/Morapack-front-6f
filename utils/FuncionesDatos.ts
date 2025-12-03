@@ -469,7 +469,7 @@ export function agregarPaquetesAlmacen(
                 aeropuertoDestino.aeropuerto.cantidadActual++;
                 aeropuertoDestino.aeropuerto.paquetes.push(paquete);
                 cuenta++;
-                if (aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                if (aeropuertoDestino.aeropuerto.cantidadActual > ( aeropuertoDestino.aeropuerto.capacidadMaxima + 5000) ) {
                     console.log("Colapso en agregarPaquetesAlmacen");
                     setColapso(true);
                     return false;

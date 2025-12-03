@@ -189,7 +189,7 @@ export function crearPuntoDeVuelo(aeropuertos: Map<String, {aeropuerto:Aeropuert
     const angulo = calcularAngulo(item);
     let tieneCarga = true;
     if (paquetes > 0) {
-        let razon = paquetes / item.vuelo.capacidad;
+        let razon = paquetes / (item.vuelo.capacidad);
         feature.set('pintarAuxiliar', true); 
         feature.set('cantPaquetes', paquetes);
         if (razon < 0.33){
@@ -204,7 +204,7 @@ export function crearPuntoDeVuelo(aeropuertos: Map<String, {aeropuerto:Aeropuert
             feature.setStyle(redPlaneStyle(item, angulo));
         } else {
             console.error("Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
-            setColapso(true);
+            //setColapso(true);
         }
     } else {
         tieneCarga = false;
