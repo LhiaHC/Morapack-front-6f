@@ -17,12 +17,13 @@ type DatosVueloProps = {
   envios: React.RefObject<Map<string, Envio>>;
   aeropuertos: React.RefObject<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>>;
   envio : Envio | null;
+  setEnvio: React.Dispatch<React.SetStateAction<Envio | null>>;
   vuelos : React.RefObject<Map<number, {vuelo: Vuelo, pointFeature: any, lineFeature: any, routeFeature: any}>>;
   simulation: boolean;
   auxiliarVuelos?: React.RefObject<Map<number, Vuelo>> | undefined;
 };
 
-const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacionVuelos, simulationTime, envios, aeropuertos , envio, vuelos, simulation=true, auxiliarVuelos}) => {
+const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacionVuelos, simulationTime, envios, aeropuertos , envio, setEnvio, vuelos, simulation=true, auxiliarVuelos}) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [opcion, setOpcion] = useState<number>(0);
   const [programacionVuelo, setProgramacionVuelo] = useState<ProgramacionVuelo | null>(null);
@@ -61,10 +62,27 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
 
   const handleSearchEnvio = () => {
     if (!searchEnvio.trim()) return;
-    const envioData = envios.current?.get(searchEnvio);
+    const searchTerm = searchEnvio.trim();
+    console.log('=== BÚSQUEDA DE ENVÍO ===');
+    console.log('Término de búsqueda:', searchTerm);
+    console.log('Total envíos en mapa:', envios.current?.size);
+    
+    // Mostrar primeras 10 claves del mapa para debug
+    if (envios.current) {
+      const keys = Array.from(envios.current.keys()).slice(0, 10);
+      console.log('Primeras 10 claves en envios.current:', keys);
+    }
+    
+    const envioData = envios.current?.get(searchTerm);
+    console.log('Resultado de búsqueda:', envioData ? 'ENCONTRADO' : 'NO ENCONTRADO');
+    
     if (envioData) {
+      console.log('Datos del envío:', envioData);
       setOpcion(3);
       setVisible(true);
+      setEnvio(envioData);
+    } else {
+      console.log('❌ Envío no encontrado en el mapa');
     }
   };
 

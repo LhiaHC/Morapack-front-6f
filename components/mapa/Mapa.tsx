@@ -384,7 +384,7 @@ const Mapa = ({
             {" "}
             <div>
                 <DatosVuelo vuelo={selectedVuelo} aeropuerto={selectedAeropuerto} programacionVuelos={programacionVuelos} simulationTime={simulationTime}
-                    envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
+                    envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} setEnvio={setSelectedEnvio} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
                 />
                 {mostrarFinSemanal && <FinSemanal programacionVuelos={programacionVuelos} vuelos={vuelos} colapso={colapso}/>}
 
@@ -416,6 +416,8 @@ const Mapa = ({
                 {/* Panel de Pedidos por Día */}
                 <PedidosPorDia
                     envios={envios}
+                    vuelos={vuelos}
+                    programacionVuelos={programacionVuelos}
                     simulationTime={simulationTime}
                     startTime={horaInicio}
                     isOpen={mostrarPedidosPorDia}
