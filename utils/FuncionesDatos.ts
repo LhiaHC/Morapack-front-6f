@@ -579,12 +579,16 @@ export function contarVuelos(
 }
 
 export function capacidadAlmacenesUsada(aeropuertos: React.MutableRefObject<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>>): number {
+    const HUBS = ['EBCI', 'SPIM', 'UBBB'];
     let capacidadUsada = 0;
     let capacidadTotal = 0;
     for (let key of aeropuertos.current.keys()) {
+        // Excluir hubs del cálculo porque tienen capacidad ilimitada
+        if (HUBS.includes(key)) continue;
+        
         // console.log("Key: ", key);
         capacidadUsada += aeropuertos.current.get(key)?.aeropuerto.cantidadActual ?? 0;
         capacidadTotal += aeropuertos.current.get(key)?.aeropuerto.capacidadMaxima ?? 0;
     }
-    return capacidadUsada/capacidadTotal;
+    return capacidadTotal > 0 ? capacidadUsada/capacidadTotal : 0;
 }
