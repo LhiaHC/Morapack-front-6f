@@ -14,7 +14,7 @@ let selectedPlaneStyle: Style;
 let greenAirportStyle: Style;
 let yellowAirportStyle: Style;
 let redAirportStyle: Style;
-let hubAirportStyle: Style;
+let hubAirportStyle: Style | Style[];
 
 if(typeof window !== 'undefined') {
     airportStyle = new Style({
