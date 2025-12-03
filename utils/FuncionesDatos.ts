@@ -538,6 +538,11 @@ export function decidirEstiloAeropuerto(item: {aeropuerto: Aeropuerto; pointFeat
     // console.log("Decidiendo estilo de aeropuerto", item);
     if (!item) return;
     if (item.pointFeature === null || item.pointFeature.get('seleccionado')) return;
+    
+    // No cambiar el estilo de los hubs
+    const HUBS = ['EBCI', 'SPIM', 'UBBB'];
+    if (HUBS.includes(item.aeropuerto.codigoOACI)) return;
+    
     let razon = item.aeropuerto.cantidadActual / item.aeropuerto.capacidadMaxima;
     // console.log("Razón de ocupación: ", razon);
     // console.log("Aeropuerto: ", item.aeropuerto);

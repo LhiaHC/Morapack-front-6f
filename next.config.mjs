@@ -1,5 +1,10 @@
 import { env } from 'process';
 import { createHash } from 'crypto';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // /** @type {import('next').NextConfig} */
 // global.HTMLImageElement = typeof window === 'undefined' ? Object : window.HTMLImageElement
@@ -14,6 +19,13 @@ const nextConfig = {
     },
     // Configuración para mejorar la carga de chunks
     webpack: (config, { isServer }) => {
+        // Resolver alias para evitar duplicados de emotion
+        config.resolve.alias = {
+            ...config.resolve.alias,
+            '@emotion/react': resolve(__dirname, 'node_modules/@emotion/react'),
+            '@emotion/styled': resolve(__dirname, 'node_modules/@emotion/styled'),
+        };
+
         if (!isServer) {
             config.optimization = {
                 ...config.optimization,

@@ -223,7 +223,7 @@ const Page = () => {
                         auxNuevosVuelos.push(vuelo.id);
                     });
                     setLoadingProgress(80);
-                    setLoadingStage("Vuelos cargados, procesando datos iniciales...");
+                    setLoadingStage("Vuelos cargados, esperando rutas optimizadas del servidor...");
                     setCampana(campana + 1);
                     console.log("Vuelos cargados: ", vuelos.current.size);
                 }
@@ -231,6 +231,8 @@ const Page = () => {
             if(message.metadata.includes("primeraCarga")) {
                 console.log("Mensaje de primera carga");
                 console.log("Datos recibidos: ", message.data);
+                setLoadingProgress(90);
+                setLoadingStage("Procesando rutas de envíos...");
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, setColapso);
             }
             if (message.metadata.includes("correrAlgoritmo")) {
