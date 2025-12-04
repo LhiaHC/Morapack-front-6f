@@ -80,16 +80,17 @@ const Page = () => {
     useEffect(() => {
         if (!initializedRef.current) {
             const initializeData = async () => {
-                //   22 Julio 2024 a las 5:45 am
-                setHoraInicio(new Date("2024-07-22T05:45:00"));
-    
+                // Usar la fecha actual en lugar de una hardcodeada
+                const ahora = new Date();
+                setHoraInicio(ahora);
+
                 try {
                     const [auxAeropuertos, vuelos] = await Promise.all([fetchAeropuertos(), fetchVuelos()]);
                     console.log("Aeropuertos cargados: ");
                     aeropuertos.current = auxAeropuertos;
                     console.log("Vuelos auxiliares cargados: ");
                     auxiliarVuelos.current = vuelos;
-    
+
                     setCampana((prev) => prev + 2);
                 } catch (error) {
                     console.error("Error cargando datos: ", error);
@@ -103,8 +104,8 @@ const Page = () => {
     useEffect(() => {
         console.log("Campana: ", campana);
         if(campana ==  2) {
-            let auxHoraInicio: Date = new Date("2024-07-22T05:45:00");
-            sendMessage("vuelosEnVivo: tiempo: " +auxHoraInicio.toLocaleString("en-US", {timeZone: "America/Lima",}),
+            // Usar horaInicio que ahora es la fecha actual
+            sendMessage("vuelosEnVivo: tiempo: " + horaInicio.toLocaleString("en-US", {timeZone: "America/Lima",}),
                     true
             );
             console.log("Enviando mensaje de tiempo con campana 2");
@@ -177,10 +178,38 @@ const Page = () => {
             if(message.metadata.includes("primeraCarga")) {
                 console.log("Mensaje de primera carga");
                 console.log("Datos recibidos: ", message.data);
+                console.log("Cantidad de envíos: ", Object.keys(message.data).length);
+
+                // Log detallado de cada envío
+                for (let key in message.data) {
+                    const envio = message.data[key];
+                    console.log("  Envío:", envio.codigoEnvio, "|", envio.origen, "->", envio.destino);
+                    console.log("    Paquetes:", envio.paquetes ? envio.paquetes.length : 0);
+                    if (envio.paquetes) {
+                        envio.paquetes.forEach((paq: any) => {
+                            console.log("      Paquete", paq.idPaquete, "| Ruta:", paq.ruta ? paq.ruta.length + " vuelos" : "SIN RUTA", "| Rutas:", paq.ruta);
+                        });
+                    }
+                }
+
                 procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, auxiliarVuelos, setColapso);
             }
             if (message.metadata.includes("nuevosEnvios")) {
-                console.log(message.data);
+                console.log("📦 NUEVOS ENVÍOS RECIBIDOS");
+                console.log("Cantidad:", Object.keys(message.data).length);
+
+                // Log detallado de cada envío nuevo
+                for (let key in message.data) {
+                    const envio = message.data[key];
+                    console.log("  ✈️ Envío:", envio.codigoEnvio, "|", envio.origen, "->", envio.destino);
+                    console.log("    📦 Paquetes:", envio.paquetes ? envio.paquetes.length : 0);
+                    if (envio.paquetes) {
+                        envio.paquetes.forEach((paq: any) => {
+                            console.log("      🎁 Paquete", paq.idPaquete, "| Ruta:", paq.ruta ? paq.ruta : "❌ SIN RUTA");
+                        });
+                    }
+                }
+
                 procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, auxiliarVuelos, setColapso);
             }
             if (message.metadata.includes("enviosEnOperacion")) {

@@ -80,8 +80,8 @@ const Page = () => {
     useEffect(() => {
         if (!initializedRef.current) {
             const initializeData = async () => {
-                //   22 Julio 2024 a las 5:45 am
-                setHoraInicio(new Date("2024-07-22T06:10:00"));
+                const ahora = new Date();
+                setHoraInicio(ahora);
     
                 try {
                     const [auxAeropuertos, vuelos] = await Promise.all([fetchAeropuertos(), fetchVuelos()]);
@@ -103,8 +103,8 @@ const Page = () => {
     useEffect(() => {
         console.log("Campana: ", campana);
         if(campana ==  2) {
-            let auxHoraInicio: Date = new Date("2024-07-22T06:10:00");
-            sendMessage("vuelosEnVivo: tiempo: " +auxHoraInicio.toLocaleString("en-US", {timeZone: "America/Lima",}),
+            // Usar horaInicio que ahora es la fecha actual
+            sendMessage("vuelosEnVivo: tiempo: " + horaInicio.toLocaleString("en-US", {timeZone: "America/Lima",}),
                     true
             );
             console.log("Enviando mensaje de tiempo con campana 2");
