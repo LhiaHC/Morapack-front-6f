@@ -18,7 +18,7 @@ const Sidebar = () => {
   }, []);
 
   const sidebarItems = [
-    { name: "En vivo", route: "/vuelosEnVivo", Icon: FlightTakeoffRoundedIcon },
+    { name: "Operación día a día", route: "/vuelosEnVivo", Icon: FlightTakeoffRoundedIcon },
     { name: "Simulación", route: "/simulacion", Icon: TuneRoundedIcon },
   ];
 

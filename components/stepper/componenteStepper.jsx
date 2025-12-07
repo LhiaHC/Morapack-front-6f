@@ -55,6 +55,48 @@ export default function HorizontalLinearStepper() {
   const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
   const [codigosPaquetes, setCodigosPaquetes] = React.useState([]);
   const [isImmediate, setIsImmediate] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  // Función de validación
+  const validateStep = (step) => {
+    setErrorMessage('');
+    
+    switch (step) {
+      case 0: // Paso 1: Datos del remitente
+        if (!tipoDocREM) return 'Por favor seleccione el tipo de documento del remitente';
+        if (!numDocREM) return 'Por favor ingrese el número de documento del remitente';
+        if (!apellidoREM) return 'Por favor ingrese el apellido del remitente';
+        if (!nombreREM) return 'Por favor ingrese el nombre del remitente';
+        if (!telefonoREM) return 'Por favor seleccione el código de país del remitente';
+        if (!numeroREM) return 'Por favor ingrese el número de teléfono del remitente';
+        if (!emailREM) return 'Por favor ingrese el correo electrónico del remitente';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailREM)) return 'Por favor ingrese un correo electrónico válido del remitente';
+        break;
+      
+      case 1: // Paso 2: Destino y paquetes
+        if (!ciudadOrigen) return 'Por favor seleccione la ciudad de origen';
+        if (!ciudadDestino) return 'Por favor seleccione la ciudad de destino';
+        if (!numPaquetes || numPaquetes <= 0) return 'Por favor ingrese una cantidad válida de paquetes';
+        if (!isImmediate && !horaEnvio) return 'Por favor seleccione la fecha y hora de envío o marque "Ahora"';
+        break;
+      
+      case 2: // Paso 3: Datos del receptor
+        if (!tipoDocDES) return 'Por favor seleccione el tipo de documento del receptor';
+        if (!numDocDES) return 'Por favor ingrese el número de documento del receptor';
+        if (!apellidoDES) return 'Por favor ingrese el apellido del receptor';
+        if (!nombreDES) return 'Por favor ingrese el nombre del receptor';
+        if (!telefonoDES) return 'Por favor seleccione el código de país del receptor';
+        if (!numeroDES) return 'Por favor ingrese el número de teléfono del receptor';
+        if (!emailDES) return 'Por favor ingrese el correo electrónico del receptor';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDES)) return 'Por favor ingrese un correo electrónico válido del receptor';
+        break;
+      
+      default:
+        break;
+    }
+    
+    return null;
+  };
 
   // Funciones handleChange
   const handleChangeNumDocREM = (e) =>{
@@ -243,6 +285,7 @@ export default function HorizontalLinearStepper() {
 
 
   const handleBack = () => {
+    setErrorMessage('');
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
@@ -280,75 +323,75 @@ export default function HorizontalLinearStepper() {
               <p className="text-gray-600 text-sm">Complete la información de quien envía el paquete</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6 space-y-6">
+            <div className="bg-white rounded-xl shadow-md p-8 space-y-8">
               {/* Tipo y Número de Documento */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Documento de Identidad</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Documento de Identidad</h3>
                 </div>
-                <BasicSelect required value={tipoDocREM} setValue={settipoDocREM} />
-                <TextField 
-                  required 
-                  id="filled-basic" 
-                  label="Ingrese número de documento" 
-                  variant="outlined" 
-                  sx={{ width: '50%' }}
-                  value={numDocREM} 
-                  onChange={handleChangeNumDocREM} 
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <BasicSelect required value={tipoDocREM} setValue={settipoDocREM} />
+                  </div>
+                  <div>
+                    <TextField 
+                      required 
+                      id="filled-basic" 
+                      label="Ingrese número de documento" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numDocREM} 
+                      onChange={handleChangeNumDocREM} 
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Nombres Completos */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Información Personal</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Información Personal</h3>
                 </div>
-                <Box display="flex" gap={3} flexWrap="wrap">
-                  <Box flex="1" minWidth="200px">
-                    <TextField 
-                      required 
-                      id="apellido" 
-                      label="Apellido" 
-                      variant="outlined" 
-                      fullWidth
-                      value={apellidoREM} 
-                      onChange={handleChangeApellidoREM} 
-                    />
-                  </Box>
-                  <Box flex="1" minWidth="200px">
-                    <TextField 
-                      required 
-                      id="nombre" 
-                      label="Nombre" 
-                      variant="outlined" 
-                      fullWidth
-                      value={nombreREM} 
-                      onChange={handleChangeNombreREM} 
-                    />
-                  </Box>
-                  <Box flex="1" minWidth="200px">
-                    <TextField 
-                      id="segundo-nombre" 
-                      label="Segundo nombre (opcional)" 
-                      variant="outlined" 
-                      fullWidth
-                      value={segundonombreREM} 
-                      onChange={handleChangeSegundonombreREM} 
-                    />
-                  </Box>
-                </Box>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextField 
+                    required 
+                    id="apellido" 
+                    label="Apellido" 
+                    variant="outlined" 
+                    fullWidth
+                    value={apellidoREM} 
+                    onChange={handleChangeApellidoREM} 
+                  />
+                  <TextField 
+                    required 
+                    id="nombre" 
+                    label="Nombre" 
+                    variant="outlined" 
+                    fullWidth
+                    value={nombreREM} 
+                    onChange={handleChangeNombreREM} 
+                  />
+                  <TextField 
+                    id="segundo-nombre" 
+                    label="Segundo nombre (opcional)" 
+                    variant="outlined" 
+                    fullWidth
+                    value={segundonombreREM} 
+                    onChange={handleChangeSegundonombreREM} 
+                  />
+                </div>
               </div>
 
               {/* Contacto */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Datos de Contacto</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Datos de Contacto</h3>
                 </div>
-                <Box display="flex" gap={2} alignItems="flex-end">
-                  <Box width="200px">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
                     <SelectVariants required numCode={telefonoREM} setnumCode={settelefonoREM} />
-                  </Box>
-                  <Box flex="1">
+                  </div>
+                  <div className="md:col-span-2">
                     <TextField 
                       required 
                       id="numero-telefono" 
@@ -358,14 +401,15 @@ export default function HorizontalLinearStepper() {
                       value={numeroREM} 
                       onChange={handleChangeNumeroREM} 
                     />
-                  </Box>
-                </Box>
+                  </div>
+                </div>
                 <TextField 
                   required 
                   id="email" 
-                  label="correo@ejemplo.com" 
+                  label="Correo electrónico" 
                   variant="outlined" 
-                  sx={{ width: '60%' }}
+                  fullWidth
+                  placeholder="correo@ejemplo.com"
                   value={emailREM} 
                   onChange={handleChangeEmailREM} 
                 />
@@ -386,34 +430,34 @@ export default function HorizontalLinearStepper() {
               <p className="text-gray-600 text-sm">Indique el origen, destino y cantidad de paquetes a enviar</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6 space-y-6">
+            <div className="bg-white rounded-xl shadow-md p-8 space-y-8">
               {/* Ubicaciones */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Ubicaciones de Envío</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Ubicaciones de Envío</h3>
                 </div>
-                <Box display="flex" gap={3} flexWrap="wrap">
-                  <Box flex="1" minWidth="250px">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Ciudad de Origen *
                     </label>
                     <SelectVariantsCity required city={ciudadOrigen} setCity={setciudadOrigen} />
-                  </Box>
-                  <Box flex="1" minWidth="250px">
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Ciudad de Destino *
                     </label>
                     <SelectVariantsCity required city={ciudadDestino} setCity={setciudadDestino} />
-                  </Box>
-                </Box>
+                  </div>
+                </div>
               </div>
 
               {/* Detalles del Envío */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Detalles del Envío</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Detalles del Envío</h3>
                 </div>
-                <Box display="flex" flexDirection="column" gap={2} width="50%">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <TextField 
                     required 
                     id="num-paquetes" 
@@ -424,44 +468,55 @@ export default function HorizontalLinearStepper() {
                     value={numPaquetes} 
                     onChange={handleChangeNumPaquetes} 
                   />
-                </Box>
-                
-                <Box display="flex" flexDirection="column" gap={2}>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Fecha y Hora de Registro *
-                  </label>
-                  <Box display="flex" flexDirection="row" alignItems="center" gap={2}>
-                    <div className="flex items-center border rounded-md bg-gray-50">
-                      <DatePicker
-                        selected={horaEnvio}
-                        onChange={handleDateChange}
-                        showTimeSelect
-                        dateFormat="dd/MM/yyyy - HH:mm"
-                        className="flex-grow p-2 text-left outline-none text-lg bg-transparent"
-                        disabled={isImmediate}
-                      />
-                      <div
-                        className="p-2 cursor-pointer flex-shrink-0"
-                        onClick={() =>
-                          document.querySelector(".react-datepicker-wrapper input").focus()
-                        }
-                      >
-                        <FaCalendarAlt className="text-lg text-gray-600" />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Fecha y Hora de Registro *
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center border border-gray-300 rounded-md bg-white flex-1 hover:border-primary transition-colors relative">
+                        <DatePicker
+                          selected={horaEnvio}
+                          onChange={handleDateChange}
+                          showTimeSelect
+                          timeFormat="HH:mm"
+                          timeIntervals={15}
+                          dateFormat="dd/MM/yyyy - HH:mm"
+                          className="flex-grow p-3 text-left outline-none bg-transparent w-full rounded-l-md"
+                          disabled={isImmediate}
+                          placeholderText="Seleccione fecha y hora"
+                          wrapperClassName="w-full"
+                          id="date-picker-input"
+                        />
+                        <button
+                          type="button"
+                          className="p-3 cursor-pointer flex-shrink-0 hover:bg-gray-100 rounded-r-md transition-colors"
+                          onClick={() => {
+                            if (!isImmediate) {
+                              const input = document.getElementById('date-picker-input');
+                              if (input) {
+                                input.click();
+                              }
+                            }
+                          }}
+                          disabled={isImmediate}
+                        >
+                          <FaCalendarAlt className={isImmediate ? "text-gray-400" : "text-primary"} />
+                        </button>
                       </div>
                     </div>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={isImmediate}
-                          onChange={handleCheckboxChange}
-                          name="checkbox-demo"
-                          inputProps={{ 'aria-label': 'Al momento de registrar' }}
-                        />
-                      }
-                      label="Ahora"
+                  </div>
+                </div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={isImmediate}
+                      onChange={handleCheckboxChange}
+                      name="checkbox-demo"
+                      inputProps={{ 'aria-label': 'Al momento de registrar' }}
                     />
-                  </Box>
-                </Box>
+                  }
+                  label="Registrar ahora (usar fecha y hora actual)"
+                />
               </div>
             </div>
           </React.Fragment>
@@ -479,75 +534,75 @@ export default function HorizontalLinearStepper() {
               <p className="text-gray-600 text-sm">Complete la información de quien recibe el paquete</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6 space-y-6">
+            <div className="bg-white rounded-xl shadow-md p-8 space-y-8">
               {/* Tipo y Número de Documento */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Documento de Identidad</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Documento de Identidad</h3>
                 </div>
-                <BasicSelect required value={tipoDocDES} setValue={settipoDocDES} />
-                <TextField 
-                  required 
-                  id="filled-basic" 
-                  label="Ingrese número de documento" 
-                  variant="outlined" 
-                  sx={{ width: '50%' }}
-                  value={numDocDES} 
-                  onChange={handleChangeNumDocDES} 
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <BasicSelect required value={tipoDocDES} setValue={settipoDocDES} />
+                  </div>
+                  <div>
+                    <TextField 
+                      required 
+                      id="filled-basic" 
+                      label="Ingrese número de documento" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numDocDES} 
+                      onChange={handleChangeNumDocDES} 
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Nombres Completos */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Información Personal</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Información Personal</h3>
                 </div>
-                <Box display="flex" gap={3} flexWrap="wrap">
-                  <Box flex="1" minWidth="200px">
-                    <TextField 
-                      required 
-                      id="apellido-des" 
-                      label="Apellido" 
-                      variant="outlined" 
-                      fullWidth
-                      value={apellidoDES} 
-                      onChange={handleChangeApellidoDES} 
-                    />
-                  </Box>
-                  <Box flex="1" minWidth="200px">
-                    <TextField 
-                      required 
-                      id="nombre-des" 
-                      label="Nombre" 
-                      variant="outlined" 
-                      fullWidth
-                      value={nombreDES} 
-                      onChange={handleChangeNombreDES} 
-                    />
-                  </Box>
-                  <Box flex="1" minWidth="200px">
-                    <TextField 
-                      id="segundo-nombre-des" 
-                      label="Segundo nombre (opcional)" 
-                      variant="outlined" 
-                      fullWidth
-                      value={segundonombreDES} 
-                      onChange={handleChangeSegundonombreDES} 
-                    />
-                  </Box>
-                </Box>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextField 
+                    required 
+                    id="apellido-des" 
+                    label="Apellido" 
+                    variant="outlined" 
+                    fullWidth
+                    value={apellidoDES} 
+                    onChange={handleChangeApellidoDES} 
+                  />
+                  <TextField 
+                    required 
+                    id="nombre-des" 
+                    label="Nombre" 
+                    variant="outlined" 
+                    fullWidth
+                    value={nombreDES} 
+                    onChange={handleChangeNombreDES} 
+                  />
+                  <TextField 
+                    id="segundo-nombre-des" 
+                    label="Segundo nombre (opcional)" 
+                    variant="outlined" 
+                    fullWidth
+                    value={segundonombreDES} 
+                    onChange={handleChangeSegundonombreDES} 
+                  />
+                </div>
               </div>
 
               {/* Contacto */}
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Datos de Contacto</h3>
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Datos de Contacto</h3>
                 </div>
-                <Box display="flex" gap={2} alignItems="flex-end">
-                  <Box width="200px">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
                     <SelectVariants required numCode={telefonoDES} setnumCode={settelefonoDES} />
-                  </Box>
-                  <Box flex="1">
+                  </div>
+                  <div className="md:col-span-2">
                     <TextField 
                       required 
                       id="numero-telefono-des" 
@@ -557,14 +612,15 @@ export default function HorizontalLinearStepper() {
                       value={numeroDES} 
                       onChange={handleChangeNumeroDES} 
                     />
-                  </Box>
-                </Box>
+                  </div>
+                </div>
                 <TextField 
                   required 
                   id="email-des" 
-                  label="correo@ejemplo.com" 
+                  label="Correo electrónico" 
                   variant="outlined" 
-                  sx={{ width: '60%' }}
+                  fullWidth
+                  placeholder="correo@ejemplo.com"
                   value={emailDES} 
                   onChange={handleChangeEmailDES} 
                 />
@@ -854,10 +910,24 @@ export default function HorizontalLinearStepper() {
                 Atrás
               </Button>
               <Box sx={{ flex: '1 1 auto' }} />
+              
+              {errorMessage && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-3 mr-3 rounded">
+                  <p className="text-sm text-red-700 font-medium">⚠️ {errorMessage}</p>
+                </div>
+              )}
+              
               <Button
                 sx={{ color: '#52489C', backgroundColor: "#FFFFFF" }}
                 variant="contained"
                 onClick={async () => {
+                  const error = validateStep(activeStep);
+                  if (error) {
+                    setErrorMessage(error);
+                    return;
+                  }
+                  
+                  setErrorMessage('');
                   if (activeStep === steps.length - 1) {
                     await handleFinish();
                   } else {
@@ -878,37 +948,63 @@ export default function HorizontalLinearStepper() {
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  width: 500,
+                  width: { xs: '90%', sm: 600 },
+                  maxHeight: '80vh',
                   bgcolor: 'background.paper',
-                  border: '2px solid #000',
+                  borderRadius: '16px',
                   boxShadow: 24,
                   p: 4,
                   overflow: 'auto',
                 }}>
-                  <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                    ¡Códigos de rastreo para los paquetes generados!
-                  </h2>
-                  <>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  <div className="mb-6">
+                    <h2 className="text-3xl mb-3 text-primary font-bold">
+                      ✅ ¡Envío Registrado Exitosamente!
+                    </h2>
+                    <p className="text-gray-600 text-base">
+                      A continuación se muestran los códigos de rastreo generados para cada paquete:
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      Códigos de Rastreo ({codigosPaquetes.length} paquetes)
+                    </h3>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                       {codigosPaquetes.map((codigo, index) => (
                         <div
                           key={index}
-                          id="modal-description"
-                          style={{
-                            padding: '5px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            backgroundColor: '#f9f9f9',
-                            width: '60px',
-                            textAlign: 'center',
-                          }}
+                          className="bg-white border-2 border-primary rounded-lg p-3 text-center font-mono font-bold text-primary hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
+                          title={`Código ${index + 1}: ${codigo}`}
                         >
                           {codigo}
                         </div>
                       ))}
                     </div>
-                  </>
-                  <Button onClick={handleCloseModal} sx={{ mt: 2, color: '#52489C', backgroundColor: "#FFFFFF" }}>Terminar</Button>
+                  </div>
+
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded">
+                    <p className="text-sm text-blue-800">
+                      💡 <strong>Importante:</strong> Guarde estos códigos. Los clientes podrán usar estos números para rastrear sus paquetes.
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleCloseModal} 
+                    variant="contained"
+                    fullWidth
+                    sx={{ 
+                      mt: 2, 
+                      py: 1.5,
+                      backgroundColor: '#00897B',
+                      '&:hover': {
+                        backgroundColor: '#00796B',
+                      },
+                      fontSize: '1rem',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    Terminar
+                  </Button>
                 </Box>
               </Modal>
 
