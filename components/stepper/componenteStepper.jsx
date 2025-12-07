@@ -29,32 +29,74 @@ export default function HorizontalLinearStepper() {
   const [skipped, setSkipped] = React.useState(new Set());
   const [openModal, setOpenModal] = React.useState(false);
 
-  const [numDocREM, setnumDocREM] = React.useState('742056989');
-  const [tipoDocREM, settipoDocREM] = React.useState('10');
-  const [apellidoREM, setapellidoREM] = React.useState('Cruzalegui');
-  const [nombreREM, setnombreREM] = React.useState('Miguel');
-  const [segundonombreREM, setsegundonombreREM] = React.useState('David');
-  const [telefonoREM, settelefonoREM] = React.useState('51');
-  const [numeroREM, setnumeroREM] = React.useState('985632599');
-  const [emailREM, setemailREM] = React.useState('miguel.david@gmail.com');
+  const [numDocREM, setnumDocREM] = React.useState('');
+  const [tipoDocREM, settipoDocREM] = React.useState('');
+  const [apellidoREM, setapellidoREM] = React.useState('');
+  const [nombreREM, setnombreREM] = React.useState('');
+  const [segundonombreREM, setsegundonombreREM] = React.useState('');
+  const [telefonoREM, settelefonoREM] = React.useState('');
+  const [numeroREM, setnumeroREM] = React.useState('');
+  const [emailREM, setemailREM] = React.useState('');
 
   const [ciudadOrigen, setciudadOrigen] = React.useState('');
   const [ciudadDestino, setciudadDestino] = React.useState('');
   const [numPaquetes, setnumPaquetes] = React.useState('');
   const [horaEnvio, sethoraEnvio] = React.useState('');
 
-  const [numDocDES, setnumDocDES] = React.useState('742056989');
-  const [tipoDocDES, settipoDocDES] = React.useState('10');
-  const [apellidoDES, setapellidoDES] = React.useState('Cruzalegui');
-  const [nombreDES, setnombreDES] = React.useState('Miguel');
-  const [segundonombreDES, setsegundonombreDES] = React.useState('David');
-  const [telefonoDES, settelefonoDES] = React.useState('51');
-  const [numeroDES, setnumeroDES] = React.useState('985632599');
-  const [emailDES, setemailDES] = React.useState('miguel.david@gmail.com');
+  const [numDocDES, setnumDocDES] = React.useState('');
+  const [tipoDocDES, settipoDocDES] = React.useState('');
+  const [apellidoDES, setapellidoDES] = React.useState('');
+  const [nombreDES, setnombreDES] = React.useState('');
+  const [segundonombreDES, setsegundonombreDES] = React.useState('');
+  const [telefonoDES, settelefonoDES] = React.useState('');
+  const [numeroDES, setnumeroDES] = React.useState('');
+  const [emailDES, setemailDES] = React.useState('');
 
   const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
   const [codigosPaquetes, setCodigosPaquetes] = React.useState([]);
   const [isImmediate, setIsImmediate] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  // Función de validación
+  const validateStep = (step) => {
+    setErrorMessage('');
+    
+    switch (step) {
+      case 0: // Paso 1: Datos del remitente
+        if (!tipoDocREM) return 'Por favor seleccione el tipo de documento del remitente';
+        if (!numDocREM) return 'Por favor ingrese el número de documento del remitente';
+        if (!apellidoREM) return 'Por favor ingrese el apellido del remitente';
+        if (!nombreREM) return 'Por favor ingrese el nombre del remitente';
+        if (!telefonoREM) return 'Por favor seleccione el código de país del remitente';
+        if (!numeroREM) return 'Por favor ingrese el número de teléfono del remitente';
+        if (!emailREM) return 'Por favor ingrese el correo electrónico del remitente';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailREM)) return 'Por favor ingrese un correo electrónico válido del remitente';
+        break;
+      
+      case 1: // Paso 2: Destino y paquetes
+        if (!ciudadOrigen) return 'Por favor seleccione la ciudad de origen';
+        if (!ciudadDestino) return 'Por favor seleccione la ciudad de destino';
+        if (!numPaquetes || numPaquetes <= 0) return 'Por favor ingrese una cantidad válida de paquetes';
+        if (!isImmediate && !horaEnvio) return 'Por favor seleccione la fecha y hora de envío o marque "Ahora"';
+        break;
+      
+      case 2: // Paso 3: Datos del receptor
+        if (!tipoDocDES) return 'Por favor seleccione el tipo de documento del receptor';
+        if (!numDocDES) return 'Por favor ingrese el número de documento del receptor';
+        if (!apellidoDES) return 'Por favor ingrese el apellido del receptor';
+        if (!nombreDES) return 'Por favor ingrese el nombre del receptor';
+        if (!telefonoDES) return 'Por favor seleccione el código de país del receptor';
+        if (!numeroDES) return 'Por favor ingrese el número de teléfono del receptor';
+        if (!emailDES) return 'Por favor ingrese el correo electrónico del receptor';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDES)) return 'Por favor ingrese un correo electrónico válido del receptor';
+        break;
+      
+      default:
+        break;
+    }
+    
+    return null;
+  };
 
   // Funciones handleChange
   const handleChangeNumDocREM = (e) =>{
@@ -243,6 +285,7 @@ export default function HorizontalLinearStepper() {
 
 
   const handleBack = () => {
+    setErrorMessage('');
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
@@ -270,153 +313,197 @@ export default function HorizontalLinearStepper() {
       case 0:
         return (
           <React.Fragment>
-            <Typography sx={{ mt: 2, mb: 1 }} component="div">Paso {activeStep + 1}</Typography>
-            <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-              Datos personales del cliente
-            </h2>
-            <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-              Tipo de documento
-            </h2>
-            <div className="flex flex-col gap-4">
-              <BasicSelect required value={tipoDocREM} setValue={settipoDocREM} />
-              <div className="text-3m mb-2 text-[#000000] text-left font-bold">
-                <h2>Número de documento</h2>
-                <TextField required id="filled-basic" label="Ej. 742056989" variant="filled" sx={{ width: '40%' }}
-                  value={numDocREM} onChange={handleChangeNumDocREM} />
-              </div>
-
-              <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  width="100%"
-                  mt={1}
-                  gap={2}
-                >
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Apellido
-                    </h2>
-                    <TextField required id="apellido" label="Ej. Cruzalegui" variant="filled" fullWidth
-                      value={apellidoREM} onChange={handleChangeApellidoREM} />
-                  </Box>
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Nombre
-                    </h2>
-                    <TextField required id="nombre" label="Ej. Miguel" variant="filled" fullWidth
-                      value={nombreREM} onChange={handleChangeNombreREM} />
-                  </Box>
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Segundo nombre
-                    </h2>
-                    <TextField required id="segundo-nombre" label="Ej. David" variant="filled" fullWidth
-                      value={segundonombreREM} onChange={handleChangeSegundonombreREM} />
-                  </Box>
-
-                </Box>
-              </div>
-              <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                <Box
-                  display="flex"
-                  justifyContent="flex-start"
-                  width="100%"
-                  gap={1}
-                >
-                  <Box display="flex" flexDirection="column" alignItems="left" width="35%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Teléfono
-                    </h2>
-                    <SelectVariants required numCode={telefonoREM} setnumCode={settelefonoREM} />
-                  </Box>
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                      Número
-                    </h2>
-                    <TextField required id="nombre" label="Ej. 985632599" variant="filled" fullWidth
-                      value={numeroREM} onChange={handleChangeNumeroREM} />
-                  </Box>
-
-                </Box>
-              </div>
-
-              <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                <Box
-                  display="flex"
-                  justifyContent="flex-start"
-                  width="100%"
-                  gap={1}
-                >
-                  <Box display="flex" flexDirection="column" alignItems="left" width="50%">
-                    <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                      Correo electrónico
-                    </h2>
-                    <TextField required id="nombre" label="Ej. miguel.david@gmail.com" variant="filled" fullWidth
-                      value={emailREM} onChange={handleChangeEmailREM} />
-                  </Box>
-
-                </Box>
-              </div>
-
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 shadow-sm mb-6">
+              <Typography sx={{ mb: 2 }} component="div" className="text-gray-600 font-medium">
+                Paso {activeStep + 1} de {steps.length}
+              </Typography>
+              <h2 className="text-3xl mb-2 text-primary font-bold">
+                📋 Datos del Cliente Remitente
+              </h2>
+              <p className="text-gray-600 text-sm">Complete la información de quien envía el paquete</p>
             </div>
-            <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
 
-            </Box>
+            <div className="bg-white rounded-xl shadow-md p-8 space-y-8">
+              {/* Tipo y Número de Documento */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Documento de Identidad</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <BasicSelect required value={tipoDocREM} setValue={settipoDocREM} />
+                  </div>
+                  <div>
+                    <TextField 
+                      required 
+                      id="filled-basic" 
+                      label="Ingrese número de documento" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numDocREM} 
+                      onChange={handleChangeNumDocREM} 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Nombres Completos */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Información Personal</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextField 
+                    required 
+                    id="apellido" 
+                    label="Apellido" 
+                    variant="outlined" 
+                    fullWidth
+                    value={apellidoREM} 
+                    onChange={handleChangeApellidoREM} 
+                  />
+                  <TextField 
+                    required 
+                    id="nombre" 
+                    label="Nombre" 
+                    variant="outlined" 
+                    fullWidth
+                    value={nombreREM} 
+                    onChange={handleChangeNombreREM} 
+                  />
+                  <TextField 
+                    id="segundo-nombre" 
+                    label="Segundo nombre (opcional)" 
+                    variant="outlined" 
+                    fullWidth
+                    value={segundonombreREM} 
+                    onChange={handleChangeSegundonombreREM} 
+                  />
+                </div>
+              </div>
+
+              {/* Contacto */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Datos de Contacto</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <SelectVariants required numCode={telefonoREM} setnumCode={settelefonoREM} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <TextField 
+                      required 
+                      id="numero-telefono" 
+                      label="Número de teléfono" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numeroREM} 
+                      onChange={handleChangeNumeroREM} 
+                    />
+                  </div>
+                </div>
+                <TextField 
+                  required 
+                  id="email" 
+                  label="Correo electrónico" 
+                  variant="outlined" 
+                  fullWidth
+                  placeholder="correo@ejemplo.com"
+                  value={emailREM} 
+                  onChange={handleChangeEmailREM} 
+                />
+              </div>
+            </div>
           </React.Fragment>
         )
       case 1:
         return (
           <React.Fragment>
-            <Typography sx={{ mt: 2, mb: 1 }} component="div">Paso {activeStep + 1}</Typography>
-            <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-              Ciudades
-            </h2>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 shadow-sm mb-6">
+              <Typography sx={{ mb: 2 }} component="div" className="text-gray-600 font-medium">
+                Paso {activeStep + 1} de {steps.length}
+              </Typography>
+              <h2 className="text-3xl mb-2 text-primary font-bold">
+                📦 Destino y Paquetes
+              </h2>
+              <p className="text-gray-600 text-sm">Indique el origen, destino y cantidad de paquetes a enviar</p>
+            </div>
 
-            <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-              Ciudad de origen
-            </h2>
-
-            <div className="flex flex-col gap-4">
-              <SelectVariantsCity required city={ciudadOrigen} setCity={setciudadOrigen} />
-              <div className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                <h2>Ciudad de destino</h2>
-                <SelectVariantsCity required city={ciudadDestino} setCity={setciudadDestino} />
+            <div className="bg-white rounded-xl shadow-md p-8 space-y-8">
+              {/* Ubicaciones */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Ubicaciones de Envío</h3>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ciudad de Origen *
+                    </label>
+                    <SelectVariantsCity required city={ciudadOrigen} setCity={setciudadOrigen} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ciudad de Destino *
+                    </label>
+                    <SelectVariantsCity required city={ciudadDestino} setCity={setciudadDestino} />
+                  </div>
+                </div>
               </div>
 
-              <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                Paquetes
-              </h2>
-              <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold" >
-                  Número de paquetes
-                </h2>
-                <TextField required id="apellido" label="Ej. 3" variant="filled" fullWidth
-                  value={numPaquetes} onChange={handleChangeNumPaquetes} />
-              </Box>
-              <h2 className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-              </h2>
-              <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                Hora de registro
-              </h2>
-              <Box display="flex" flexDirection="row" alignItems="center" gap={2}>
-                <div className="flex items-center border rounded-md">
-                <DatePicker
-                    selected = {horaEnvio}
-                    onChange={handleDateChange}
-                    showTimeSelect
-                    dateFormat="dd/MM/yyyy - HH:mm"
-                    className="flex-grow p-2 text-left outline-none text-lg"
-                    style={{ backgroundColor: '#e1e1e1 !important' }}
-                    disabled={isImmediate}
+              {/* Detalles del Envío */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Detalles del Envío</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextField 
+                    required 
+                    id="num-paquetes" 
+                    label="Cantidad de paquetes" 
+                    variant="outlined" 
+                    fullWidth
+                    type="number"
+                    value={numPaquetes} 
+                    onChange={handleChangeNumPaquetes} 
                   />
-                  <div
-                    className="p-2 cursor-pointer flex-shrink-0"
-                    onClick={() =>
-                      document.querySelector(".react-datepicker-wrapper input").focus()
-                    }
-                  >
-                    <FaCalendarAlt className="text-lg" />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Fecha y Hora de Registro *
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center border border-gray-300 rounded-md bg-white flex-1 hover:border-primary transition-colors relative">
+                        <DatePicker
+                          selected={horaEnvio}
+                          onChange={handleDateChange}
+                          showTimeSelect
+                          timeFormat="HH:mm"
+                          timeIntervals={15}
+                          dateFormat="dd/MM/yyyy - HH:mm"
+                          className="flex-grow p-3 text-left outline-none bg-transparent w-full rounded-l-md"
+                          disabled={isImmediate}
+                          placeholderText="Seleccione fecha y hora"
+                          wrapperClassName="w-full"
+                          id="date-picker-input"
+                        />
+                        <button
+                          type="button"
+                          className="p-3 cursor-pointer flex-shrink-0 hover:bg-gray-100 rounded-r-md transition-colors"
+                          onClick={() => {
+                            if (!isImmediate) {
+                              const input = document.getElementById('date-picker-input');
+                              if (input) {
+                                input.click();
+                              }
+                            }
+                          }}
+                          disabled={isImmediate}
+                        >
+                          <FaCalendarAlt className={isImmediate ? "text-gray-400" : "text-primary"} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <FormControlLabel
@@ -428,383 +515,349 @@ export default function HorizontalLinearStepper() {
                       inputProps={{ 'aria-label': 'Al momento de registrar' }}
                     />
                   }
-                  label="Ahora"
+                  label="Registrar ahora (usar fecha y hora actual)"
                 />
-              </Box>
+              </div>
             </div>
-            <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-
-            </Box>
           </React.Fragment>
         );
       case 2:
         return (
           <React.Fragment>
-            <Typography sx={{ mt: 2, mb: 1 }} component="div">Paso {activeStep + 1}</Typography>
-            <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-              Datos del receptor
-            </h2>
-            <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-              Tipo de documento
-            </h2>
-            <div className="flex flex-col gap-4">
-              <BasicSelect required value={tipoDocDES} setValue={settipoDocDES} />
-              <div className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                <h2>Número de documento</h2>
-                <TextField required id="filled-basic" label="Ej. 742056989" variant="filled" sx={{ width: '40%' }}
-                  value={numDocDES} onChange={(handleChangeNumDocDES)} />
-              </div>
-
-              <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  width="100%"
-                  mt={1}
-                  gap={2}
-                >
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Apellido
-                    </h2>
-                    <TextField required id="apellido" label="Ej. Cruzalegui" variant="filled" fullWidth
-                      value={apellidoDES} onChange={handleChangeApellidoDES} />
-                  </Box>
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Nombre
-                    </h2>
-                    <TextField required id="nombre" label="Ej. Miguel" variant="filled" fullWidth
-                      value={nombreDES} onChange={handleChangeNombreDES} />
-                  </Box>
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Segundo nombre
-                    </h2>
-                    <TextField required id="segundo-nombre" label="Ej. David" variant="filled" fullWidth
-                      value={segundonombreDES} onChange={handleChangeSegundonombreDES} />
-                  </Box>
-
-                </Box>
-              </div>
-              <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                <Box
-                  display="flex"
-                  justifyContent="flex-start"
-                  width="100%"
-                  gap={1}
-                >
-                  <Box display="flex" flexDirection="column" alignItems="left" width="35%">
-                    <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Teléfono
-                    </h2>
-                    <SelectVariants required numCode={telefonoDES} setnumCode={settelefonoDES} />
-                  </Box>
-                  <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                    <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                      Número
-                    </h2>
-                    <TextField required id="nombre" label="Ej. 985632599" variant="filled" fullWidth
-                      value={numeroDES} onChange={handleChangeNumeroDES} />
-                  </Box>
-
-                </Box>
-              </div>
-
-              <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                <Box
-                  display="flex"
-                  justifyContent="flex-start"
-                  width="100%"
-                  gap={1}
-                >
-                  <Box display="flex" flexDirection="column" alignItems="left" width="50%">
-                    <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                      Correo electrónico
-                    </h2>
-                    <TextField required id="nombre" label="Ej. miguel.david@gmail.com" variant="filled" fullWidth
-                      value={emailDES} onChange={handleChangeEmailDES} />
-                  </Box>
-
-                </Box>
-              </div>
-
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 shadow-sm mb-6">
+              <Typography sx={{ mb: 2 }} component="div" className="text-gray-600 font-medium">
+                Paso {activeStep + 1} de {steps.length}
+              </Typography>
+              <h2 className="text-3xl mb-2 text-primary font-bold">
+                👤 Datos del Receptor
+              </h2>
+              <p className="text-gray-600 text-sm">Complete la información de quien recibe el paquete</p>
             </div>
-            <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
 
-            </Box>
+            <div className="bg-white rounded-xl shadow-md p-8 space-y-8">
+              {/* Tipo y Número de Documento */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Documento de Identidad</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <BasicSelect required value={tipoDocDES} setValue={settipoDocDES} />
+                  </div>
+                  <div>
+                    <TextField 
+                      required 
+                      id="filled-basic" 
+                      label="Ingrese número de documento" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numDocDES} 
+                      onChange={handleChangeNumDocDES} 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Nombres Completos */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Información Personal</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextField 
+                    required 
+                    id="apellido-des" 
+                    label="Apellido" 
+                    variant="outlined" 
+                    fullWidth
+                    value={apellidoDES} 
+                    onChange={handleChangeApellidoDES} 
+                  />
+                  <TextField 
+                    required 
+                    id="nombre-des" 
+                    label="Nombre" 
+                    variant="outlined" 
+                    fullWidth
+                    value={nombreDES} 
+                    onChange={handleChangeNombreDES} 
+                  />
+                  <TextField 
+                    id="segundo-nombre-des" 
+                    label="Segundo nombre (opcional)" 
+                    variant="outlined" 
+                    fullWidth
+                    value={segundonombreDES} 
+                    onChange={handleChangeSegundonombreDES} 
+                  />
+                </div>
+              </div>
+
+              {/* Contacto */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">Datos de Contacto</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <SelectVariants required numCode={telefonoDES} setnumCode={settelefonoDES} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <TextField 
+                      required 
+                      id="numero-telefono-des" 
+                      label="Número de teléfono" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numeroDES} 
+                      onChange={handleChangeNumeroDES} 
+                    />
+                  </div>
+                </div>
+                <TextField 
+                  required 
+                  id="email-des" 
+                  label="Correo electrónico" 
+                  variant="outlined" 
+                  fullWidth
+                  placeholder="correo@ejemplo.com"
+                  value={emailDES} 
+                  onChange={handleChangeEmailDES} 
+                />
+              </div>
+            </div>
           </React.Fragment>
         );
       case 3:
         return (
           <div>
             <React.Fragment>
-              <Typography sx={{ mt: 2, mb: 1 }} component="div">Paso {activeStep + 1}</Typography>
-              <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                Confirmar envío
-              </h2>
-              <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-                Tipo de documento
-              </h2>
-              <div className="flex flex-col gap-4">
-                <BasicSelect disabled={true} value={tipoDocREM} setValue={settipoDocREM} />
-                <div className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <h2>Número de documento </h2>
-                  <TextField disabled id="filled-basic" label="Número de documento" variant="filled" sx={{ width: '40%' }}
-                    value={numDocREM} />
-                </div>
-                <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    width="100%"
-                    mt={1}
-                    gap={2}
-                  >
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Apellido
-                      </h2>
-                      <TextField disabled id="apellido" label="Apellido" variant="filled" fullWidth
-                        value={apellidoREM} />
-                    </Box>
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Nombre
-                      </h2>
-                      <TextField disabled id="nombre" label="Nombre" variant="filled" fullWidth
-                        value={nombreREM} onChange={setnombreREM} />
-                    </Box>
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Segundo nombre
-                      </h2>
-                      <TextField disabled id="segundo-nombre" label="Segundo nombre" variant="filled" fullWidth
-                        value={segundonombreREM} onChange={setsegundonombreREM} />
-                    </Box>
-
-                  </Box>
-                </div>
-                <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <Box
-                    display="flex"
-                    justifyContent="flex-start"
-                    width="100%"
-                    gap={1}
-                  >
-                    <Box display="flex" flexDirection="column" alignItems="left" width="35%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Teléfono
-                      </h2>
-                      <SelectVariants disabled={true} numCode={telefonoREM} setnumCode={settelefonoREM} />
-                    </Box>
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                        Número
-                      </h2>
-                      <TextField disabled id="nombre" label="Número" variant="filled" fullWidth
-                        value={numeroREM} />
-                    </Box>
-
-                  </Box>
-                </div>
-
-                <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <Box
-                    display="flex"
-                    justifyContent="flex-start"
-                    width="100%"
-                    gap={1}
-                  >
-                    <Box display="flex" flexDirection="column" alignItems="left" width="50%">
-                      <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                        Correo electrónico
-                      </h2>
-                      <TextField disabled id="nombre" label="Email" variant="filled" fullWidth
-                        value={emailREM} />
-                    </Box>
-
-                  </Box>
-                </div>
-
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 shadow-sm mb-6">
+                <Typography sx={{ mb: 2 }} component="div" className="text-gray-600 font-medium">
+                  Paso {activeStep + 1} de {steps.length}
+                </Typography>
+                <h2 className="text-3xl mb-2 text-primary font-bold">
+                  ✓ Confirmar Envío
+                </h2>
+                <p className="text-gray-600 text-sm">Revise que todos los datos sean correctos antes de confirmar</p>
               </div>
-              <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
 
-              </Box>
-            </React.Fragment>
-
-            <React.Fragment>
-              <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                Destino
-              </h2>
-
-              <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-                Ciudad de origen
-              </h2>
-
-              <div className="flex flex-col gap-4">
-                <SelectVariantsCity disabled={true} city={ciudadOrigen} setCity={setciudadOrigen} />
-                <div className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <h2>Ciudad de destino </h2>
-                  <SelectVariantsCity disabled={true} city={ciudadDestino} setCity={setciudadDestino} />
+              {/* Card Remitente */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-4">
+                <div className="flex items-center gap-2 mb-4 border-b pb-3">
+                  <span className="text-2xl">📤</span>
+                  <h3 className="text-xl font-bold text-gray-800">Datos del Remitente</h3>
                 </div>
-
-                <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                  Paquetes
-                </h2>
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold" >
-                    Número de paquetes
-                  </h2>
-                  <TextField disabled id="apellido" label="Paquetes" variant="filled" fullWidth
-                    value={numPaquetes} />
-                </Box>
-
-                {/* Insert aquí la parte de la hora de envío pero todo desactivado*/}
-                <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                  Hora de registro
-                </h2>
-                <Box display="flex" flexDirection="row" alignItems="center" gap={2}>
-                  <div className="flex items-center border rounded-md">
-                    <DatePicker
-                      selected={horaEnvio}
-                      onChange={handleDateChange}
-                      showTimeSelect
-                      dateFormat="dd/MM/yyyy - HH:mm"
-                      className="flex-grow p-2 text-left outline-none text-lg"
-                      style={{ backgroundColor: '#e1e1e1 !important' }}
-                      disabled={true}
-                    />
-                    <div
-                      className="p-2 cursor-pointer flex-shrink-0"
-                      onClick={() =>
-                        document.querySelector(".react-datepicker-wrapper input").focus()
-                      }
-                    >
-                      <FaCalendarAlt className="text-lg" />
-                    </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Tipo de Documento</label>
+                    <BasicSelect disabled={true} value={tipoDocREM} setValue={settipoDocREM} />
                   </div>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={isImmediate}
-                        onChange={handleCheckboxChange}
-                        name="checkbox-demo"
-                        inputProps={{ 'aria-label': 'Al momento de registrar' }}
-                        disabled={true}
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Número de Documento</label>
+                    <TextField 
+                      disabled 
+                      id="num-doc-rem-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numDocREM} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Apellido</label>
+                    <TextField 
+                      disabled 
+                      id="apellido-rem-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={apellidoREM} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Nombre</label>
+                    <TextField 
+                      disabled 
+                      id="nombre-rem-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={nombreREM} 
+                    />
+                  </div>
+                  {segundonombreREM && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Segundo Nombre</label>
+                      <TextField 
+                        disabled 
+                        id="segundo-nombre-rem-confirm" 
+                        variant="outlined" 
+                        fullWidth
+                        value={segundonombreREM} 
                       />
-                    }
-                    label="Ahora"
-                  />
-                </Box>
-
-
-
-
-                <h2 className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-
-                </h2>
-
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Teléfono</label>
+                    <Box display="flex" gap={1}>
+                      <SelectVariants disabled={true} numCode={telefonoREM} setnumCode={settelefonoREM} />
+                      <TextField 
+                        disabled 
+                        id="numero-rem-confirm" 
+                        variant="outlined" 
+                        fullWidth
+                        value={numeroREM} 
+                      />
+                    </Box>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium text-gray-600">Correo Electrónico</label>
+                    <TextField 
+                      disabled 
+                      id="email-rem-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={emailREM} 
+                    />
+                  </div>
+                </div>
               </div>
-              <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
 
-              </Box>
-            </React.Fragment>
-
-            <React.Fragment>
-              <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                Datos del receptor
-              </h2>
-              <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-                Tipo de documento
-              </h2>
-              <div className="flex flex-col gap-4">
-                <BasicSelect disabled={true} value={tipoDocDES} setValue={settipoDocDES} />
-                <div className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <h2>Número de documento </h2>
-                  <TextField disabled id="filled-basic" label="Número de documento" variant="filled" sx={{ width: '40%' }}
-                    value={numDocDES} />
+              {/* Card Envío */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-4">
+                <div className="flex items-center gap-2 mb-4 border-b pb-3">
+                  <span className="text-2xl">🌍</span>
+                  <h3 className="text-xl font-bold text-gray-800">Detalles del Envío</h3>
                 </div>
-                <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    width="100%"
-                    mt={1}
-                    gap={2}
-                  >
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Apellido
-                      </h2>
-                      <TextField disabled id="apellido" label="Apellido" variant="filled" fullWidth
-                        value={apellidoDES} />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Ciudad de Origen</label>
+                    <SelectVariantsCity disabled={true} city={ciudadOrigen} setCity={setciudadOrigen} />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Ciudad de Destino</label>
+                    <SelectVariantsCity disabled={true} city={ciudadDestino} setCity={setciudadDestino} />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Número de Paquetes</label>
+                    <TextField 
+                      disabled 
+                      id="num-paquetes-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numPaquetes} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Fecha y Hora de Registro</label>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <div className="flex items-center border rounded-md flex-1 bg-gray-100">
+                        <DatePicker
+                          selected={horaEnvio}
+                          onChange={handleDateChange}
+                          showTimeSelect
+                          dateFormat="dd/MM/yyyy - HH:mm"
+                          className="flex-grow p-2 text-left outline-none text-sm bg-transparent"
+                          disabled={true}
+                        />
+                        <div className="p-2 flex-shrink-0">
+                          <FaCalendarAlt className="text-sm text-gray-500" />
+                        </div>
+                      </div>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={isImmediate}
+                            disabled={true}
+                          />
+                        }
+                        label="Ahora"
+                      />
                     </Box>
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Nombre
-                      </h2>
-                      <TextField disabled id="nombre" label="Nombre" variant="filled" fullWidth
-                        value={nombreDES} />
-                    </Box>
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Segundo nombre
-                      </h2>
-                      <TextField disabled id="segundo-nombre" label="Segundo nombre" variant="filled" fullWidth
-                        value={segundonombreDES} />
-                    </Box>
-
-                  </Box>
+                  </div>
                 </div>
-                <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <Box
-                    display="flex"
-                    justifyContent="flex-start"
-                    width="100%"
-                    gap={1}
-                  >
-                    <Box display="flex" flexDirection="column" alignItems="left" width="35%">
-                      <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Teléfono
-                      </h2>
+              </div>
+
+              {/* Card Receptor */}
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex items-center gap-2 mb-4 border-b pb-3">
+                  <span className="text-2xl">📥</span>
+                  <h3 className="text-xl font-bold text-gray-800">Datos del Receptor</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Tipo de Documento</label>
+                    <BasicSelect disabled={true} value={tipoDocDES} setValue={settipoDocDES} />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Número de Documento</label>
+                    <TextField 
+                      disabled 
+                      id="num-doc-des-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={numDocDES} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Apellido</label>
+                    <TextField 
+                      disabled 
+                      id="apellido-des-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={apellidoDES} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Nombre</label>
+                    <TextField 
+                      disabled 
+                      id="nombre-des-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={nombreDES} 
+                    />
+                  </div>
+                  {segundonombreDES && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Segundo Nombre</label>
+                      <TextField 
+                        disabled 
+                        id="segundo-nombre-des-confirm" 
+                        variant="outlined" 
+                        fullWidth
+                        value={segundonombreDES} 
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Teléfono</label>
+                    <Box display="flex" gap={1}>
                       <SelectVariants disabled={true} numCode={telefonoDES} setnumCode={settelefonoDES} />
+                      <TextField 
+                        disabled 
+                        id="numero-des-confirm" 
+                        variant="outlined" 
+                        fullWidth
+                        value={numeroDES} 
+                      />
                     </Box>
-                    <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                      <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                        Número
-                      </h2>
-                      <TextField disabled id="nombre" label="Número" variant="filled" fullWidth
-                        value={numeroDES} />
-                    </Box>
-
-                  </Box>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium text-gray-600">Correo Electrónico</label>
+                    <TextField 
+                      disabled 
+                      id="email-des-confirm" 
+                      variant="outlined" 
+                      fullWidth
+                      value={emailDES} 
+                    />
+                  </div>
                 </div>
-
-                <div className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-                  <Box
-                    display="flex"
-                    justifyContent="flex-start"
-                    width="100%"
-                    gap={1}
-                  >
-                    <Box display="flex" flexDirection="column" alignItems="left" width="50%">
-                      <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                        Correo electrónico
-                      </h2>
-                      <TextField disabled id="nombre" label="Email" variant="filled" fullWidth
-                        value={emailDES} />
-                    </Box>
-
-                  </Box>
-                </div>
-
               </div>
-              <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-
-              </Box>
             </React.Fragment>
-
           </div>
         );
       default:
@@ -857,10 +910,24 @@ export default function HorizontalLinearStepper() {
                 Atrás
               </Button>
               <Box sx={{ flex: '1 1 auto' }} />
+              
+              {errorMessage && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-3 mr-3 rounded">
+                  <p className="text-sm text-red-700 font-medium">⚠️ {errorMessage}</p>
+                </div>
+              )}
+              
               <Button
                 sx={{ color: '#52489C', backgroundColor: "#FFFFFF" }}
                 variant="contained"
                 onClick={async () => {
+                  const error = validateStep(activeStep);
+                  if (error) {
+                    setErrorMessage(error);
+                    return;
+                  }
+                  
+                  setErrorMessage('');
                   if (activeStep === steps.length - 1) {
                     await handleFinish();
                   } else {
@@ -881,37 +948,63 @@ export default function HorizontalLinearStepper() {
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  width: 500,
+                  width: { xs: '90%', sm: 600 },
+                  maxHeight: '80vh',
                   bgcolor: 'background.paper',
-                  border: '2px solid #000',
+                  borderRadius: '16px',
                   boxShadow: 24,
                   p: 4,
                   overflow: 'auto',
                 }}>
-                  <h2 className="text-2xl mb-2 text-[#52489C] text-left font-bold">
-                    ¡Códigos de rastreo para los paquetes generados!
-                  </h2>
-                  <>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  <div className="mb-6">
+                    <h2 className="text-3xl mb-3 text-primary font-bold">
+                      ✅ ¡Envío Registrado Exitosamente!
+                    </h2>
+                    <p className="text-gray-600 text-base">
+                      A continuación se muestran los códigos de rastreo generados para cada paquete:
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      Códigos de Rastreo ({codigosPaquetes.length} paquetes)
+                    </h3>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                       {codigosPaquetes.map((codigo, index) => (
                         <div
                           key={index}
-                          id="modal-description"
-                          style={{
-                            padding: '5px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            backgroundColor: '#f9f9f9',
-                            width: '60px',
-                            textAlign: 'center',
-                          }}
+                          className="bg-white border-2 border-primary rounded-lg p-3 text-center font-mono font-bold text-primary hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
+                          title={`Código ${index + 1}: ${codigo}`}
                         >
                           {codigo}
                         </div>
                       ))}
                     </div>
-                  </>
-                  <Button onClick={handleCloseModal} sx={{ mt: 2, color: '#52489C', backgroundColor: "#FFFFFF" }}>Terminar</Button>
+                  </div>
+
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded">
+                    <p className="text-sm text-blue-800">
+                      💡 <strong>Importante:</strong> Guarde estos códigos. Los clientes podrán usar estos números para rastrear sus paquetes.
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleCloseModal} 
+                    variant="contained"
+                    fullWidth
+                    sx={{ 
+                      mt: 2, 
+                      py: 1.5,
+                      backgroundColor: '#00897B',
+                      '&:hover': {
+                        backgroundColor: '#00796B',
+                      },
+                      fontSize: '1rem',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    Terminar
+                  </Button>
                 </Box>
               </Modal>
 
@@ -964,7 +1057,7 @@ export default function HorizontalLinearStepper() {
             <BasicSelect/>
             <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
                     Número de documento
-                    <TextField id="filled-basic" label="Ej. 742056989" variant="filled" sx={{ width: '40%' }}/>
+                    <TextField id="filled-basic" label="Ej. 742056989" variant="outlined" sx={{ width: '40%' }}/>
             </h2>
             <h2 className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
               <Box
@@ -978,19 +1071,19 @@ export default function HorizontalLinearStepper() {
                   <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
                       Apellido
                   </h2>
-                  <TextField id="apellido" label="Ej. Cruzalegui" variant="filled" fullWidth />
+                  <TextField id="apellido" label="Ej. Cruzalegui" variant="outlined" fullWidth />
                 </Box>
                 <Box display="flex" flexDirection="column" alignItems="left" width="30%">
                   <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
                         Nombre
                   </h2>
-                  <TextField id="nombre" label="Ej. Miguel" variant="filled" fullWidth />
+                  <TextField id="nombre" label="Ej. Miguel" variant="outlined" fullWidth />
                 </Box>
                 <Box display="flex" flexDirection="column" alignItems="left" width="30%">
                   <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
                         Segundo nombre
                   </h2>
-                  <TextField id="segundo-nombre" label="Ej. David" variant="filled" fullWidth />
+                  <TextField id="segundo-nombre" label="Ej. David" variant="outlined" fullWidth />
                 </Box>
 
               </Box>  
@@ -1012,7 +1105,7 @@ export default function HorizontalLinearStepper() {
                   <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
                         Número
                   </h2>
-                  <TextField id="nombre" label="Ej. 985632599" variant="filled" fullWidth />
+                  <TextField id="nombre" label="Ej. 985632599" variant="outlined" fullWidth />
                 </Box>
               </Box>  
             </h2>

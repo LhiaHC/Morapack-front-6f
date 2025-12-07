@@ -80,9 +80,11 @@ export function procesarData(
                 if (aeropuertoOrigen && !cargaInicial) {
                     aeropuertoOrigen.cantidadActual++;
                     aeropuertoOrigen.paquetes.push(paquete);
-                    if (aeropuertoOrigen.cantidadActual > aeropuertoOrigen.capacidadMaxima) {
+                    // Excluir hubs del colapso (capacidad ilimitada)
+                    const HUBS = ['EBCI', 'SPIM', 'UBBB'];
+                    if (!HUBS.includes(aeropuertoOrigen.codigoOACI) && aeropuertoOrigen.cantidadActual > aeropuertoOrigen.capacidadMaxima) {
                         setColapso(true);
-                        console.log("Colapso en procesarData (aeropuerto origen)");
+                        console.log("Colapso en procesarData (aeropuerto origen): " + aeropuertoOrigen.codigoOACI);
                     }
                 }
             }
@@ -187,9 +189,11 @@ export function procesarDataReal(
                     if (aeropuerto) {
                         aeropuerto.cantidadActual++;
                         aeropuerto.paquetes.push(paquete);
-                        if (aeropuerto.cantidadActual > aeropuerto.capacidadMaxima) {
+                        // Excluir hubs del colapso (capacidad ilimitada)
+                        const HUBS = ['EBCI', 'SPIM', 'UBBB'];
+                        if (!HUBS.includes(aeropuerto.codigoOACI) && aeropuerto.cantidadActual > aeropuerto.capacidadMaxima) {
                             setColapso(true);
-                            console.log("Colapso en procesarDataReal (aeropuerto origen)");
+                            console.log("Colapso en procesarDataReal (aeropuerto origen): " + aeropuerto.codigoOACI);
                         }
                     }
                 }
@@ -469,8 +473,10 @@ export function agregarPaquetesAlmacen(
                 aeropuertoDestino.aeropuerto.cantidadActual++;
                 aeropuertoDestino.aeropuerto.paquetes.push(paquete);
                 cuenta++;
-                if (aeropuertoDestino.aeropuerto.cantidadActual > ( aeropuertoDestino.aeropuerto.capacidadMaxima + 5000) ) {
-                    console.log("Colapso en agregarPaquetesAlmacen");
+                // Excluir hubs del colapso (capacidad ilimitada)
+                const HUBS = ['EBCI', 'SPIM', 'UBBB'];
+                if (!HUBS.includes(aeropuertoDestino.aeropuerto.codigoOACI) && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                    console.log("Colapso en agregarPaquetesAlmacen: " + aeropuertoDestino.aeropuerto.codigoOACI);
                     setColapso(true);
                     return false;
                 }
@@ -514,7 +520,10 @@ export function agregarPaquetesAlmacenReal(
                 aeropuertoDestino.aeropuerto.cantidadActual++;
                 aeropuertoDestino.aeropuerto.paquetes.push(paquete);
                 cuenta++;
-                if (aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                // Excluir hubs del colapso (capacidad ilimitada)
+                const HUBS = ['EBCI', 'SPIM', 'UBBB'];
+                if (!HUBS.includes(aeropuertoDestino.aeropuerto.codigoOACI) && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                    console.log("Colapso en agregarPaquetesAlmacenReal: " + aeropuertoDestino.aeropuerto.codigoOACI);
                     setColapso(true);
                     return false;
                 }

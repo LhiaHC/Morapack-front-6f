@@ -11,6 +11,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { actualizarDataReal, procesarData, procesarDataReal, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
 import { Envio } from "@/types/Envio";
+import BotonRegistroPedido from "@/components/mapa/BotonRegistroPedido";
 
 type MessageData = {
     data: Array<any>;
@@ -210,6 +211,7 @@ const Page = () => {
                         colapso={colapso}
                         setColapso={setColapso}
                     />
+                    <BotonRegistroPedido />
                     <div ref={bottomRef}></div>
                 </div>
             )}
