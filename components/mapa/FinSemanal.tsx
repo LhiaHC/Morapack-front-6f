@@ -79,80 +79,17 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
       })
       .filter(row => row !== null);
 
-    // SIEMPRE agregar ejemplos hardcodeados de vuelos con sobrecapacidad para demostración
-    const now = new Date();
-    const hardcodedRows = [
-      {
-        code: 2156,
-        departure: formatTime(new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString()),
-        arrival: formatTime(new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString()),
-        origin: 'SPIM',
-        destination: 'SCEL',
-        packages: 285,
-        capacity: 200,
-        exceeded: true,
-      },
-      {
-        code: 1843,
-        departure: formatTime(new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString()),
-        arrival: formatTime(new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString()),
-        origin: 'EBCI',
-        destination: 'OERK',
-        packages: 178,
-        capacity: 150,
-        exceeded: true,
-      },
-      {
-        code: 967,
-        departure: formatTime(new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString()),
-        arrival: formatTime(new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString()),
-        origin: 'UBBB',
-        destination: 'OJAI',
-        packages: 231,
-        capacity: 180,
-        exceeded: true,
-      },
-      {
-        code: 2341,
-        departure: formatTime(new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString()),
-        arrival: formatTime(new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString()),
-        origin: 'SPIM',
-        destination: 'SBBR',
-        packages: 302,
-        capacity: 250,
-        exceeded: true,
-      },
-      {
-        code: 1456,
-        departure: formatTime(new Date(now.getTime() - 10 * 60 * 60 * 1000).toISOString()),
-        arrival: formatTime(new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString()),
-        origin: 'EBCI',
-        destination: 'LOWW',
-        packages: 195,
-        capacity: 160,
-        exceeded: true,
-      },
-    ];
-    
-    // Siempre insertar los vuelos excedidos al inicio
-    allRows.unshift(...hardcodedRows);
-    
-    console.log('🔴 Total rows después de agregar hardcoded:', allRows.length);
-    console.log('🔴 Hardcoded rows agregados:', hardcodedRows.length);
-
     // Tomar los últimos 300 items
     const finalRows = allRows.slice(-300);
     
-    console.log('🔴 Final rows después de slice:', finalRows.length);
+    // Reorganizar para que los vuelos excedidos estén al inicio (solo si hay colapso)
+    if (colapso) {
+      const exceeded = finalRows.filter(row => row?.exceeded);
+      const normal = finalRows.filter(row => !row?.exceeded);
+      return [...exceeded, ...normal];
+    }
     
-    // Reorganizar para que los vuelos excedidos estén al inicio
-    const exceeded = finalRows.filter(row => row?.exceeded);
-    const normal = finalRows.filter(row => !row?.exceeded);
-    
-    console.log('🔴 Vuelos excedidos encontrados:', exceeded.length);
-    console.log('🔴 Vuelos normales:', normal.length);
-    
-    return [...exceeded, ...normal];
+    return finalRows;
   }, [programacionVuelos, vuelos, colapso]);
 
   const exceededCount = useMemo(() => {
