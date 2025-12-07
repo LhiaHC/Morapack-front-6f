@@ -8,6 +8,9 @@ import { Envio } from "@/types/Envio";
 import { aHoraMinutos, convertirHoraVuelo, mostrarTiempoEnZonaHoraria, tiempoFaltante, utcStringToZonedDate } from "@/utils/FuncionesTiempo";
 import { Paquete } from "@/types/Paquete";
 import { FaSearch, FaPlane, FaWarehouse, FaBox, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { procesarSeleccionEnvio, desactivarEnvio, seleccionarAeropuerto, seleccionarVuelo } from "@/utils/FuncionesMapa";
+import { Map as OLMap } from "ol";
+import { fromLonLat } from "ol/proj";
 
 type DatosVueloProps = {
   vuelo: Vuelo | null;
@@ -18,12 +21,17 @@ type DatosVueloProps = {
   aeropuertos: React.RefObject<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>>;
   envio : Envio | null;
   setEnvio: React.Dispatch<React.SetStateAction<Envio | null>>;
+  setVuelo?: React.Dispatch<React.SetStateAction<Vuelo | null>>;
+  setAeropuerto?: React.Dispatch<React.SetStateAction<Aeropuerto | null>>;
+  selectedFeature?: React.RefObject<any>;
+  aBorrarEnvios?: React.MutableRefObject<string[]>;
+  mapRef?: React.RefObject<OLMap | null>;
   vuelos : React.RefObject<Map<number, {vuelo: Vuelo, pointFeature: any, lineFeature: any, routeFeature: any}>>;
   simulation: boolean;
   auxiliarVuelos?: React.RefObject<Map<number, Vuelo>> | undefined;
 };
 
-const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacionVuelos, simulationTime, envios, aeropuertos , envio, setEnvio, vuelos, simulation=true, auxiliarVuelos}) => {
+const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacionVuelos, simulationTime, envios, aeropuertos , envio, setEnvio, setVuelo, setAeropuerto, selectedFeature, aBorrarEnvios, mapRef, vuelos, simulation=true, auxiliarVuelos}) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [opcion, setOpcion] = useState<number>(0);
   const [programacionVuelo, setProgramacionVuelo] = useState<ProgramacionVuelo | null>(null);
@@ -38,8 +46,22 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
 
   const handleSearchAlmacen = () => {
     if (!searchAlmacen.trim()) return;
-    const almacen = aeropuertos.current?.get(searchAlmacen.toUpperCase());
-    if (almacen) {
+    const almacenCode = searchAlmacen.toUpperCase();
+    const almacen = aeropuertos.current?.get(almacenCode);
+    if (almacen && setAeropuerto && setVuelo && selectedFeature && aBorrarEnvios && aeropuertos.current) {
+      desactivarEnvio(aBorrarEnvios, aeropuertos.current, vuelos);
+      seleccionarAeropuerto(almacenCode, setAeropuerto, setVuelo, selectedFeature, aeropuertos.current, almacen.pointFeature, vuelos);
+      // Hacer zoom al aeropuerto
+      if (mapRef?.current) {
+        const view = mapRef.current.getView();
+        if (view) {
+          view.animate({
+            center: fromLonLat([almacen.aeropuerto.longitud, almacen.aeropuerto.latitud]),
+            zoom: 6,
+            duration: 1000,
+          });
+        }
+      }
       setOpcion(2);
       setVisible(true);
     }
@@ -49,7 +71,20 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
     if (!searchVuelo.trim()) return;
     const vueloId = parseInt(searchVuelo);
     const vueloData = vuelos.current?.get(vueloId);
-    if (vueloData) {
+    if (vueloData && vueloData.pointFeature.get('pintarAuxiliar') && setVuelo && setAeropuerto && selectedFeature && aBorrarEnvios && aeropuertos.current) {
+      desactivarEnvio(aBorrarEnvios, aeropuertos.current, vuelos);
+      seleccionarVuelo(vueloId, setVuelo, setAeropuerto, selectedFeature, vuelos, vueloData.pointFeature);
+      // Hacer zoom al vuelo
+      if (mapRef?.current) {
+        const view = mapRef.current.getView();
+        if (view) {
+          view.animate({
+            center: vueloData.pointFeature.getGeometry().getCoordinates(),
+            zoom: 5,
+            duration: 1000,
+          });
+        }
+      }
       const claveProgramacion = `${vueloId}-${simulationTime.toISOString().slice(0,10)}`;
       const fechaAyer = new Date(simulationTime);
       fechaAyer.setDate(fechaAyer.getDate() - 1);
@@ -63,24 +98,37 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
   const handleSearchEnvio = () => {
     if (!searchEnvio.trim()) return;
     const searchTerm = searchEnvio.trim();
-    console.log('=== BÚSQUEDA DE ENVÍO ===');
-    console.log('Término de búsqueda:', searchTerm);
-    console.log('Total envíos en mapa:', envios.current?.size);
-    
-    // Mostrar primeras 10 claves del mapa para debug
-    if (envios.current) {
-      const keys = Array.from(envios.current.keys()).slice(0, 10);
-      console.log('Primeras 10 claves en envios.current:', keys);
-    }
     
     const envioData = envios.current?.get(searchTerm);
-    console.log('Resultado de búsqueda:', envioData ? 'ENCONTRADO' : 'NO ENCONTRADO');
     
-    if (envioData) {
-      console.log('Datos del envío:', envioData);
+    if (envioData && setVuelo && setAeropuerto && selectedFeature && aBorrarEnvios && aeropuertos.current) {
+      console.log('✅ Envío encontrado, pintando vuelos asociados en azul');
+      // Desactivar selecciones anteriores
+      desactivarEnvio(aBorrarEnvios, aeropuertos.current, vuelos);
+      // Activar aeropuertos y vuelos del envío (se pintarán en azul)
+      aBorrarEnvios.current = procesarSeleccionEnvio(
+        envioData,
+        setVuelo,
+        setAeropuerto,
+        setEnvio,
+        selectedFeature,
+        vuelos,
+        aeropuertos.current
+      );
+      // Hacer zoom al aeropuerto de origen del envío
+      const aeropuertoOrigen = aeropuertos.current.get(envioData.origen);
+      if (mapRef?.current && aeropuertoOrigen) {
+        const view = mapRef.current.getView();
+        if (view) {
+          view.animate({
+            center: fromLonLat([aeropuertoOrigen.aeropuerto.longitud, aeropuertoOrigen.aeropuerto.latitud]),
+            zoom: 5,
+            duration: 1000,
+          });
+        }
+      }
       setOpcion(3);
       setVisible(true);
-      setEnvio(envioData);
     } else {
       console.log('❌ Envío no encontrado en el mapa');
     }
@@ -230,7 +278,7 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
           <FaBox className="search-icon" />
           <input
             type="text"
-            placeholder="ID Grupo de Productos"
+            placeholder="ID Envío"
             value={searchEnvio}
             onChange={(e) => setSearchEnvio(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearchEnvio()}

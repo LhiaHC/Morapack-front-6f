@@ -384,12 +384,12 @@ const Mapa = ({
             {" "}
             <div>
                 <DatosVuelo vuelo={selectedVuelo} aeropuerto={selectedAeropuerto} programacionVuelos={programacionVuelos} simulationTime={simulationTime}
-                    envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} setEnvio={setSelectedEnvio} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
+                    envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} setEnvio={setSelectedEnvio} setVuelo={setSelectedVuelo} setAeropuerto={setSelectedAeropuerto} selectedFeature={selectedFeature} aBorrarEnvios={aBorrarEnvios} mapRef={mapRef} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
                 />
                 {mostrarFinSemanal && <FinSemanal programacionVuelos={programacionVuelos} vuelos={vuelos} colapso={colapso}/>}
 
                 {/* Botones en esquina superior derecha */}
-                <div className="fixed top-20 right-8 z-50 flex flex-col gap-3">
+                <div className="fixed top-20 right-8 z-[60] flex flex-col gap-3">
                     {/* Botón "Más información" - solo visible cuando está cerrado */}
                     {!mostrarInfoSidebar && (
                         <button
@@ -425,7 +425,7 @@ const Mapa = ({
                 />
 
                 {/* Sidebar derecho con información del mapa */}
-                <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-40 transition-transform duration-300 ease-in-out ${
+                <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-[70] transition-transform duration-300 ease-in-out ${
                     mostrarInfoSidebar ? 'translate-x-0' : 'translate-x-full'
                 }`} style={{ width: '380px' }}>
                     <div className="h-full overflow-y-auto">
@@ -581,7 +581,7 @@ const Mapa = ({
                 {/* Overlay cuando el sidebar está abierto */}
                 {mostrarInfoSidebar && (
                     <div
-                        className="fixed inset-0 bg-black bg-opacity-30 z-30"
+                        className="fixed inset-0 bg-black bg-opacity-30 z-[60]"
                         onClick={() => setMostrarInfoSidebar(false)}
                     />
                 )}

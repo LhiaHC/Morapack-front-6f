@@ -41,7 +41,7 @@ const Sidebar = () => {
   if (!mounted) {
     return (
       <button
-        className="fixed top-4 left-4 z-50 bg-primary text-white p-3 rounded-lg shadow-lg"
+        className="fixed top-4 left-4 z-[9999] bg-primary text-white p-3 rounded-lg shadow-lg"
         aria-label="Toggle menu"
         disabled
       >
@@ -55,7 +55,7 @@ const Sidebar = () => {
       {/* Toggle Button - Fixed position */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 bg-primary text-white p-3 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200"
+        className="fixed top-4 left-4 z-[9999] bg-primary text-white p-3 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200"
         aria-label="Toggle menu"
       >
         {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -64,14 +64,14 @@ const Sidebar = () => {
       {/* Overlay - Only visible when sidebar is open */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9998] transition-opacity duration-300"
           onClick={closeSidebar}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`h-screen w-64 bg-white shadow-2xl flex flex-col fixed left-0 top-0 z-40 transform transition-transform duration-300 ease-in-out ${
+        className={`h-screen w-64 bg-white shadow-2xl flex flex-col fixed left-0 top-0 z-[9998] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

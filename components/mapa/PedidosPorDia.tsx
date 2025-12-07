@@ -93,12 +93,12 @@ const PedidosPorDia: React.FC<PedidosPorDiaProps> = ({
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        className="fixed inset-0 bg-black bg-opacity-50 z-[80]"
         onClick={onClose}
       />
 
       {/* Sidebar */}
-      <div className="fixed top-0 right-0 h-full bg-white shadow-2xl z-50 w-full max-w-md overflow-hidden">
+      <div className="fixed top-0 right-0 h-full bg-white shadow-2xl z-[80] w-full max-w-md overflow-hidden">
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary-600 text-white p-6 relative">
