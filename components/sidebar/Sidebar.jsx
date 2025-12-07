@@ -8,7 +8,6 @@ import Link from "next/link";
 import { FaBars, FaTimes } from "react-icons/fa";
 import FlightTakeoffRoundedIcon from '@mui/icons-material/FlightTakeoffRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
-import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +20,6 @@ const Sidebar = () => {
   const sidebarItems = [
     { name: "En vivo", route: "/vuelosEnVivo", Icon: FlightTakeoffRoundedIcon },
     { name: "Simulación", route: "/simulacion", Icon: TuneRoundedIcon },
-    { name: "Registro de grupos de productos", route: "/registroEnvios", Icon: LocalShippingRoundedIcon },
   ];
 
   const pathname = usePathname();
