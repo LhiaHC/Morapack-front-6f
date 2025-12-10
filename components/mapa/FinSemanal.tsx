@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Vuelo } from "@/types/Vuelo";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { FaPlane, FaCheckCircle, FaExclamationTriangle, FaTimes, FaFileAlt, FaCalendar, FaBox, FaRoute, FaPercentage, FaClock, FaFire, FaWarehouse, FaChartLine } from 'react-icons/fa';
@@ -12,13 +12,42 @@ type FinSemanalProps = {
 
 const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, colapso = false }) => {
   const [open, setOpen] = useState(true);
+  const [isCalculating, setIsCalculating] = useState(true);
 
   const handleClose = () => {
     setOpen(false);
   };
 
+  // Efecto para asegurar que los datos estén listos antes de calcular
+  useEffect(() => {
+    // Pequeño delay para asegurar que todos los refs estén actualizados
+    const timer = setTimeout(() => {
+      setIsCalculating(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Cálculos y estadísticas
   const stats = useMemo(() => {
+    if (isCalculating) {
+      return {
+        totalVuelos: 0,
+        totalPaquetes: 0,
+        capacidadTotal: 0,
+        vuelosExcedidos: 0,
+        promedioOcupacion: 0,
+        vuelosPorDia: {},
+        paquetesPorDia: {},
+        topRutas: [],
+        momentoColapso: null,
+        excesoPaquetesTotal: 0,
+        promedioExceso: 0,
+        topRutasCriticas: [],
+        topAeropuertosAfectados: [],
+        porcentajeVuelosExcedidos: 0,
+      };
+    }
+
     const allData = Array.from(programacionVuelos.current.values());
     
     let totalVuelos = 0;
@@ -129,9 +158,21 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
       topAeropuertosAfectados,
       porcentajeVuelosExcedidos: totalVuelos > 0 ? (vuelosExcedidos / totalVuelos) * 100 : 0,
     };
-  }, [programacionVuelos, vuelos]);
+  }, [programacionVuelos, vuelos, isCalculating]);
 
   if (!open) return null;
+
+  // Mostrar indicador de carga mientras se calculan las estadísticas
+  if (isCalculating) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary"></div>
+          <p className="text-lg font-semibold text-gray-700">Generando reporte de simulación...</p>
+        </div>
+      </div>
+    );
+  }
 
   // REPORTE ESPECIAL PARA COLAPSO
   if (colapso) {

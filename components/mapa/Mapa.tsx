@@ -255,28 +255,40 @@ const Mapa = ({
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            setSimulationTime(
-                (prevSimulationTime) =>
-                    new Date(
-                        prevSimulationTime.getTime() +
-                            simulationInterval * 60 * 1000
-                    )
-            );
-            onSimulationTimeChange(simulationTime);
-            if (sendMessage) {
-                const limaTime = simulationTime.toLocaleString("en-US", {
-                    timeZone: "America/Lima",
-                });
-                sendMessage("mensaje: tiempo: " + limaTime, true);
-            }
+            setSimulationTime((prevSimulationTime) => {
+                const newTime = new Date(
+                    prevSimulationTime.getTime() +
+                        simulationInterval * 60 * 1000
+                );
+                
+                // Usar el nuevo tiempo para las notificaciones
+                onSimulationTimeChange(newTime);
+                if (sendMessage) {
+                    const limaTime = newTime.toLocaleString("en-US", {
+                        timeZone: "America/Lima",
+                    });
+                    sendMessage("mensaje: tiempo: " + limaTime, true);
+                }
+                
+                return newTime;
+            });
         }, 1000);
 
+        // Clean up interval on unmount
+        return () => clearInterval(intervalId);
+    }, [simulationInterval, sendMessage, onSimulationTimeChange]);
+
+    useEffect(() => {
         if((simulationTime.getTime() > fechaFinSemana.getTime() && simulationInterval!==1/60) || colapso){
-            clearInterval(intervalId);
-            console.log("Fin");
-            setMostrarFinSemanal(true);
-            //Aquí André activas tus componenetes
+            console.log("Fin de simulación detectado");
+            // Pequeño delay para asegurar que todos los datos se hayan procesado
+            setTimeout(() => {
+                setMostrarFinSemanal(true);
+            }, 500);
         }
+    }, [simulationTime, simulationInterval, colapso, fechaFinSemana]);
+
+    useEffect(() => {
         // console.log("Updating coordinates con tiempo: ", simulationTime);
 
         if (vectorSourceRef.current.getFeatures().length > 0) {
@@ -287,10 +299,7 @@ const Mapa = ({
             // console.log("aBorrar: ", aBorrar);
             setVuelosABorrar(aBorrar);
         }
-
-        // Clean up interval on unmount
-        return () => clearInterval(intervalId);
-    }, [simulationTime, simulationInterval]);
+    }, [simulationTime]);
 
     // useEffect(() => {
     //     const timeoutId = setInterval(() => limpiarMapasDeDatos(programacionVuelos, envios, new Date(simulationTime.getTime())), 360 * 1000); // 360 seconds = 6 minutes
@@ -525,11 +534,11 @@ const Mapa = ({
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 bg-orange-50 rounded-lg p-3">
-                                        <div className="w-8 h-1 bg-[#FF7F09] border-t-2 border-dashed border-[#FF7F09]"></div>
+                                    <div className="flex items-center gap-3 bg-red-50 rounded-lg p-3">
+                                        <div className="w-8 h-1 bg-red-500 border-t-2 border-dashed border-red-500"></div>
                                         <div>
                                             <p className="font-semibold text-gray-800">Ruta de vuelo</p>
-                                            <p className="text-xs text-gray-600">Línea naranja punteada</p>
+                                            <p className="text-xs text-gray-600">Línea roja punteada</p>
                                         </div>
                                     </div>
                                 </div>
