@@ -441,13 +441,13 @@ export default function HorizontalLinearStepper() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Ciudad de Origen *
                     </label>
-                    <SelectVariantsCity required city={ciudadOrigen} setCity={setciudadOrigen} />
+                    <SelectVariantsCity required city={ciudadOrigen} setCity={setciudadOrigen} isOrigin={true} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Ciudad de Destino *
                     </label>
-                    <SelectVariantsCity required city={ciudadDestino} setCity={setciudadDestino} />
+                    <SelectVariantsCity required city={ciudadDestino} setCity={setciudadDestino} isDestination={true} />
                   </div>
                 </div>
               </div>
@@ -732,11 +732,11 @@ export default function HorizontalLinearStepper() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Ciudad de Origen</label>
-                    <SelectVariantsCity disabled={true} city={ciudadOrigen} setCity={setciudadOrigen} />
+                    <SelectVariantsCity disabled={true} city={ciudadOrigen} setCity={setciudadOrigen} isOrigin={true} />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Ciudad de Destino</label>
-                    <SelectVariantsCity disabled={true} city={ciudadDestino} setCity={setciudadDestino} />
+                    <SelectVariantsCity disabled={true} city={ciudadDestino} setCity={setciudadDestino} isDestination={true} />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Número de Paquetes</label>

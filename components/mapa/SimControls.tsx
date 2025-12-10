@@ -73,8 +73,9 @@ const SimControls: React.FC<SimControlsProps> = ({
               <option value="4">4 min/s</option>
               <option value="5">5 min/s</option>
               <option value="10">10 min/s</option>
+              <option value="15">15 min/s</option>
+              <option value="20">20 min/s</option>
               <option value="30">30 min/s</option>
-              <option value="60">1 h/s</option>
             </select>
           </div>
 

@@ -67,7 +67,6 @@ const Page = () => {
     );
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
-    const [colapso, setColapso] = useState(false);
     const [simulationInterval, setSimulationInterval] = useState(4);
     const [playing, setPlaying] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -233,11 +232,11 @@ const Page = () => {
                 console.log("Datos recibidos: ", message.data);
                 setLoadingProgress(90);
                 setLoadingStage("Procesando rutas de envíos...");
-                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, setColapso);
+                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, () => {}); // No detectar colapso en semanal
             }
             if (message.metadata.includes("correrAlgoritmo")) {
                 console.log(message.data);
-                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, setColapso);
+                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, () => {}); // No detectar colapso en semanal
             }
         }
     }, [lastMessage]);
@@ -299,8 +298,9 @@ const Page = () => {
                         setSemaforo={setSemaforo}
                         sendMessage={sendMessage}
                         onSimulationTimeChange={setSimulationTime}
-                        colapso={colapso}
-                        setColapso={setColapso}
+                        colapso={false}
+                        setColapso={() => {}}
+                        setPlaying={setPlaying}
                     />
                     <SimControls
                         simulationInterval={simulationInterval}

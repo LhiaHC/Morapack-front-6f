@@ -68,6 +68,7 @@ type MapaProps = {
     auxiliarVuelos?: React.MutableRefObject<Map<number, Vuelo>>;
     colapso: boolean;
     setColapso: React.Dispatch<React.SetStateAction<boolean>>;
+    setPlaying?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const Mapa = ({
@@ -85,6 +86,7 @@ const Mapa = ({
     auxiliarVuelos,
     colapso, 
     setColapso,
+    setPlaying,
 }: MapaProps) => {
     const mapRef = useRef<OLMap | null>(null);
     const vectorSourceRef = useRef(new VectorSource());
@@ -102,6 +104,8 @@ const Mapa = ({
     const vuelosEnElAire = useRef<number>(0);
     const [mostrarInfoSidebar, setMostrarInfoSidebar] = useState(false);
     const [mostrarPedidosPorDia, setMostrarPedidosPorDia] = useState(false);
+    const [aeropuertosCongelados, setAeropuertosCongelados] = useState<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}> | null>(null);
+    const [simulacionFinalizada, setSimulacionFinalizada] = useState(false);
 
     useEffect(() => {
         if (!mapRef.current) {
@@ -281,12 +285,37 @@ const Mapa = ({
     useEffect(() => {
         if((simulationTime.getTime() > fechaFinSemana.getTime() && simulationInterval!==1/60) || colapso){
             console.log("Fin de simulación detectado");
-            // Pequeño delay para asegurar que todos los datos se hayan procesado
+            
+            // Congelar los aeropuertos solo si no es colapso (simulación semanal)
+            if (!colapso && !simulacionFinalizada) {
+                console.log("Congelando estado de aeropuertos para simulación semanal");
+                // Crear una copia profunda de los aeropuertos
+                const copiaAeropuertos = new Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>();
+                aeropuertos.current.forEach((value, key) => {
+                    copiaAeropuertos.set(key, {
+                        aeropuerto: { ...value.aeropuerto },
+                        pointFeature: value.pointFeature
+                    });
+                });
+                setAeropuertosCongelados(copiaAeropuertos);
+                setSimulacionFinalizada(true);
+                
+                // Pausar la simulación semanal cuando termina
+                if (setPlaying) {
+                    console.log("Pausando simulación semanal automáticamente");
+                    setPlaying(false);
+                }
+            }
+            
+            // Delay más largo para asegurar que todos los datos se hayan procesado
+            // Especialmente importante cuando hay colapso y a velocidades altas
+            const delayTime = colapso ? 1500 : 500;
             setTimeout(() => {
+                console.log("Mostrando reporte final después del delay");
                 setMostrarFinSemanal(true);
-            }, 500);
+            }, delayTime);
         }
-    }, [simulationTime, simulationInterval, colapso, fechaFinSemana]);
+    }, [simulationTime, simulationInterval, colapso, fechaFinSemana, simulacionFinalizada, setPlaying]);
 
     useEffect(() => {
         // console.log("Updating coordinates con tiempo: ", simulationTime);
@@ -550,7 +579,7 @@ const Mapa = ({
                                     Top 5 - Mayor Ocupación
                                 </h3>
                                 <div className="space-y-2">
-                                    {Array.from(aeropuertos.current?.values() || [])
+                                    {Array.from((aeropuertosCongelados || aeropuertos.current)?.values() || [])
                                         .map(item => item.aeropuerto)
                                         .sort((a, b) => (b.cantidadActual / b.capacidadMaxima) - (a.cantidadActual / a.capacidadMaxima))
                                         .slice(0, 5)
