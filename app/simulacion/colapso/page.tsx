@@ -54,15 +54,22 @@ const Page = () => {
                             new Date()
                     );
                 }
-                console.log("Conexión abierta para simulación de colapso con tiempo: ", auxHoraInicio);
-                // Enviar mensaje para simulación (usa el mismo endpoint que semanal)
-                sendMessage(
-                    "simulacionSemanal: tiempo: " +
-                        auxHoraInicio.toLocaleString("en-US", {
-                            timeZone: "America/Lima",
-                        }),
-                    true
-                );
+                const mensaje = "simulacionSemanal: tiempo: " + auxHoraInicio.toLocaleString("en-US", { timeZone: "America/Lima" });
+                console.log("🌐 WebSocket conectado para simulación de colapso");
+                console.log("📤 Enviando mensaje:", mensaje);
+                console.log("⏰ Hora inicio:", auxHoraInicio.toLocaleString());
+                console.log("⚠️ NOTA: Usando 'simulacionSemanal' - El colapso se forzará desde el frontend después de 60 segundos");
+                
+                // Enviar mensaje como simulación semanal (el backend no tiene endpoint específico para colapso)
+                // El colapso se fuerza desde el frontend después de 60 segundos de simulación
+                sendMessage(mensaje, true);
+            },
+            onError: (error) => {
+                console.error("❌ Error en WebSocket:", error);
+                setLoadingStage("Error de conexión con el servidor");
+            },
+            onClose: () => {
+                console.log("🔌 WebSocket cerrado");
             },
             share: true,
         }
@@ -77,6 +84,7 @@ const Page = () => {
     const [loadingStage, setLoadingStage] = useState("Inicializando...");
     const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
     const tiempoInicioSimulacion = useRef<Date | null>(null);
+    const primeraCargaRecibida = useRef<boolean>(false);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,131 +94,110 @@ const Page = () => {
         }
     }, [cargado]);
 
+    // Pausar la simulación automáticamente cuando se detecta colapso
     useEffect(() => {
-        const intervalId = setInterval(() => {
-            setCurrentTime(new Date());
+        if (colapso && playing) {
+            console.log("⏸️ Pausando simulación automáticamente debido al colapso");
+            setPlaying(false);
+        }
+    }, [colapso]);
 
-            // Verificar si han pasado 60 segundos desde el inicio de la simulación
-            if (cargado && tiempoInicioSimulacion.current && !colapso) {
+    useEffect(() => {
+        if (cargado && !colapso) {
+            const verificarYForzarColapso = () => {
+                if (!tiempoInicioSimulacion.current) return;
+                
                 const tiempoTranscurrido = (new Date().getTime() - tiempoInicioSimulacion.current.getTime()) / 1000; // en segundos
 
                 // Forzar colapso después de 60 segundos (1 minuto)
                 if (tiempoTranscurrido >= 60) {
-                    // Sobrecargar aeropuertos con mayor tráfico (no hubs)
-                    const aeropuertosNoHub = Array.from(aeropuertos.current.entries())
-                        .filter(([codigo]) => !['EBCI', 'SPIM', 'UBBB'].includes(codigo))
-                        .sort((a, b) => b[1].aeropuerto.cantidadActual - a[1].aeropuerto.cantidadActual); // Ordenar por más ocupados
-
-                    if (aeropuertosNoHub.length > 0) {
-                        // Tomar el aeropuerto más ocupado para el colapso crítico
-                        const [codigoColapso, dataColapso] = aeropuertosNoHub[0];
-                        const capacidadActual = dataColapso.aeropuerto.cantidadActual;
-                        const capacidadMaxima = dataColapso.aeropuerto.capacidadMaxima;
-
-                        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                        console.log("⚠️  ALERTA CRÍTICA DEL SISTEMA");
-                        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                        console.log("");
-                        console.log(`📍 AEROPUERTO EN COLAPSO: ${codigoColapso}`);
-                        console.log(`   Estado antes del evento:`);
-                        console.log(`   - Capacidad utilizada: ${capacidadActual}/${capacidadMaxima} paquetes`);
-                        console.log(`   - Nivel de ocupación: ${((capacidadActual / capacidadMaxima) * 100).toFixed(1)}%`);
-                        console.log(`   - Estado: ${ (capacidadActual / capacidadMaxima) > 0.8 ? 'CRÍTICO' : 'SATURADO' }`);
-                        console.log("");
-
-                        // Obtener vuelos que van hacia ese aeropuerto
-                        const vuelosHaciaAeropuerto: Array<{id: number, origen: string, destino: string, paquetes: number}> = [];
-
-                        programacionVuelos.current.forEach((prog) => {
-                            const vueloInfo = vuelos.current?.get(prog.idVuelo);
-                            if (vueloInfo && vueloInfo.vuelo.destino === codigoColapso) {
-                                vuelosHaciaAeropuerto.push({
-                                    id: prog.idVuelo,
-                                    origen: vueloInfo.vuelo.origen,
-                                    destino: vueloInfo.vuelo.destino,
-                                    paquetes: prog.cantPaquetes
-                                });
-                            }
-                        });
-
-                        // Simular llegada de múltiples vuelos que causan el colapso
-                        const vuelosCriticos = vuelosHaciaAeropuerto.slice(0, Math.min(5, vuelosHaciaAeropuerto.length));
-                        let paquetesTotales = 0;
-
-                        console.log("🛬 EVENTOS QUE CAUSARON EL COLAPSO:");
-                        console.log("");
-
-                        const baseTime = simulationTime || horaInicio;
-
-                        if (vuelosCriticos.length > 0) {
-                            vuelosCriticos.forEach((vuelo, index) => {
-                                const timestamp = new Date(baseTime.getTime() + (index * 5 * 60 * 1000)); // Cada 5 minutos
-                                const horaFormateada = timestamp.toLocaleTimeString('es-PE', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                });
-                                paquetesTotales += vuelo.paquetes;
-                                console.log(`   [${horaFormateada}] Vuelo #${vuelo.id} (${vuelo.origen} → ${vuelo.destino})`);
-                                console.log(`              Descargó: ${vuelo.paquetes} paquetes`);
-                                console.log(`              Capacidad acumulada: ${capacidadActual + paquetesTotales}/${capacidadMaxima}`);
-                                console.log("");
-                            });
-                        } else {
-                            // Si no hay vuelos, simular llegada de paquetes de envíos
-                            const numEnvios = Math.floor(Math.random() * 8) + 5; // 5-12 envíos
-                            for (let i = 0; i < numEnvios; i++) {
-                                const paquetesEnvio = Math.floor(Math.random() * 80) + 40; // 40-120 paquetes por envío
-                                paquetesTotales += paquetesEnvio;
-                                const timestamp = new Date(baseTime.getTime() + (i * 3 * 60 * 1000));
-                                const horaFormateada = timestamp.toLocaleTimeString('es-PE', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                });
-                                console.log(`   [${horaFormateada}] Envío recibido: ${paquetesEnvio} paquetes`);
-                                console.log(`              Capacidad acumulada: ${capacidadActual + paquetesTotales}/${capacidadMaxima}`);
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.log("⚠️  FORZANDO COLAPSO DEL SISTEMA");
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.log("");
+                    
+                    // Estrategia: Sobrecargar vuelos programados para forzar exceso de capacidad
+                    let vuelosExcedidos = 0;
+                    let paquetesAnadidos = 0;
+                    
+                    // Obtener vuelos programados y aumentar su carga
+                    programacionVuelos.current.forEach((programacion, clave) => {
+                        const vueloInfo = vuelos.current?.get(programacion.idVuelo);
+                        if (vueloInfo && programacion.cantPaquetes > 0) {
+                            const capacidad = vueloInfo.vuelo.capacidad;
+                            const cargaActual = programacion.cantPaquetes;
+                            
+                            // Si el vuelo tiene más del 50% de capacidad, sobrecargarlo
+                            if (cargaActual > capacidad * 0.5) {
+                                // Añadir 50-100% más paquetes para exceder capacidad
+                                const exceso = Math.floor(capacidad * (0.5 + Math.random() * 0.5));
+                                programacion.cantPaquetes += exceso;
+                                paquetesAnadidos += exceso;
+                                vuelosExcedidos++;
+                                
+                                console.log(`✈️ Vuelo ${vueloInfo.vuelo.id} (${vueloInfo.vuelo.origen}→${vueloInfo.vuelo.destino})`);
+                                console.log(`   Capacidad: ${capacidad}`);
+                                console.log(`   Antes: ${cargaActual} paquetes`);
+                                console.log(`   Después: ${programacion.cantPaquetes} paquetes`);
+                                console.log(`   Exceso: +${exceso} (${((programacion.cantPaquetes / capacidad) * 100).toFixed(1)}% de capacidad)`);
                                 console.log("");
                             }
                         }
+                    });
+                    
+                    // Sobrecargar aeropuertos
+                    const aeropuertosNoHub = Array.from(aeropuertos.current.entries())
+                        .filter(([codigo]) => !['EBCI', 'SPIM', 'UBBB'].includes(codigo))
+                        .sort((a, b) => b[1].aeropuerto.cantidadActual - a[1].aeropuerto.cantidadActual);
 
-                        const capacidadFinal = capacidadActual + paquetesTotales;
-                        const excedente = capacidadFinal - capacidadMaxima;
-
-                        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                        console.log("📊 RESUMEN DEL COLAPSO");
-                        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                        console.log("");
-                        console.log(`   Aeropuerto: ${codigoColapso}`);
-                        console.log(`   Capacidad máxima: ${capacidadMaxima} paquetes`);
-                        console.log(`   Paquetes iniciales: ${capacidadActual}`);
-                        console.log(`   Paquetes recibidos: +${paquetesTotales}`);
-                        console.log(`   Total final: ${capacidadFinal} paquetes`);
-                        console.log(`   EXCEDENTE: ${excedente} paquetes (${((excedente / capacidadMaxima) * 100).toFixed(1)}% sobre capacidad)`);
-                        console.log("");
-                        console.log("🔴 ESTADO: COLAPSO OPERACIONAL");
-                        console.log("   La capacidad de almacenamiento ha sido superada.");
-                        console.log("   El sistema no puede procesar más paquetes.");
-                        console.log("");
-                        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-                        // Establecer el estado de colapso
-                        dataColapso.aeropuerto.cantidadActual = capacidadFinal;
-                        setColapso(true);
+                    if (aeropuertosNoHub.length > 0) {
+                        // Sobrecargar los 5 aeropuertos más ocupados
+                        aeropuertosNoHub.slice(0, 5).forEach(([codigo, data]) => {
+                            const capacidadActual = data.aeropuerto.cantidadActual;
+                            const capacidadMaxima = data.aeropuerto.capacidadMaxima;
+                            const exceso = Math.floor(capacidadMaxima * 0.3); // 30% de exceso
+                            data.aeropuerto.cantidadActual = capacidadMaxima + exceso;
+                            
+                            console.log(`📍 Aeropuerto ${codigo}:`);
+                            console.log(`   Capacidad: ${capacidadMaxima}`);
+                            console.log(`   Antes: ${capacidadActual} paquetes`);
+                            console.log(`   Después: ${data.aeropuerto.cantidadActual} paquetes`);
+                            console.log(`   Exceso: +${exceso} (${((data.aeropuerto.cantidadActual / capacidadMaxima) * 100).toFixed(1)}%)`);
+                            console.log("");
+                        });
                     }
+                    
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.log("📊 RESUMEN DEL COLAPSO FORZADO");
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.log(`Total vuelos excedidos: ${vuelosExcedidos}`);
+                    console.log(`Total paquetes añadidos: ${paquetesAnadidos}`);
+                    console.log(`Aeropuertos sobrecargados: ${Math.min(5, aeropuertosNoHub.length)}`);
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.log("");
+                    console.log("🔴 Activando estado de COLAPSO");
+                    
+                    // Establecer el estado de colapso
+                    setColapso(true);
                 }
-            }
-        }, 1000);
-        return () => clearInterval(intervalId);
+            };
+            
+            verificarYForzarColapso(); // Ejecución inmediata
+            const intervalo = setInterval(verificarYForzarColapso, 5000); // Verificar cada 5 segundos
+
+            return () => clearInterval(intervalo);
+        }
     }, [cargado, colapso]);
 
     // Progreso lento mientras espera datos del WebSocket
     useEffect(() => {
-        if (loadingProgress >= 55 && loadingProgress < 80 && !cargado) {
+        if (loadingProgress >= 55 && loadingProgress < 85 && !cargado) {
             slowProgressInterval.current = setInterval(() => {
                 setLoadingProgress(prev => {
-                    if (prev < 75) return prev + 1; // Aumentar más rápido (era 0.5)
+                    if (prev < 82) return prev + 0.5; // Avanzar lentamente hasta 82%
                     return prev;
                 });
-            }, 200); // Más frecuente (era 400)
+            }, 300); // Actualizar cada 300ms
         } else if (slowProgressInterval.current) {
             clearInterval(slowProgressInterval.current);
             slowProgressInterval.current = null;
@@ -222,6 +209,32 @@ const Page = () => {
             }
         };
     }, [loadingProgress, cargado]);
+
+    // Timeout de emergencia: si después de 30 segundos no ha cargado, forzar carga
+    useEffect(() => {
+        if (!cargado && loadingProgress >= 55) {
+            const emergencyTimeout = setTimeout(() => {
+                if (!cargado && campana < 2) {
+                    console.warn("⚠️ TIMEOUT DE EMERGENCIA: Forzando finalización de carga");
+                    console.log("Estado actual:");
+                    console.log("- Campana:", campana);
+                    console.log("- Aeropuertos:", aeropuertos.current.size);
+                    console.log("- Vuelos:", vuelos.current.size);
+                    console.log("- Progreso:", loadingProgress);
+                    
+                    if (aeropuertos.current.size > 0 && vuelos.current.size > 0) {
+                        console.log("✅ Datos básicos presentes, completando carga");
+                        setCampana(2);
+                    } else {
+                        console.error("❌ Faltan datos críticos, no se puede completar carga");
+                        setLoadingStage("Error: No se recibieron todos los datos del servidor");
+                    }
+                }
+            }, 30000); // 30 segundos
+
+            return () => clearTimeout(emergencyTimeout);
+        }
+    }, [cargado, loadingProgress, campana]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -271,11 +284,11 @@ const Page = () => {
     }, []);
 
     useEffect(() => {
-        console.log("Campana actual: ", campana);
-        if (campana >= 2) {
-            console.log("Campana sonando - iniciando finalización");
+        console.log("📢 Campana actual: ", campana);
+        if (campana === 2) {
+            console.log("✅ Campana sonando (=2) - iniciando finalización");
             if (cargado) {
-                console.log("Ya estaba cargado, ignorando");
+                console.log("⚠️ Ya estaba cargado, ignorando");
                 return;
             }
             setLoadingStage("Finalizando carga...");
@@ -283,11 +296,11 @@ const Page = () => {
             setTimeout(() => {
                 setLoadingProgress(100);
                 setTimeout(() => {
-                    console.log("Marcando como cargado");
+                    console.log("🎉 Marcando como cargado - Simulación de colapso lista");
                     setCargado(true);
                 }, 100);
             }, 100);
-            console.log("Cargando datos para simulación de colapso");
+            console.log("📦 Cargando datos para simulación de colapso");
             if (typeof window !== "undefined") {
                 window.history.replaceState(
                     {},
@@ -300,14 +313,20 @@ const Page = () => {
 
     useEffect(() => {
         if (lastMessage) {
-            console.log("Mensaje recibido en colapso: ", lastMessage.data);
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("📨 Nuevo mensaje WebSocket recibido");
+            console.log("Raw data:", lastMessage.data.substring(0, 200) + "...");
+            
             let message = JSON.parse(lastMessage.data) as MessageData;
-            console.log("Metadata: ", message.metadata);
+            console.log("📋 Metadata:", message.metadata);
+            console.log("📊 Data items:", message.data?.length || 0);
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            
             const auxNuevosVuelos: number[] = [];
 
             if (message.metadata.includes("dataVuelos")) {
-                console.log("Actualizando vuelos");
-                console.log("Vuelos actuales tamaño: ", vuelos.current.size);
+                console.log("✈️ Actualizando vuelos en simulación de colapso");
+                console.log("📊 Vuelos actuales tamaño: ", vuelos.current.size);
                 if (cargado) {
                     message.data.forEach((vuelo: Vuelo) => {
                         vuelo.pintarAuxiliar = false;
@@ -321,12 +340,12 @@ const Page = () => {
                         auxiliarVuelos.current.set(vuelo.id, vuelo);
                         auxNuevosVuelos.push(vuelo.id);
                     });
-                    console.log("Vuelos luego tamaño: ", vuelos.current.size);
+                    console.log("📊 Vuelos después de actualizar: ", vuelos.current.size);
                     quitarPaquetesAlmacenados(auxNuevosVuelos, programacionVuelos, aeropuertos, simulationTime);
                     setNuevosVuelos(auxNuevosVuelos);
                     setSemaforo(semaforo + 1);
                 } else {
-                    console.log("Cargando vuelos con datos: ", message.data);
+                    console.log("📥 Cargando vuelos iniciales: ", message.data.length, "vuelos");
                     message.data.forEach((vuelo: Vuelo) => {
                         vuelo.pintarAuxiliar = false;
                         vuelos.current.set(vuelo.id, {
@@ -341,16 +360,23 @@ const Page = () => {
                     });
                     setLoadingProgress(80);
                     setLoadingStage("Vuelos cargados, esperando rutas optimizadas del servidor...");
-                    setCampana(prev => {
-                        console.log("Incrementando campana de", prev, "a", prev + 1);
-                        return prev + 1;
-                    });
-                    console.log("Vuelos cargados: ", vuelos.current.size);
+                    
+                    // Incrementar campana solo si es menor a 2
+                    if (campana < 2) {
+                        console.log("⬆️ Incrementando campana después de cargar vuelos de", campana, "a", campana + 1);
+                        setCampana(prev => prev + 1);
+                    } else {
+                        console.log("⚠️ Campana ya es", campana, "- no incrementando");
+                    }
+                    
+                    console.log("✅ Vuelos cargados: ", vuelos.current.size);
                 }
             }
             if(message.metadata.includes("primeraCarga")) {
-                console.log("Mensaje de primera carga (colapso)");
-                console.log("Datos recibidos: ", message.data);
+                console.log("📨 Mensaje de primera carga (colapso)");
+                console.log("Datos recibidos: ", message.data.length, "envíos");
+                primeraCargaRecibida.current = true; // ✅ Marcar que se recibió
+                
                 setLoadingProgress(85);
                 setLoadingStage("Procesando rutas de envíos...");
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, setColapso);
@@ -361,18 +387,62 @@ const Page = () => {
                         auxiliarVuelos.current.set(id, vueloData.vuelo);
                     }
                 });
-                console.log("Vuelos en auxiliar después de primera carga: ", auxiliarVuelos.current.size);
+                console.log("✈️ Vuelos en auxiliar después de primera carga: ", auxiliarVuelos.current.size);
 
-                // Avanzar más rápido a la finalización
+                // NO incrementar campana si ya es 2, solo si es menor
+                if (campana < 2) {
+                    console.log("⬆️ Incrementando campana después de primeraCarga de", campana, "a 2");
+                    setCampana(2);
+                } else {
+                    console.log("⚠️ Campana ya es", campana, "- no incrementando");
+                }
+                
+                // Avanzar progreso
                 setLoadingProgress(92);
-                setCampana(prev => {
-                    console.log("Incrementando campana después de primeraCarga de", prev, "a", prev + 1);
-                    return prev + 1;
-                });
             }
             if (message.metadata.includes("correrAlgoritmo")) {
-                console.log("Corriendo algoritmo de colapso");
-                console.log(message.data);
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("🤖 Corriendo algoritmo de colapso");
+                console.log("Data recibida:", message.data);
+                
+                // VALIDACIÓN: Verificar si primeraCarga fue recibida
+                if (!primeraCargaRecibida.current) {
+                    console.error("⚠️⚠️⚠️ PROBLEMA CRÍTICO ⚠️⚠️⚠️");
+                    console.error("El mensaje 'correrAlgoritmo' llegó ANTES que 'primeraCarga'");
+                    console.error("O el mensaje 'primeraCarga' NUNCA llegó");
+                    console.error("");
+                    console.error("Esto es un ERROR DEL BACKEND:");
+                    console.error("  El backend debe enviar 'primeraCarga' con los datos de envíos");
+                    console.error("  ANTES de enviar 'correrAlgoritmo'");
+                    console.error("");
+                    console.error("Sin 'primeraCarga', no hay:");
+                    console.error("  ❌ Envíos procesados");
+                    console.error("  ❌ Paquetes asignados a vuelos");
+                    console.error("  ❌ Programaciones de vuelo");
+                    console.error("  ❌ Datos para el reporte de colapso");
+                    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                }
+                
+                // VALIDACIÓN CRÍTICA: Si data está vacío, hay problema en backend
+                if (!message.data || (typeof message.data === 'object' && Object.keys(message.data).length === 0)) {
+                    console.error("❌ ERROR CRÍTICO DEL BACKEND");
+                    console.error("El mensaje 'correrAlgoritmo' llegó con data VACÍO");
+                    console.error("Esto significa que:");
+                    console.error("  1. El backend no procesó ningún envío");
+                    console.error("  2. No se generaron rutas para los paquetes");
+                    console.error("  3. No hay datos para mostrar en el reporte");
+                    console.error("");
+                    console.error("📋 Estado actual de datos:");
+                    console.error("  - Programaciones de vuelo:", programacionVuelos.current.size);
+                    console.error("  - Envíos procesados:", envios.current.size);
+                    console.error("  - Vuelos disponibles:", vuelos.current.size);
+                    console.error("");
+                    console.error("🔧 ACCIÓN REQUERIDA:");
+                    console.error("  Revisa los logs del BACKEND para identificar por qué no se enviaron datos de envíos.");
+                    console.error("  El backend debe enviar un mensaje 'primeraCarga' ANTES de 'correrAlgoritmo'");
+                    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                }
+                
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, setColapso);
 
                 // Sincronizar auxiliarVuelos

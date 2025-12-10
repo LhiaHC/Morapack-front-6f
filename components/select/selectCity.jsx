@@ -4,7 +4,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 
-export default function SelectVariantsCity({disabled=false, city, setCity}) {
+export default function SelectVariantsCity({disabled=false, city, setCity, isOrigin=false, isDestination=false}) {
 
   const handleChange = (event) => {
     setCity(event.target.value);
@@ -42,10 +42,19 @@ export default function SelectVariantsCity({disabled=false, city, setCity}) {
     { value: "UBBB", name: "Baku" },
     { value: "OJAI", name: "Aman" }
 ];
+
+  // Si es ciudad de origen, filtrar solo los 3 hubs
+  // Si es ciudad de destino, excluir los 3 hubs
+  const hubCities = ["UBBB", "SPIM", "EBCI"];
+  const filteredCities = isOrigin 
+    ? cities.filter(city => hubCities.includes(city.value))
+    : isDestination
+    ? cities.filter(city => !hubCities.includes(city.value))
+    : cities;
   
-  cities.sort((a, b) => a.value.localeCompare(b.value));
+  filteredCities.sort((a, b) => a.value.localeCompare(b.value));
   
-  const menuItems = cities.map(city => (
+  const menuItems = filteredCities.map(city => (
     <MenuItem key={city.value} value={city.value}>{`${city.value} (${city.name})`}</MenuItem>
   ));
 

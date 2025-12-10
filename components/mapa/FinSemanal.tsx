@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Vuelo } from "@/types/Vuelo";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { FaPlane, FaCheckCircle, FaExclamationTriangle, FaTimes, FaFileAlt, FaCalendar, FaBox, FaRoute, FaPercentage, FaClock, FaFire, FaWarehouse, FaChartLine } from 'react-icons/fa';
@@ -12,20 +12,93 @@ type FinSemanalProps = {
 
 const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, colapso = false }) => {
   const [open, setOpen] = useState(true);
+  const [isCalculating, setIsCalculating] = useState(true);
 
   const handleClose = () => {
     setOpen(false);
   };
 
+  // Efecto para asegurar que los datos estén listos antes de calcular
+  useEffect(() => {
+    // Delay más largo cuando es colapso para asegurar que todos los refs estén actualizados
+    const delayTime = colapso ? 300 : 100;
+    const timer = setTimeout(() => {
+      console.log("FinSemanal: Iniciando cálculos después del delay");
+      setIsCalculating(false);
+    }, delayTime);
+    return () => clearTimeout(timer);
+  }, [colapso]);
+
   // Cálculos y estadísticas
   const stats = useMemo(() => {
+    if (isCalculating) {
+      return {
+        totalVuelos: 0,
+        totalPaquetes: 0,
+        capacidadTotal: 0,
+        vuelosExcedidos: 0,
+        promedioOcupacion: 0,
+        vuelosPorDia: {},
+        paquetesPorDia: {},
+        topRutas: [],
+        momentoColapso: null,
+        excesoPaquetesTotal: 0,
+        promedioExceso: 0,
+        topRutasCriticas: [],
+        topAeropuertosAfectados: [],
+        porcentajeVuelosExcedidos: 0,
+      };
+    }
+
+    console.log("=== DEBUGGING REPORTE COLAPSO ===");
+    console.log("Colapso:", colapso);
+    console.log("ProgramacionVuelos size:", programacionVuelos.current.size);
+    console.log("Vuelos size:", vuelos.current?.size);
+    
     const allData = Array.from(programacionVuelos.current.values());
+    console.log("AllData length:", allData.length);
+    
+    // VALIDACIÓN CRÍTICA: Si no hay datos suficientes en modo colapso
+    if (colapso && allData.length === 0) {
+      console.error("❌ ERROR CRÍTICO: No hay programaciones de vuelo para analizar");
+      console.error("El backend no envió datos de envíos (mensaje 'primeraCarga')");
+      console.error("Esto indica un problema en el backend - no se están procesando los envíos");
+    }
+    
+    // FILTRAR SOLO VUELOS DE LA PRIMERA SEMANA (7 días) si no es colapso
+    let filteredData = allData;
+    if (!colapso && allData.length > 0) {
+      // Encontrar la fecha más temprana
+      const fechaMasTemprana = allData.reduce((min, prog) => {
+        const fecha = new Date(prog.fechaSalida);
+        return fecha < min ? fecha : min;
+      }, new Date(allData[0].fechaSalida));
+      
+      // Fecha límite: 7 días después
+      const fechaLimite = new Date(fechaMasTemprana);
+      fechaLimite.setDate(fechaLimite.getDate() + 7);
+      
+      console.log("Fecha más temprana:", fechaMasTemprana);
+      console.log("Fecha límite (7 días):", fechaLimite);
+      
+      // Filtrar vuelos dentro de la semana
+      filteredData = allData.filter(prog => {
+        const fechaVuelo = new Date(prog.fechaSalida);
+        return fechaVuelo < fechaLimite;
+      });
+      
+      console.log("Vuelos después del filtro de 7 días:", filteredData.length);
+    }
+    
+    if (filteredData.length > 0) {
+      console.log("Primera programacion:", filteredData[0]);
+    }
     
     let totalVuelos = 0;
     let totalPaquetes = 0;
     let capacidadTotal = 0;
     let vuelosExcedidos = 0;
-    let momentoColapso: { dia: number; hora: string } | null = null;
+    let momentoColapso: { dia: number; hora: string } | null = null as { dia: number; hora: string } | null;
     let primerVueloExcedido: ProgramacionVuelo | null = null;
     const vuelosPorDia: { [key: number]: number } = {};
     const paquetesPorDia: { [key: number]: number } = {};
@@ -34,10 +107,13 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
     const aeropuertosAfectados: { [key: string]: number } = {};
     let excesoPaquetesTotal = 0;
     
-    allData.forEach((programacion) => {
+    filteredData.forEach((programacion) => {
       if (!vuelos.current) return;
       const vueloInfo = vuelos.current.get(programacion.idVuelo);
-      if (!vueloInfo) return;
+      if (!vueloInfo) {
+        console.log("⚠️ VueloInfo no encontrado para idVuelo:", programacion.idVuelo);
+        return;
+      }
       
       totalVuelos++;
       totalPaquetes += programacion.cantPaquetes;
@@ -45,10 +121,12 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
       
       const excedido = programacion.cantPaquetes > vueloInfo.vuelo.capacidad;
       
-      if (excedido) {
+      // Solo reportar vuelos excedidos en modo colapso
+      if (excedido && colapso) {
         vuelosExcedidos++;
         const exceso = programacion.cantPaquetes - vueloInfo.vuelo.capacidad;
         excesoPaquetesTotal += exceso;
+        console.log(`✈️ Vuelo excedido: ${vueloInfo.vuelo.origen}→${vueloInfo.vuelo.destino}, Paquetes: ${programacion.cantPaquetes}, Capacidad: ${vueloInfo.vuelo.capacidad}, Exceso: ${exceso}`);
         
         // Detectar primer vuelo excedido (momento del colapso)
         if (!primerVueloExcedido) {
@@ -112,6 +190,14 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
     const promedioOcupacion = capacidadTotal > 0 ? (totalPaquetes / capacidadTotal) * 100 : 0;
     const promedioExceso = vuelosExcedidos > 0 ? (excesoPaquetesTotal / vuelosExcedidos / (capacidadTotal / totalVuelos)) * 100 : 0;
     
+    console.log("=== RESULTADOS CALCULADOS ===");
+    console.log("Total vuelos:", totalVuelos);
+    console.log("Vuelos excedidos:", vuelosExcedidos);
+    console.log("Exceso paquetes total:", excesoPaquetesTotal);
+    console.log("Momento colapso:", momentoColapso);
+    console.log("Top rutas críticas:", topRutasCriticas.length);
+    console.log("Top aeropuertos afectados:", topAeropuertosAfectados.length);
+    
     return {
       totalVuelos,
       totalPaquetes,
@@ -129,9 +215,21 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
       topAeropuertosAfectados,
       porcentajeVuelosExcedidos: totalVuelos > 0 ? (vuelosExcedidos / totalVuelos) * 100 : 0,
     };
-  }, [programacionVuelos, vuelos]);
+  }, [programacionVuelos, vuelos, isCalculating]);
 
   if (!open) return null;
+
+  // Mostrar indicador de carga mientras se calculan las estadísticas
+  if (isCalculating) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary"></div>
+          <p className="text-lg font-semibold text-gray-700">Generando reporte de simulación...</p>
+        </div>
+      </div>
+    );
+  }
 
   // REPORTE ESPECIAL PARA COLAPSO
   if (colapso) {
@@ -168,6 +266,39 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-8 py-6">
+              {/* Alerta si no hay datos */}
+              {stats.totalVuelos === 0 && (
+                <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 mb-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <FaExclamationTriangle className="text-yellow-600 text-3xl" />
+                    <h3 className="text-xl font-bold text-yellow-900">⚠️ Datos Insuficientes para Análisis</h3>
+                  </div>
+                  <div className="space-y-3 text-yellow-800">
+                    <p className="font-semibold">
+                      No se encontraron programaciones de vuelo para analizar. Esto indica un problema en la comunicación con el backend.
+                    </p>
+                    <div className="bg-white rounded-lg p-4 border border-yellow-300">
+                      <p className="font-semibold mb-2 text-yellow-900">Posibles causas:</p>
+                      <ul className="list-disc list-inside space-y-1 text-sm">
+                        <li>El backend no envió el mensaje <code className="bg-yellow-100 px-1 rounded">"primeraCarga"</code> con los datos de envíos</li>
+                        <li>Los envíos no se procesaron correctamente en el servidor</li>
+                        <li>El algoritmo de optimización no generó rutas para los paquetes</li>
+                        <li>Problema de conexión WebSocket durante la transmisión de datos</li>
+                      </ul>
+                    </div>
+                    <div className="bg-red-100 rounded-lg p-4 border border-red-300">
+                      <p className="font-semibold text-red-900 mb-2">🔧 Recomendaciones:</p>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-red-800">
+                        <li>Verifica los logs del backend para errores en el procesamiento de envíos</li>
+                        <li>Confirma que el endpoint de simulación semanal esté funcionando</li>
+                        <li>Revisa la configuración de datos de entrada (archivos de envíos y vuelos)</li>
+                        <li>Intenta ejecutar primero la simulación semanal normal para verificar que funcione</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Alerta Principal */}
               <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5 mb-6">
                 <div className="flex items-center gap-3 mb-3">
@@ -309,12 +440,6 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
                         <li className="flex items-start gap-2">
                           <span className="text-blue-600 font-bold">•</span>
                           <span><span className="font-semibold">Aumentar capacidad:</span> Agregar más vuelos en las rutas críticas identificadas ({stats.topRutasCriticas.map(([r]) => r).join(', ')})</span>
-                        </li>
-                      )}
-                      {stats.topAeropuertosAfectados.length > 0 && (
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-600 font-bold">•</span>
-                          <span><span className="font-semibold">Reforzar hubs:</span> Incrementar capacidad de almacenamiento en {stats.topAeropuertosAfectados[0][0]} y otros aeropuertos saturados</span>
                         </li>
                       )}
                       <li className="flex items-start gap-2">
@@ -538,7 +663,7 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
               onClick={handleClose}
               className="px-6 py-3 bg-primary text-white rounded-lg font-semibold font-sans hover:bg-primary-600 transition-colors shadow-sm"
             >
-              Cerrar Reporte
+              Volver a Configuración
             </button>
           </div>
         </div>

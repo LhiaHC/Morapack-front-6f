@@ -83,6 +83,13 @@ export function procesarData(
                     // Excluir hubs del colapso (capacidad ilimitada)
                     const HUBS = ['EBCI', 'SPIM', 'UBBB'];
                     if (!HUBS.includes(aeropuertoOrigen.codigoOACI) && aeropuertoOrigen.cantidadActual > aeropuertoOrigen.capacidadMaxima) {
+                        console.error("🔴 COLAPSO DETECTADO en procesarData");
+                        console.log("Aeropuerto:", aeropuertoOrigen.codigoOACI);
+                        console.log("Cantidad actual:", aeropuertoOrigen.cantidadActual);
+                        console.log("Capacidad máxima:", aeropuertoOrigen.capacidadMaxima);
+                        console.log("Total envíos procesados:", envios.current.size);
+                        console.log("Total programaciones vuelo:", programacionVuelos.current.size);
+                        console.log("Total aeropuertos:", aeropuertos.current.size);
                         setColapso(true);
                         console.log("Colapso en procesarData (aeropuerto origen): " + aeropuertoOrigen.codigoOACI);
                     }

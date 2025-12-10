@@ -203,7 +203,15 @@ export function crearPuntoDeVuelo(aeropuertos: Map<String, {aeropuerto:Aeropuert
         else if (razon <= 1){
             feature.setStyle(redPlaneStyle(item, angulo));
         } else {
-            console.error("❌ COLAPSO: Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
+            console.error("❌ COLAPSO POR VUELO EXCEDIDO");
+            console.error("Vuelo ID:", item.vuelo.id);
+            console.error("Ruta:", item.vuelo.origen, "→", item.vuelo.destino);
+            console.error("Paquetes asignados:", paquetes);
+            console.error("Capacidad del vuelo:", item.vuelo.capacidad);
+            console.error("Exceso:", paquetes - item.vuelo.capacidad);
+            console.error("Razón (paquetes/capacidad):", razon);
+            console.error("Llave búsqueda:", llaveBusqueda);
+            console.error("Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
             setColapso(true);
         }
     } else {

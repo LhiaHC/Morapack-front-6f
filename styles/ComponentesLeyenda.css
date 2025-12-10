@@ -110,8 +110,8 @@
 .ruta-vuelo-seleccionado {
     width: 20px;
     height: 2px;
-    background-color: #FF7F09;
-    border-top: 2px dotted #FF7F09;
+    background-color: #ef4444;
+    border-top: 2px dotted #ef4444;
     margin-right: 10px;
     place-self: center;
 }
