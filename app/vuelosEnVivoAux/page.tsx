@@ -81,7 +81,7 @@ const Page = () => {
         if (!initializedRef.current) {
             const initializeData = async () => {
                 //   22 Julio 2024 a las 5:45 am
-                setHoraInicio(new Date("2024-07-22T06:10:00"));
+                setHoraInicio(new Date());
     
                 try {
                     const [auxAeropuertos, vuelos] = await Promise.all([fetchAeropuertos(), fetchVuelos()]);
@@ -103,7 +103,7 @@ const Page = () => {
     useEffect(() => {
         console.log("Campana: ", campana);
         if(campana ==  2) {
-            let auxHoraInicio: Date = new Date("2024-07-22T06:10:00");
+            let auxHoraInicio: Date = new Date();
             sendMessage("vuelosEnVivo: tiempo: " +auxHoraInicio.toLocaleString("en-US", {timeZone: "America/Lima",}),
                     true
             );

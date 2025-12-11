@@ -218,13 +218,27 @@ export default function HorizontalLinearStepper() {
       telefono: numeroDES
     };
 
+    // Convertir la fecha a formato ISO manteniendo la zona horaria de Perú (America/Lima = UTC-5)
+    let fechaHoraSalidaISO = null;
+    if (!isImmediate && horaEnvio) {
+      // Crear una fecha en formato ISO con la zona horaria de Perú
+      const year = horaEnvio.getFullYear();
+      const month = String(horaEnvio.getMonth() + 1).padStart(2, '0');
+      const day = String(horaEnvio.getDate()).padStart(2, '0');
+      const hours = String(horaEnvio.getHours()).padStart(2, '0');
+      const minutes = String(horaEnvio.getMinutes()).padStart(2, '0');
+      const seconds = String(horaEnvio.getSeconds()).padStart(2, '0');
+      // Formato ISO con zona horaria de Perú (UTC-5)
+      fechaHoraSalidaISO = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}-05:00`;
+    }
+
     let envio = {
       origen: ciudadOrigen,
       destino: ciudadDestino,
       cantidadPaquetes: numPaquetes,
-      fechaHoraSalida: isImmediate ? null : horaEnvio,
+      fechaHoraSalida: fechaHoraSalidaISO,
     };
-    console.log(envio);
+    console.log("Envio con fecha en zona horaria de Perú:", envio);
     //Guardar clientes
     console.log("guardando clientes en ", apiURL);
 
@@ -232,49 +246,50 @@ export default function HorizontalLinearStepper() {
       //Cursor de carga
       document.body.style.cursor = 'wait';
 
-      await axios.post(`${apiURL}/cliente`, clienteEmisor)
-        .then((response) => {
-          console.log(response.data);
-          envio.emisorID = response.data.id;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      // Registrar cliente emisor
+      console.log("Registrando cliente emisor:", clienteEmisor);
+      const responseEmisor = await axios.post(`${apiURL}/cliente`, clienteEmisor);
+      console.log("Respuesta emisor:", responseEmisor.data);
+      envio.emisorID = responseEmisor.data.id;
 
-      await axios.post(`${apiURL}/cliente`, clienteReceptor)
-        .then((response) => {
-          console.log(response.data);
-          envio.receptorID = response.data.id;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      // Registrar cliente receptor
+      console.log("Registrando cliente receptor:", clienteReceptor);
+      const responseReceptor = await axios.post(`${apiURL}/cliente`, clienteReceptor);
+      console.log("Respuesta receptor:", responseReceptor.data);
+      envio.receptorID = responseReceptor.data.id;
 
-      await axios.post(`${apiURL}/envio`, envio)
-        .then((response) => {
-          console.log(response.data);
-          envio.id = response.data.id;
-
-          //Los codigos llegan en una string separados por espacios
-          let codigos;
-          if (typeof response.data === 'number') {
-            codigos = [response.data];
-          } else if (typeof response.data === 'string') {
-            codigos = response.data.split(" ");
-            codigos = codigos.filter((codigo) => codigo !== "");
-          }
-          console.log(codigos);
-          setCodigosPaquetes(codigos);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      } catch (error) {
-        console.log(error);
-      } finally {
-        //Cursor normal
-        document.body.style.cursor = 'default';
+      // Verificar que ambos IDs estén presentes antes de crear el envío
+      if (!envio.emisorID || !envio.receptorID) {
+        throw new Error("No se pudieron registrar ambos clientes correctamente");
       }
+
+      console.log("Registrando envío con datos:", envio);
+      // Registrar envío
+      const responseEnvio = await axios.post(`${apiURL}/envio`, envio);
+      console.log("Respuesta envío:", responseEnvio.data);
+      envio.id = responseEnvio.data.id;
+
+      //Los codigos llegan en una string separados por espacios
+      let codigos;
+      if (typeof responseEnvio.data === 'number') {
+        codigos = [responseEnvio.data];
+      } else if (typeof responseEnvio.data === 'string') {
+        codigos = responseEnvio.data.split(" ");
+        codigos = codigos.filter((codigo) => codigo !== "");
+      }
+      console.log("Códigos de paquetes:", codigos);
+      setCodigosPaquetes(codigos);
+    } catch (error) {
+      console.error("Error al registrar el envío:", error);
+      setErrorMessage(
+        error.response?.data?.message ||
+        error.message ||
+        "Error al registrar el envío. Por favor intente nuevamente."
+      );
+    } finally {
+      //Cursor normal
+      document.body.style.cursor = 'default';
+    }
   };
 
   React.useEffect(() => {

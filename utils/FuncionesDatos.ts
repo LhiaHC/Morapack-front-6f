@@ -276,11 +276,38 @@ export function actualizarDataReal(
             let envioAntiguo = envios.current.get(envio.codigoEnvio);
             console.log("Envio antiguo paquetes: ", envioAntiguo?.cantidadPaquetes);
             console.log("Envio nuevo paquetes: ", envio.cantidadPaquetes);
+
+            // Si no hay envío antiguo, es un envío nuevo - agregarlo a la lista
+            if (!envioAntiguo){
+                 console.log("Envío nuevo detectado en actualizarDataReal - agregándolo a la lista");
+                 envios.current.set(envio.codigoEnvio, envio);
+                 // Procesar paquetes del envío nuevo
+                 for (let paquete of envio.paquetes) {
+                     if (paquete.ruta == null || paquete.ruta.length === 0) {
+                         const aeropuertoData = aeropuertos.current.get(envio.origen);
+                         if (aeropuertoData) {
+                             const aeropuerto = aeropuertoData.aeropuerto;
+                             const yaEstaEnAeropuerto = aeropuerto.paquetes.some(p => p.id === paquete.id);
+                             if (!yaEstaEnAeropuerto) {
+                                 aeropuerto.cantidadActual++;
+                                 aeropuerto.paquetes.push(paquete);
+                                 console.log("Paquete", paquete.id, "agregado al aeropuerto", envio.origen, "en actualizarDataReal");
+                                 // Actualizar el estilo del aeropuerto
+                                 decidirEstiloAeropuerto(aeropuertoData);
+                             }
+                         }
+                     }
+                 }
+                 continue;
+            }
+
             let index=0;
             for (let paquete of envio.paquetes) {
-                if ( paquete.ruta==null || !envioAntiguo){
+
+                // Si el paquete nuevo no tiene ruta, saltarlo (ya debería estar en el aeropuerto desde procesarDataReal)
+                if (paquete.ruta == null || paquete.ruta.length === 0) {
                      index++;
-                     console.log("No se actualiza paquete porque no tiene ruta o no hay envio antiguo");
+                     // No hacer nada - los paquetes sin ruta ya fueron agregados en procesarDataReal
                      continue;
                 }
                 //Si el antiguo paquete no tiene ruta, no se elimina, solo se agrega

@@ -10,7 +10,7 @@ import HorizontalLinearStepper from "@/components/stepper/componenteStepper.jsx"
 import UploadFile from "@/components/uploadFile/uploadFile.jsx";
 
 function ConfiguracionRegistro({ buttonText, activeTab }) {
-  const [startDate, setStartDate] = useState(new Date("2024-01-12T05:36:52"));
+  const [startDate, setStartDate] = useState(new Date());
 
   return (
     <div className="flex flex-col items-center mt-5 w-full mb-8">

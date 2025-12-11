@@ -81,8 +81,8 @@ const Page = () => {
     useEffect(() => {
         if (!initializedRef.current) {
             const initializeData = async () => {
-                //   22 Julio 2024 a las 5:45 am
-                setHoraInicio(new Date("2024-07-22T05:45:00"));
+                //   fecha y hora actual
+                setHoraInicio(new Date());
     
                 try {
                     const [auxAeropuertos, vuelos] = await Promise.all([fetchAeropuertos(), fetchVuelos()]);
@@ -104,10 +104,13 @@ const Page = () => {
     useEffect(() => {
         console.log("Campana: ", campana);
         if(campana ==  2) {
-            let auxHoraInicio: Date = new Date("2024-07-22T05:45:00");
-            sendMessage("vuelosEnVivo: tiempo: " +auxHoraInicio.toLocaleString("en-US", {timeZone: "America/Lima",}),
-                    true
-            );
+            let auxHoraInicio: Date = new Date();
+            const mensajeTiempo = "vuelosEnVivo: tiempo: " + auxHoraInicio.toLocaleString("en-US", {timeZone: "America/Lima"});
+            console.log("=== ENVIANDO MENSAJE AL WEBSOCKET ===");
+            console.log("Fecha actual:", auxHoraInicio);
+            console.log("Mensaje completo:", mensajeTiempo);
+            console.log("=====================================");
+            sendMessage(mensajeTiempo, true);
             console.log("Enviando mensaje de tiempo con campana 2");
         }
         if (campana ==3 ) {
@@ -181,8 +184,13 @@ const Page = () => {
                 procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, auxiliarVuelos, setColapso);
             }
             if (message.metadata.includes("nuevosEnvios")) {
-                console.log(message.data);
+                console.log("Nuevos envíos recibidos (sin rutas):", message.data);
                 procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, auxiliarVuelos, setColapso);
+            }
+            if (message.metadata.includes("rutasAsignadas")) {
+                console.log("Rutas asignadas recibidas:", message.data);
+                // Actualizar los envíos que ahora tienen rutas asignadas
+                actualizarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, false, vuelos);
             }
             if (message.metadata.includes("enviosEnOperacion")) {
                 actualizarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, false, vuelos);
