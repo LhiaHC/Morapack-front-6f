@@ -38,7 +38,18 @@ export function updateCoordinates(vuelos: Map<number, { vuelo: Vuelo, pointFeatu
 
         // console.log("vuelo: ", vuelo);
         try{
+            // Validar que lineFeature existe antes de acceder a getGeometry
+            if (!lineFeature) {
+                console.warn(`⚠️ lineFeature es null para vuelo ${vuelo.id}`);
+                return;
+            }
+            
             const line = lineFeature.getGeometry() as LineString;
+            if (!line) {
+                console.warn(`⚠️ getGeometry() retornó null para vuelo ${vuelo.id}`);
+                return;
+            }
+            
             const coordinates = line.getCoordinates();
             // console.log("coordinates: ", coordinates);
             const totalDistance = vuelo.distanciaVuelo; //En km

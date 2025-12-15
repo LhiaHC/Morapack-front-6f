@@ -67,27 +67,58 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
     
     // FILTRAR SOLO VUELOS DE LA PRIMERA SEMANA (7 días) si no es colapso
     let filteredData = allData;
+    let fechaInicio: Date | null = null;
+    
     if (!colapso && allData.length > 0) {
-      // Encontrar la fecha más temprana
+      // Encontrar la fecha más temprana (solo la fecha, sin hora)
       const fechaMasTemprana = allData.reduce((min, prog) => {
         const fecha = new Date(prog.fechaSalida);
+        fecha.setUTCHours(0, 0, 0, 0); // Normalizar a medianoche UTC
         return fecha < min ? fecha : min;
-      }, new Date(allData[0].fechaSalida));
+      }, (() => {
+        const d = new Date(allData[0].fechaSalida);
+        d.setUTCHours(0, 0, 0, 0);
+        return d;
+      })());
       
-      // Fecha límite: 7 días después
+      fechaInicio = fechaMasTemprana;
+      
+      // Fecha límite: 7 días después (medianoche del día 8)
       const fechaLimite = new Date(fechaMasTemprana);
       fechaLimite.setDate(fechaLimite.getDate() + 7);
       
-      console.log("Fecha más temprana:", fechaMasTemprana);
+      console.log("Fecha inicio (Día 1):", fechaMasTemprana);
       console.log("Fecha límite (7 días):", fechaLimite);
+      
+      // Debug: contar vuelos por día antes del filtro
+      const vuelosPorDiaAntesFiltro: { [key: string]: number } = {};
+      allData.forEach(prog => {
+        const fecha = new Date(prog.fechaSalida);
+        fecha.setUTCHours(0, 0, 0, 0);
+        const fechaStr = fecha.toISOString().split('T')[0];
+        vuelosPorDiaAntesFiltro[fechaStr] = (vuelosPorDiaAntesFiltro[fechaStr] || 0) + 1;
+      });
+      console.log("📊 Vuelos por día (ANTES del filtro):", vuelosPorDiaAntesFiltro);
       
       // Filtrar vuelos dentro de la semana
       filteredData = allData.filter(prog => {
         const fechaVuelo = new Date(prog.fechaSalida);
-        return fechaVuelo < fechaLimite;
+        fechaVuelo.setUTCHours(0, 0, 0, 0); // Normalizar para comparación UTC
+        return fechaVuelo >= fechaMasTemprana && fechaVuelo < fechaLimite;
       });
       
       console.log("Vuelos después del filtro de 7 días:", filteredData.length);
+    } else if (colapso && allData.length > 0) {
+      // En modo colapso, también establecer la fecha de inicio (normalizada a medianoche)
+      fechaInicio = allData.reduce((min, prog) => {
+        const fecha = new Date(prog.fechaSalida);
+        fecha.setUTCHours(0, 0, 0, 0);
+        return fecha < min ? fecha : min;
+      }, (() => {
+        const d = new Date(allData[0].fechaSalida);
+        d.setUTCHours(0, 0, 0, 0);
+        return d;
+      })());
     }
     
     if (filteredData.length > 0) {
@@ -151,11 +182,38 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
         aeropuertosAfectados[vueloInfo.vuelo.destino] = (aeropuertosAfectados[vueloInfo.vuelo.destino] || 0) + 1;
       }
       
-      // Contar vuelos por día
+      // Contar vuelos por día (relativo al inicio de la simulación)
       const fechaSalida = new Date(programacion.fechaSalida);
-      const dia = fechaSalida.getDate();
-      vuelosPorDia[dia] = (vuelosPorDia[dia] || 0) + 1;
-      paquetesPorDia[dia] = (paquetesPorDia[dia] || 0) + programacion.cantPaquetes;
+      let diaRelativo: number;
+      
+      if (fechaInicio) {
+        // Normalizar la fecha del vuelo a medianoche UTC para comparación de días
+        const fechaSalidaNormalizada = new Date(fechaSalida);
+        fechaSalidaNormalizada.setUTCHours(0, 0, 0, 0);
+        
+        // Calcular el día relativo (1, 2, 3, ...) desde el inicio
+        const diffTime = fechaSalidaNormalizada.getTime() - fechaInicio.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        diaRelativo = diffDays + 1; // +1 porque el primer día es "Día 1"
+        
+        // Debug: mostrar los primeros cálculos
+        if (totalVuelos < 5) {
+          console.log(`🔍 Debug vuelo ${totalVuelos}:`, {
+            fechaSalida: fechaSalida.toISOString(),
+            fechaInicio: fechaInicio.toISOString(),
+            fechaSalidaNormalizada: fechaSalidaNormalizada.toISOString(),
+            diffTime,
+            diffDays,
+            diaRelativo
+          });
+        }
+      } else {
+        // Fallback al método anterior si no hay fecha de inicio
+        diaRelativo = fechaSalida.getDate();
+      }
+      
+      vuelosPorDia[diaRelativo] = (vuelosPorDia[diaRelativo] || 0) + 1;
+      paquetesPorDia[diaRelativo] = (paquetesPorDia[diaRelativo] || 0) + programacion.cantPaquetes;
       
       // Rutas más usadas
       const ruta = `${vueloInfo.vuelo.origen}-${vueloInfo.vuelo.destino}`;
