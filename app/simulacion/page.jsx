@@ -5,8 +5,10 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaCalendarAlt, FaTimes, FaCog } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 function ConfiguracionModal({ isOpen, onClose }) {
+    const router = useRouter();
     const [startDate, setStartDate] = useState(null);
     const [activeTab, setActiveTab] = useState("semanal");
     const [mounted, setMounted] = useState(false);
@@ -24,6 +26,11 @@ function ConfiguracionModal({ isOpen, onClose }) {
         activeTab === "semanal"
             ? "Iniciar Simulación Semanal"
             : "Iniciar Simulación hasta el Colapso";
+
+    const handleStartSimulation = () => {
+        // ✅ Ir DIRECTAMENTE a la simulación (sin pasar por carga de archivos)
+        router.push(`/simulacion/${activeTab}?startDate=${startDate?.toISOString()}`);
+    };
 
     return (
         <>
@@ -114,14 +121,12 @@ function ConfiguracionModal({ isOpen, onClose }) {
                             >
                                 Cancelar
                             </button>
-                            <Link
-                                href={`/simulacion/${activeTab}?startDate=${startDate?.toISOString()}`}
-                                className="flex-1"
+                            <button
+                                onClick={handleStartSimulation}
+                                className="flex-1 bg-primary text-white py-3 rounded-md text-lg font-medium hover:bg-primary-600 transition-colors"
                             >
-                                <button className="w-full bg-primary text-white py-3 rounded-md text-lg font-medium hover:bg-primary-600 transition-colors">
-                                    {buttonText}
-                                </button>
-                            </Link>
+                                {buttonText}
+                            </button>
                         </div>
                     </div>
                 </div>

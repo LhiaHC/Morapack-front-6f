@@ -19,7 +19,8 @@ const Sidebar = () => {
 
   const sidebarItems = [
     { name: "Operación día a día", route: "/vuelosEnVivo", Icon: FlightTakeoffRoundedIcon },
-    { name: "Simulación", route: "/simulacion", Icon: TuneRoundedIcon },
+    //{ name: "Simulación", route: "/simulacion/cargar-pedidos", Icon: TuneRoundedIcon },
+    { name: "Simulación", route: "/simulacion/cargar-pedidos", Icon: TuneRoundedIcon },
   ];
 
   const pathname = usePathname();
