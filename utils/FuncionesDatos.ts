@@ -29,7 +29,7 @@ export function procesarData(
                 const aeropuertoOrigen: Aeropuerto | undefined =aeropuertos.current.get(envio.origen)?.aeropuerto;
                 let vueloSalio=false;
                 // console.log("paquete: ", paquete);
-                for (let i = 0; i < paquete.fechasRuta?.length ?? 0; i++) {
+                for (let i = 0; i < (paquete.fechasRuta ? paquete.fechasRuta.length : 0); i++) {
                     const idVuelo = paquete.ruta[i];
                     const auxFechaRuta = paquete.fechasRuta[i];
 
@@ -127,7 +127,7 @@ export function procesarDataReal(
                 const aeropuertoOrigen: Aeropuerto | undefined =aeropuertos.current.get(envio.origen)?.aeropuerto;
                 let dondeEsta:string="";
                 // console.log("paquete: ", paquete);
-                for (let i = 0; i < paquete.fechasRuta?.length ?? 0; i++) {
+                for (let i = 0; i < (paquete.fechasRuta ? paquete.fechasRuta.length : 0); i++) {
                     const idVuelo = paquete.ruta[i];
                     const auxFechaRuta = paquete.fechasRuta[i];
 
@@ -135,10 +135,10 @@ export function procesarDataReal(
                     let fechaVuelo = new Date();
                     if(auxFechaRuta < 10) {
                         fechaVuelo = new Date(envio!.fechaHoraSalida*1000 + auxFechaRuta * 24 * 60 * 60 * 1000);
-                        //Añadir offset de la hora de salida del vuelo
-                        fechaVuelo = new Date(fechaVuelo.getTime() + 
-                        (aeropuertos.current.get(auxiliarVuelos.current?.get(idVuelo)?.origen ?? "SPIM")?.aeropuerto.gmt?? 0) 
-                        * 60 * 60 * 1000); 
+                        // //Añadir offset de la hora de salida del vuelo
+                        // fechaVuelo = new Date(fechaVuelo.getTime() + 
+                        // (aeropuertos.current.get(auxiliarVuelos.current?.get(idVuelo)?.origen ?? "SPIM")?.aeropuerto.gmt?? 0) 
+                        // * 60 * 60 * 1000); 
                     }
                     else{
                         fechaVuelo = new Date(paquete.fechasRuta[i] * 1000);
@@ -219,7 +219,7 @@ function dondeEstaPaquete(paquete: Paquete, envio: Envio, vuelos: React.RefObjec
     let dondeEsta = "";
     // let fechaActual = new Date();
     let fechaLlegadaAnterior = null;
-    for (let i = 0; i < paquete.fechasRuta?.length ?? 0; i++) {
+    for (let i = 0; i < (paquete.fechasRuta ? paquete.fechasRuta.length : 0); i++) {
         const idVuelo = paquete.ruta[i];
         const auxFechaRuta = paquete.fechasRuta[i];
         let fechaVuelo = new Date();
@@ -356,7 +356,7 @@ export function actualizarDataReal(
                 paqueteAntiguo.ruta=paquete.ruta;
 
                 // Agregar la nueva ruta
-                for (let i = 0; i < paquete.fechasRuta?.length ?? 0; i++) {
+                for (let i = 0; i < (paquete.fechasRuta ? paquete.fechasRuta.length : 0); i++) {
                     // console.log("Añadiendo paquete a ruta");
                     const idVuelo = paquete.ruta[i];
                     const auxFechaRuta = paquete.fechasRuta[i];
