@@ -160,13 +160,26 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
         console.log(`✈️ Vuelo excedido: ${vueloInfo.vuelo.origen}→${vueloInfo.vuelo.destino}, Paquetes: ${programacion.cantPaquetes}, Capacidad: ${vueloInfo.vuelo.capacidad}, Exceso: ${exceso}`);
         
         // Detectar primer vuelo excedido (momento del colapso)
-        if (!primerVueloExcedido) {
+        if (!primerVueloExcedido && fechaInicio) {
           primerVueloExcedido = programacion;
           const fechaColapso = new Date(programacion.fechaSalida);
+          
+          // Calcular días transcurridos desde el inicio
+          const fechaInicioNorm = new Date(fechaInicio);
+          fechaInicioNorm.setUTCHours(0, 0, 0, 0);
+          const fechaColapsoNorm = new Date(fechaColapso);
+          fechaColapsoNorm.setUTCHours(0, 0, 0, 0);
+          
+          const diasTranscurridos = Math.floor((fechaColapsoNorm.getTime() - fechaInicioNorm.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 porque el día 1 es el primer día
+          
           momentoColapso = {
-            dia: fechaColapso.getDate(),
+            dia: diasTranscurridos,
             hora: fechaColapso.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
           };
+          
+          console.log(`🔴 Momento del colapso detectado: Día ${diasTranscurridos} a las ${momentoColapso.hora}`);
+          console.log(`   Fecha inicio: ${fechaInicioNorm.toISOString()}`);
+          console.log(`   Fecha colapso: ${fechaColapsoNorm.toISOString()}`);
         }
         
         // Rutas críticas (con problemas)

@@ -12,6 +12,7 @@ interface SimControlsProps {
   simulationTime?: Date;
   startTime?: Date;
   isSimulation?: boolean;
+  customSpeeds?: { value: number; label: string }[];
 }
 
 const SimControls: React.FC<SimControlsProps> = ({
@@ -24,7 +25,21 @@ const SimControls: React.FC<SimControlsProps> = ({
   simulationTime,
   startTime,
   isSimulation = true,
+  customSpeeds,
 }) => {
+  // Velocidades por defecto si no se proporcionan customSpeeds
+  const defaultSpeeds = [
+    { value: 1, label: "1 min/s" },
+    { value: 2, label: "2 min/s" },
+    { value: 4, label: "4 min/s" },
+    { value: 5, label: "5 min/s" },
+    { value: 10, label: "10 min/s" },
+    { value: 15, label: "15 min/s" },
+    { value: 20, label: "20 min/s" },
+    { value: 30, label: "30 min/s" },
+  ];
+
+  const speeds = customSpeeds || defaultSpeeds;
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
       <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-lg border border-gray-200 p-3 relative">
@@ -68,14 +83,11 @@ const SimControls: React.FC<SimControlsProps> = ({
               onChange={(e) => onSpeedChange(Number(e.target.value))}
               className="px-4 py-2 text-sm font-sans border border-neutral-custom-200 rounded-lg bg-white hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 cursor-pointer text-neutral-custom-800 font-medium"
             >
-              <option value="1">1 min/s</option>
-              <option value="2">2 min/s</option>
-              <option value="4">4 min/s</option>
-              <option value="5">5 min/s</option>
-              <option value="10">10 min/s</option>
-              <option value="15">15 min/s</option>
-              <option value="20">20 min/s</option>
-              <option value="30">30 min/s</option>
+              {speeds.map((speed) => (
+                <option key={speed.value} value={speed.value}>
+                  {speed.label}
+                </option>
+              ))}
             </select>
           </div>
 

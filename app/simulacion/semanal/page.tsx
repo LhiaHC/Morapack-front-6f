@@ -301,6 +301,7 @@ const Page = () => {
                         colapso={false}
                         setColapso={() => {}}
                         setPlaying={setPlaying}
+                        esSimulacionContinua={false}
                     />
                     <SimControls
                         simulationInterval={simulationInterval}

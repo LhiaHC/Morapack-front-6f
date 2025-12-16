@@ -186,7 +186,7 @@ export function crearLineaDeVuelo(aeropuertos: Map<String, {aeropuerto: Aeropuer
 }
 
 export function crearPuntoDeVuelo(aeropuertos: Map<String, {aeropuerto:Aeropuerto; pointFeature: any}>, item: any, simulationTime: Date,
-    programacionVuelos: Map<string, ProgramacionVuelo>, setColapso: any): {feature: any, tieneCarga: boolean} {
+    programacionVuelos: Map<string, ProgramacionVuelo>, setColapso: any, enFaseReduccion: boolean = false): {feature: any, tieneCarga: boolean} {
     const point = coordenadasIniciales(aeropuertos, item, simulationTime);
     const feature = new Feature({
         geometry: point,
@@ -203,7 +203,27 @@ export function crearPuntoDeVuelo(aeropuertos: Map<String, {aeropuerto:Aeropuert
         let razon = paquetes / (item.vuelo.capacidad);
         feature.set('pintarAuxiliar', true); 
         feature.set('cantPaquetes', paquetes);
-        if (razon < 0.33){
+        // Si está en fase de reducción, usar umbrales más bajos para que se pongan rojos más fácil
+        if (enFaseReduccion) {
+            // Umbrales reducidos: verde <20%, amarillo <40%, resto rojo
+            if (razon < 0.20) {
+                feature.setStyle(greenPlaneStyle(item, angulo));
+            } else if (razon < 0.40) {
+                feature.setStyle(yellowPlaneStyle(item, angulo));
+            } else if (razon <= 1) {
+                feature.setStyle(redPlaneStyle(item, angulo));
+            } else {
+                console.error("❌ COLAPSO POR VUELO EXCEDIDO");
+                console.error("Vuelo ID:", item.vuelo.id);
+                console.error("Ruta:", item.vuelo.origen, "→", item.vuelo.destino);
+                console.error("Paquetes asignados:", paquetes);
+                console.error("Capacidad del vuelo:", item.vuelo.capacidad);
+                console.error("Exceso:", paquetes - item.vuelo.capacidad);
+                console.error("Razón (paquetes/capacidad):", razon);
+                console.error("Llave búsqueda:", llaveBusqueda);
+                setColapso(true);
+            }
+        } else if (razon < 0.33){
         // if (razon < 8/120){
             feature.setStyle(greenPlaneStyle(item, angulo));
         }
@@ -235,7 +255,7 @@ export function crearPuntoDeVuelo(aeropuertos: Map<String, {aeropuerto:Aeropuert
 }
 
 export function crearPuntoDeVueloReal(aeropuertos: Map<String, {aeropuerto:Aeropuerto; pointFeature: any}>, item: any, simulationTime: Date,
-    programacionVuelos: Map<string, ProgramacionVuelo>, setColapso: any): {feature: any, tieneCarga: boolean} {
+    programacionVuelos: Map<string, ProgramacionVuelo>, setColapso: any, enFaseReduccion: boolean = false): {feature: any, tieneCarga: boolean} {
     const point = coordenadasIniciales(aeropuertos, item, simulationTime);
     const feature = new Feature({
         geometry: point,
@@ -267,7 +287,19 @@ export function crearPuntoDeVueloReal(aeropuertos: Map<String, {aeropuerto:Aerop
         let razon = paquetes / item.vuelo.capacidad;
         feature.set('pintarAuxiliar', true); 
         feature.set('cantPaquetes', paquetes);
-        if (razon < 0.33){
+        // Si está en fase de reducción, usar umbrales más bajos para que se pongan rojos más fácil
+        if (enFaseReduccion) {
+            if (razon < 0.20) {
+                feature.setStyle(greenPlaneStyle(item, angulo));
+            } else if (razon < 0.40) {
+                feature.setStyle(yellowPlaneStyle(item, angulo));
+            } else if (razon <= 1) {
+                feature.setStyle(redPlaneStyle(item, angulo));
+            } else {
+                console.error("Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
+                setColapso(true);
+            }
+        } else if (razon < 0.33){
             feature.setStyle(greenPlaneStyle(item, angulo));
         }
         else if (razon < 0.66){

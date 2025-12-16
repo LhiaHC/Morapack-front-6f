@@ -25,6 +25,7 @@ import {
     dinamicPlaneStyle,
     dinamicSelectedPlaneStle,
     hubAirportStyle,
+    redAirportStyle,
 } from "./EstilosMapa";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
@@ -69,6 +70,8 @@ type MapaProps = {
     colapso: boolean;
     setColapso: React.Dispatch<React.SetStateAction<boolean>>;
     setPlaying?: React.Dispatch<React.SetStateAction<boolean>>;
+    esSimulacionContinua?: boolean; // Nueva prop para indicar que no debe detenerse en 7 días
+    enFaseReduccion?: boolean; // Nueva prop para indicar si está en fase de reducción (pintar todo de rojo)
 };
 
 const Mapa = ({
@@ -84,9 +87,11 @@ const Mapa = ({
     sendMessage,
     onSimulationTimeChange,
     auxiliarVuelos,
-    colapso, 
+    colapso,
     setColapso,
     setPlaying,
+    esSimulacionContinua = false,
+    enFaseReduccion = false,
 }: MapaProps) => {
     const mapRef = useRef<OLMap | null>(null);
     const vectorSourceRef = useRef(new VectorSource());
@@ -178,7 +183,7 @@ const Mapa = ({
                 }
                 
                 aeropuertos.current.set(item.aeropuerto.codigoOACI, {...item, pointFeature: feature});
-                decidirEstiloAeropuerto(aeropuertos.current.get(item.aeropuerto.codigoOACI));
+                decidirEstiloAeropuerto(aeropuertos.current.get(item.aeropuerto.codigoOACI), enFaseReduccion);
                 return feature;
             }
         );
@@ -264,7 +269,7 @@ const Mapa = ({
                     prevSimulationTime.getTime() +
                         simulationInterval * 60 * 1000
                 );
-                
+
                 // Usar el nuevo tiempo para las notificaciones
                 onSimulationTimeChange(newTime);
                 if (sendMessage) {
@@ -273,21 +278,29 @@ const Mapa = ({
                     });
                     sendMessage("mensaje: tiempo: " + limaTime, true);
                 }
-                
+
                 return newTime;
             });
-        }, 1000);
+        }, 1000); // Intervalo de 1 segundo para que la simulación sea visible en el mapa
 
         // Clean up interval on unmount
         return () => clearInterval(intervalId);
     }, [simulationInterval, sendMessage, onSimulationTimeChange]);
 
     useEffect(() => {
-        if((simulationTime.getTime() > fechaFinSemana.getTime() && simulationInterval!==1/60) || colapso){
+        // Para simulación continua (colapso): solo mostrar reporte cuando ocurra colapso real
+        // Para simulación semanal: mostrar reporte al completar 7 días
+        const simulacionTerminada = esSimulacionContinua
+            ? colapso // En modo continuo, solo termina cuando hay colapso
+            : (simulationTime.getTime() > fechaFinSemana.getTime() && simulationInterval!==1/60) || colapso;
+
+        if(simulacionTerminada){
             console.log("Fin de simulación detectado");
-            
+            console.log("Es simulación continua:", esSimulacionContinua);
+            console.log("Hay colapso:", colapso);
+
             // Congelar los aeropuertos solo si no es colapso (simulación semanal)
-            if (!colapso && !simulacionFinalizada) {
+            if (!colapso && !simulacionFinalizada && !esSimulacionContinua) {
                 console.log("Congelando estado de aeropuertos para simulación semanal");
                 // Crear una copia profunda de los aeropuertos
                 const copiaAeropuertos = new Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>();
@@ -299,14 +312,21 @@ const Mapa = ({
                 });
                 setAeropuertosCongelados(copiaAeropuertos);
                 setSimulacionFinalizada(true);
-                
+
                 // Pausar la simulación semanal cuando termina
                 if (setPlaying) {
                     console.log("Pausando simulación semanal automáticamente");
                     setPlaying(false);
                 }
             }
-            
+
+            // Pausar simulación continua cuando hay colapso
+            if (esSimulacionContinua && colapso && setPlaying && !simulacionFinalizada) {
+                console.log("Pausando simulación continua debido a colapso");
+                setPlaying(false);
+                setSimulacionFinalizada(true);
+            }
+
             // Delay más largo para asegurar que todos los datos se hayan procesado
             // Especialmente importante cuando hay colapso y a velocidades altas
             const delayTime = colapso ? 1500 : 500;
@@ -315,7 +335,7 @@ const Mapa = ({
                 setMostrarFinSemanal(true);
             }, delayTime);
         }
-    }, [simulationTime, simulationInterval, colapso, fechaFinSemana, simulacionFinalizada, setPlaying]);
+    }, [simulationTime, simulationInterval, colapso, fechaFinSemana, simulacionFinalizada, setPlaying, esSimulacionContinua]);
 
     useEffect(() => {
         // console.log("Updating coordinates con tiempo: ", simulationTime);
@@ -375,8 +395,8 @@ const Mapa = ({
         if(vuelosABorrar.length > 0){
              processItems(vuelosABorrar);
              for (let key in aeropuertos.current.keys()) {
-                decidirEstiloAeropuerto(aeropuertos.current.get(key));
-            } 
+                decidirEstiloAeropuerto(aeropuertos.current.get(key), enFaseReduccion);
+            }
         }
     } ,[vuelosABorrar]);
 
@@ -395,13 +415,15 @@ const Mapa = ({
                         item,
                         simulationTime,
                         programacionVuelos.current,
-                        setColapso
+                        setColapso,
+                        enFaseReduccion
                     ) : crearPuntoDeVueloReal(
                         aeropuertos.current,
                         item,
                         simulationTime,
                         programacionVuelos.current,
-                        setColapso
+                        setColapso,
+                        enFaseReduccion
                     );
                     item.pointFeature = objeto.feature;
                     if(objeto.tieneCarga) cuenta++;
@@ -428,8 +450,8 @@ const Mapa = ({
 
                 {/* Botones en esquina superior derecha */}
                 <div className="fixed top-20 right-8 z-[60] flex flex-col gap-3">
-                    {/* Botón "Más información" - solo visible cuando está cerrado */}
-                    {!mostrarInfoSidebar && (
+                    {/* Botón "Más información" - solo visible cuando está cerrado y no es simulación de colapso */}
+                    {!mostrarInfoSidebar && !esSimulacionContinua && (
                         <button
                             onClick={() => setMostrarInfoSidebar(true)}
                             className="bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2"
@@ -439,16 +461,18 @@ const Mapa = ({
                         </button>
                     )}
 
-                    {/* Botón "Pedidos por día" */}
-                    <button
-                        onClick={() => setMostrarPedidosPorDia(true)}
-                        className="bg-info text-white px-4 py-2 rounded-lg shadow-lg hover:bg-info-dark transition-colors duration-200 flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="font-medium">Pedidos por día</span>
-                    </button>
+                    {/* Botón "Pedidos por día" - Solo para simulaciones no-colapso */}
+                    {!esSimulacionContinua && (
+                        <button
+                            onClick={() => setMostrarPedidosPorDia(true)}
+                            className="bg-info text-white px-4 py-2 rounded-lg shadow-lg hover:bg-info-dark transition-colors duration-200 flex items-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="font-medium">Pedidos por día</span>
+                        </button>
+                    )}
                 </div>
 
                 {/* Panel de Pedidos por Día */}
@@ -520,7 +544,7 @@ const Mapa = ({
                                             <img src="/logos/almacenVerde.png" alt="Almacén verde" className="w-6 h-6"/>
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-green-800">0-33%</p>
+                                            <p className="font-semibold text-green-800">{enFaseReduccion ? '0-20%' : '0-33%'}</p>
                                             <p className="text-xs text-gray-600">Ocupación baja</p>
                                         </div>
                                     </div>
@@ -531,7 +555,7 @@ const Mapa = ({
                                             <img src="/logos/almacenAmarillo.png" alt="Almacén amarillo" className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-yellow-800">33-66%</p>
+                                            <p className="font-semibold text-yellow-800">{enFaseReduccion ? '20-40%' : '33-66%'}</p>
                                             <p className="text-xs text-gray-600">Ocupación media</p>
                                         </div>
                                     </div>
@@ -542,7 +566,7 @@ const Mapa = ({
                                             <img src="/logos/almacenRojo.png" alt="Almacén rojo" className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-red-800">66-100%</p>
+                                            <p className="font-semibold text-red-800">{enFaseReduccion ? '40-100%+' : '66-100%'}</p>
                                             <p className="text-xs text-gray-600">Ocupación alta</p>
                                         </div>
                                     </div>

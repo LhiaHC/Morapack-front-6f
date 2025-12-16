@@ -14,7 +14,8 @@ export function procesarData(
     cargaInicial: boolean,
     vuelos: React.RefObject<Map<number,{vuelo: Vuelo;pointFeature: any;lineFeature: any;routeFeature: any;}>>,
     esSimulacion: boolean,
-    setColapso: React.Dispatch<React.SetStateAction<boolean>>
+    setColapso: React.Dispatch<React.SetStateAction<boolean>>,
+    enFaseReduccion: boolean = false
 ): void {
     console.log("Procesando data");
     for (let key in messageData) {
@@ -99,7 +100,7 @@ export function procesarData(
     }
     for (let key of aeropuertos.current.keys()) {
         // console.log("Decidiendo estilo de aeropuerto con clave: ", key);
-        decidirEstiloAeropuerto(aeropuertos.current.get(key));
+        decidirEstiloAeropuerto(aeropuertos.current.get(key), enFaseReduccion);
     }
     console.log("Data procesada");
 }
@@ -112,7 +113,8 @@ export function procesarDataReal(
     simulationTime: Date | null,
     cargaInicial: boolean,
     auxiliarVuelos: React.RefObject<Map<number, Vuelo>>,
-    setColapso: React.Dispatch<React.SetStateAction<boolean>>
+    setColapso: React.Dispatch<React.SetStateAction<boolean>>,
+    enFaseReduccion: boolean = false
 ): void {
     console.log("Procesando data real");
     if (!simulationTime) return;
@@ -210,7 +212,7 @@ export function procesarDataReal(
     }
     for (let key of aeropuertos.current.keys()) {
         // console.log("Decidiendo estilo de aeropuerto con clave: ", key);
-        decidirEstiloAeropuerto(aeropuertos.current.get(key));
+        decidirEstiloAeropuerto(aeropuertos.current.get(key), enFaseReduccion);
     }
     console.log("Data procesada");
 }
@@ -577,29 +579,42 @@ export function agregarPaquetesAlmacenReal(
     }
 }
 
-export function decidirEstiloAeropuerto(item: {aeropuerto: Aeropuerto; pointFeature: any} | undefined) {
+export function decidirEstiloAeropuerto(item: {aeropuerto: Aeropuerto; pointFeature: any} | undefined, enFaseReduccion: boolean = false) {
     // console.log("Decidiendo estilo de aeropuerto", item);
     if (!item) return;
     if (item.pointFeature === null || item.pointFeature.get('seleccionado')) return;
-    
+
     // No cambiar el estilo de los hubs
     const HUBS = ['EBCI', 'SPIM', 'UBBB'];
     if (HUBS.includes(item.aeropuerto.codigoOACI)) return;
-    
+
     let razon = item.aeropuerto.cantidadActual / item.aeropuerto.capacidadMaxima;
     // console.log("Razón de ocupación: ", razon);
     // console.log("Aeropuerto: ", item.aeropuerto);
-    //Verde, menos del 33% de la capacidad
-    if (razon < 0.33) {
-        item.pointFeature.setStyle(greenAirportStyle);
-    }
-    //Amarillo, entre 33% y 66% de la capacidad
-    else if (razon < 0.66) {
-        item.pointFeature.setStyle(yellowAirportStyle);
-    }
-    //Rojo, más del 66% de la capacidad
-    else {
-        item.pointFeature.setStyle(redAirportStyle);
+
+    // Si está en fase de reducción, usar umbrales más bajos para que se pongan rojos más fácil
+    if (enFaseReduccion) {
+        // Umbrales reducidos: verde <20%, amarillo <40%, resto rojo
+        if (razon < 0.20) {
+            item.pointFeature.setStyle(greenAirportStyle);
+        } else if (razon < 0.40) {
+            item.pointFeature.setStyle(yellowAirportStyle);
+        } else {
+            item.pointFeature.setStyle(redAirportStyle);
+        }
+    } else {
+        //Verde, menos del 33% de la capacidad
+        if (razon < 0.33) {
+            item.pointFeature.setStyle(greenAirportStyle);
+        }
+        //Amarillo, entre 33% y 66% de la capacidad
+        else if (razon < 0.66) {
+            item.pointFeature.setStyle(yellowAirportStyle);
+        }
+        //Rojo, más del 66% de la capacidad
+        else {
+            item.pointFeature.setStyle(redAirportStyle);
+        }
     }
 }
 
