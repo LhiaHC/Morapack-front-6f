@@ -12,6 +12,8 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { procesarData, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
 import { Envio } from "@/types/Envio";
+import PedidosPreloadScreen from "@/components/PedidosPreloadScreen";
+
 
 type MessageData = {
     data: Array<any>;
@@ -39,6 +41,9 @@ const Page = () => {
     const aeropuertos = useRef<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>>(new Map());
     const [cargado, setCargado] = useState(false);
     const [horaInicio, setHoraInicio] = useState(new Date());
+
+    const [preloadDone, setPreloadDone] = useState(false);
+
     const [campana, setCampana] = useState(0);
     const [simulationTime, setSimulationTime] = useState<Date | null>(null);
     const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(
@@ -63,7 +68,8 @@ const Page = () => {
                 );
             },
             share: true,
-        }
+        },
+        preloadDone // ✅ SOLO conecta cuando termine la pantalla previa
     );
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
@@ -107,6 +113,7 @@ const Page = () => {
     }, [loadingProgress, cargado]);
 
     useEffect(() => {
+        if (!preloadDone) return; // ⛔ NO ejecutes axios aún
         const params = new URLSearchParams(window.location.search);
         const startDate = params.get("startDate");
         if (startDate !== null) {
@@ -142,7 +149,7 @@ const Page = () => {
                     // console.log("Aeropuertos cargados: ", auxAeropuertos);
                     aeropuertos.current = auxAeropuertos;
                     setLoadingProgress(55);
-                    setLoadingStage("Aeropuertos cargados, esperando datos de vuelos...");
+                    setLoadingStage("Datos cargados, ejecutando simulación...");
                     setCampana(campana + 1);
                 }
             })
@@ -152,7 +159,7 @@ const Page = () => {
             });
 
         return () => clearInterval(progressInterval);
-    }, []);
+    }, [preloadDone]);
 
     useEffect(() => {
         if (campana ==2) {
@@ -244,7 +251,13 @@ const Page = () => {
     
     return (
         <>
-            {!cargado && (
+        {!preloadDone && (
+        <PedidosPreloadScreen
+            startDate={horaInicio}
+            onDone={() => setPreloadDone(true)}
+        />
+        )}
+            {preloadDone && !cargado && (
                 <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
                     <div className="text-center max-w-md px-8">
                         <div className="mb-8">
@@ -263,7 +276,7 @@ const Page = () => {
                             </svg>
                         </div>
                         <h2 className="text-3xl font-bold text-gray-800 mb-3">
-                            Cargando Simulación
+                            Cargando Simulación en vivo ...
                         </h2>
                         <p className="text-gray-600 mb-8">
                             {loadingStage}
@@ -284,7 +297,7 @@ const Page = () => {
                     </div>
                 </div>
             )}
-            {cargado && (
+            {preloadDone && cargado && (
                 <div className="w-full h-screen">
                     <Mapa
                         vuelos={vuelos}
@@ -303,18 +316,6 @@ const Page = () => {
                         setPlaying={setPlaying}
                     />
                     <SimControls
-                        simulationInterval={simulationInterval}
-                        onSpeedChange={setSimulationInterval}
-                        playing={playing}
-                        onPlayPause={() => setPlaying(!playing)}
-                        onReset={() => {
-                            setSimulationTime(horaInicio);
-                            setPlaying(false);
-                        }}
-                        currentTime={currentTime.toLocaleString()}
-                        simulationTime={simulationTime || horaInicio}
-                        startTime={horaInicio}
-                        isSimulation={true}
                     />
                     <div ref={bottomRef}></div>
                 </div>
