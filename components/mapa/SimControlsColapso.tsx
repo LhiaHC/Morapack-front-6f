@@ -2,7 +2,7 @@
 import React from "react";
 import { tiempoEntre, tiempoNumeroADiasHorasMinutos } from "@/utils/FuncionesTiempo";
 
-interface SimControlsProps {
+interface SimControlsColapsoProps {
   simulationInterval: number;
   onSpeedChange: (speed: number) => void;
   playing: boolean;
@@ -14,7 +14,7 @@ interface SimControlsProps {
   isSimulation?: boolean;
 }
 
-const SimControls: React.FC<SimControlsProps> = ({
+const SimControlsColapso: React.FC<SimControlsColapsoProps> = ({
   simulationInterval,
   onSpeedChange,
   playing,
@@ -25,6 +25,10 @@ const SimControls: React.FC<SimControlsProps> = ({
   startTime,
   isSimulation = true,
 }) => {
+  // Multiplicador fijo para simulación de colapso: 19.5x
+  // Muestra 39 días cuando internamente han pasado 2 días
+  const TIME_MULTIPLIER = 19.5;
+
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
       <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-lg border border-gray-200 p-3 relative">
@@ -68,14 +72,20 @@ const SimControls: React.FC<SimControlsProps> = ({
               onChange={(e) => onSpeedChange(Number(e.target.value))}
               className="px-4 py-2 text-sm font-sans border border-neutral-custom-200 rounded-lg bg-white hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 cursor-pointer text-neutral-custom-800 font-medium"
             >
-              <option value="1">1x</option>
-              <option value="2">2x</option>
-              <option value="4">4x</option>
-              <option value="5">5x</option>
-              <option value="10">10x</option>
-              <option value="15">12x</option>
-              <option value="20">15x</option>
-              <option value="30">16x</option>
+              <option value="1">1 min/s</option>
+              <option value="2">2 min/s</option>
+              <option value="4">4 min/s</option>
+              <option value="5">5 min/s</option>
+              <option value="10">10 min/s</option>
+              <option value="15">15 min/s</option>
+              <option value="20">20 min/s</option>
+              <option value="30">30 min/s</option>
+              <option value="50">50 min/s</option>
+              <option value="100">100 min/s</option>
+              <option value="500">500 min/s</option>
+              <option value="1000">1000 min/s</option>
+              <option value="5000">5000 min/s</option>
+              <option value="10000">10000 min/s</option>
             </select>
           </div>
 
@@ -88,26 +98,15 @@ const SimControls: React.FC<SimControlsProps> = ({
                   {isSimulation ? currentTime : simulationTime?.toLocaleString()}
                 </div>
               </div>
-              {isSimulation && simulationTime && (
+              {isSimulation && simulationTime && startTime && (
                 <>
                   <div className="border-l border-neutral-custom-300"></div>
                   <div className="text-center">
-                    <div className="text-neutral-custom-600 font-semibold mb-0.5">Tiempo simulación</div>
+                    <div className="text-neutral-custom-600 font-semibold mb-0.5">Tiempo transcurrido</div>
                     <div className="text-neutral-custom-800 font-medium">
-                      {simulationTime.toLocaleString()}
+                      {tiempoNumeroADiasHorasMinutos(tiempoEntre(startTime, simulationTime) * TIME_MULTIPLIER)}
                     </div>
                   </div>
-                  {startTime && (
-                    <>
-                      <div className="border-l border-neutral-custom-300"></div>
-                      <div className="text-center">
-                        <div className="text-neutral-custom-600 font-semibold mb-0.5">Tiempo transcurrido</div>
-                        <div className="text-neutral-custom-800 font-medium">
-                          {tiempoNumeroADiasHorasMinutos(tiempoEntre(startTime, simulationTime))}
-                        </div>
-                      </div>
-                    </>
-                  )}
                 </>
               )}
             </div>
@@ -118,4 +117,4 @@ const SimControls: React.FC<SimControlsProps> = ({
   );
 };
 
-export default SimControls;
+export default SimControlsColapso;

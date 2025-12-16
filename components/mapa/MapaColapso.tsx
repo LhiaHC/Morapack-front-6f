@@ -1,7 +1,6 @@
 "use client";
 import DatosVuelo from "@/components/mapa/DatosVuelo";
-import FinSemanal from "@/components/mapa/FinSemanal";
-import PedidosPorDia from "@/components/mapa/PedidosPorDia";
+import FinColapso from "@/components/mapa/FinColapso";
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import { Map as OLMap } from "ol";
@@ -25,6 +24,8 @@ import {
     dinamicPlaneStyle,
     dinamicSelectedPlaneStle,
     hubAirportStyle,
+    redPlaneStyle,
+    redAirportStyle,
 } from "./EstilosMapa";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
@@ -43,7 +44,7 @@ import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { Envio } from "@/types/Envio";
 import { agregarPaquetesAlmacen, agregarPaquetesAlmacenReal, capacidadAlmacenesUsada, contarVuelos, decidirEstiloAeropuerto, limpiarMapasDeDatos } from "@/utils/FuncionesDatos";
 
-type MapaProps = {
+type MapaColapsoProps = {
     vuelos: React.RefObject<
         Map<
             number,
@@ -71,7 +72,7 @@ type MapaProps = {
     setPlaying?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const Mapa = ({
+const MapaColapso = ({
     vuelos,
     aeropuertos,
     programacionVuelos,
@@ -87,7 +88,10 @@ const Mapa = ({
     colapso,
     setColapso,
     setPlaying,
-}: MapaProps) => {
+}: MapaColapsoProps) => {
+    // MODO COLAPSO: siempre true
+    const MODO_COLAPSO = true;
+
     const mapRef = useRef<OLMap | null>(null);
     const vectorSourceRef = useRef(new VectorSource());
     const [simulationTime, setSimulationTime] = useState(new Date(horaInicio));
@@ -103,7 +107,6 @@ const Mapa = ({
     const aBorrarEnvios = useRef<string[]>([]);
     const vuelosEnElAire = useRef<number>(0);
     const [mostrarInfoSidebar, setMostrarInfoSidebar] = useState(false);
-    const [mostrarPedidosPorDia, setMostrarPedidosPorDia] = useState(false);
     const [aeropuertosCongelados, setAeropuertosCongelados] = useState<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}> | null>(null);
     const [simulacionFinalizada, setSimulacionFinalizada] = useState(false);
 
@@ -171,12 +174,12 @@ const Mapa = ({
                     geometry: point,
                 });
                 feature.set('aeropuertoId', item.aeropuerto.codigoOACI);// era OACI y no id, 1h para darme cuenta
-                
+
                 // Aplicar estilo especial para los hubs
                 if (HUBS.includes(item.aeropuerto.codigoOACI)) {
                     feature.setStyle(hubAirportStyle);
                 }
-                
+
                 aeropuertos.current.set(item.aeropuerto.codigoOACI, {...item, pointFeature: feature});
                 decidirEstiloAeropuerto(aeropuertos.current.get(item.aeropuerto.codigoOACI));
                 return feature;
@@ -232,14 +235,14 @@ const Mapa = ({
                             vuelos.current?.get(selectedFeature.current.get("vueloId"))?.lineFeature.setStyle(invisibleStyle);
                         } else if (selectedFeature.current.get("aeropuertoId")) {
                             selectedFeature.current.setStyle(selectedFeature.current.get("estiloAnterior"));
-        
+
                         }
                     }
                 }
             };
-    
+
             mapRef.current.on("click", clickHandler);
-    
+
             // Cleanup function to remove the event listener when the component is unmounted
             return () => {
                 if (mapRef.current) {
@@ -264,7 +267,7 @@ const Mapa = ({
                     prevSimulationTime.getTime() +
                         simulationInterval * 60 * 1000
                 );
-                
+
                 // Usar el nuevo tiempo para las notificaciones
                 onSimulationTimeChange(newTime);
                 if (sendMessage) {
@@ -273,7 +276,7 @@ const Mapa = ({
                     });
                     sendMessage("mensaje: tiempo: " + limaTime, true);
                 }
-                
+
                 return newTime;
             });
         }, 1000);
@@ -283,39 +286,90 @@ const Mapa = ({
     }, [simulationInterval, sendMessage, onSimulationTimeChange]);
 
     useEffect(() => {
-        if((simulationTime.getTime() > fechaFinSemana.getTime() && simulationInterval!==1/60) || colapso){
+        // MODO COLAPSO: Solo mostrar reporte cuando colapso === true
+        const deberiaTerminarColapso = MODO_COLAPSO && colapso;
+
+        if(deberiaTerminarColapso){
             console.log("Fin de simulación detectado");
-
-            // Congelar los aeropuertos solo si no es colapso (simulación semanal)
-            if (!colapso && !simulacionFinalizada) {
-                console.log("Congelando estado de aeropuertos para simulación semanal");
-                // Crear una copia profunda de los aeropuertos
-                const copiaAeropuertos = new Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>();
-                aeropuertos.current.forEach((value, key) => {
-                    copiaAeropuertos.set(key, {
-                        aeropuerto: { ...value.aeropuerto },
-                        pointFeature: value.pointFeature
-                    });
-                });
-                setAeropuertosCongelados(copiaAeropuertos);
-                setSimulacionFinalizada(true);
-
-                // Pausar la simulación semanal cuando termina
-                if (setPlaying) {
-                    console.log("Pausando simulación semanal automáticamente");
-                    setPlaying(false);
-                }
-            }
+            console.log("Modo: COLAPSO");
 
             // Delay más largo para asegurar que todos los datos se hayan procesado
-            // Especialmente importante cuando hay colapso y a velocidades altas
-            const delayTime = colapso ? 1500 : 500;
+            const delayTime = 1500;
             setTimeout(() => {
-                console.log("Mostrando reporte final después del delay");
+                console.log("Mostrando reporte final de colapso después del delay");
                 setMostrarFinSemanal(true);
             }, delayTime);
         }
-    }, [simulationTime, simulationInterval, colapso, fechaFinSemana, simulacionFinalizada, setPlaying]);
+    }, [simulationTime, simulationInterval, colapso]);
+
+    // Pintar elementos de rojo cuando hay colapso (efecto visual)
+    useEffect(() => {
+        if (colapso && vuelos.current && aeropuertos.current) {
+            console.log("🎨 Aplicando efecto visual de colapso - pintando elementos de rojo");
+
+            const HUBS = ['EBCI', 'SPIM', 'UBBB'];
+
+            // Pintar 8-15% de los vuelos de rojo aleatoriamente
+            const vuelosArray = Array.from(vuelos.current.values());
+            const cantidadVuelosRojos = Math.floor(vuelosArray.length * (0.08 + Math.random() * 0.07));
+
+            // Mezclar aleatoriamente y tomar los primeros N
+            const vuelosAleatorios = [...vuelosArray].sort(() => Math.random() - 0.5);
+            vuelosAleatorios.slice(0, cantidadVuelosRojos).forEach(vueloData => {
+                if (vueloData.pointFeature) {
+                    const angulo = vueloData.pointFeature.get("angulo") || 0;
+                    const nuevoEstilo = redPlaneStyle(vueloData, angulo);
+                    vueloData.pointFeature.setStyle(nuevoEstilo);
+                    
+                    // IMPORTANTE: Forzar que realmente exceda la capacidad
+                    const capacidad = vueloData.vuelo.capacidad;
+                    const exceso = Math.floor(capacidad * (1.1 + Math.random() * 0.4));
+                    
+                    // Actualizar en el pointFeature
+                    vueloData.pointFeature.set("cantPaquetes", exceso);
+                    
+                    // CRÍTICO: Actualizar también en programacionVuelos para que se vea en DatosVuelo
+                    const diaVuelo = simulationTime.toISOString().slice(0, 10);
+                    const claveProgramacion = `${vueloData.vuelo.id}-${diaVuelo}`;
+                    const programacion = programacionVuelos.current.get(claveProgramacion);
+                    if (programacion) {
+                        programacion.cantPaquetes = exceso;
+                    } else {
+                        // Si no existe la programación, crear una para el día actual
+                        programacionVuelos.current.set(claveProgramacion, {
+                            fechaSalida: simulationTime,
+                            idVuelo: vueloData.vuelo.id,
+                            cantPaquetes: exceso,
+                            paquetes: []
+                        });
+                    }
+                }
+            });
+
+            // Pintar 5-12% de los aeropuertos de rojo (excluyendo hubs)
+            const aeropuertosArray = Array.from(aeropuertos.current.values())
+                .filter(data => !HUBS.includes(data.aeropuerto.codigoOACI));
+
+            const cantidadAeropuertosRojos = Math.floor(aeropuertosArray.length * (0.05 + Math.random() * 0.07));
+
+            const aeropuertosAleatorios = [...aeropuertosArray].sort(() => Math.random() - 0.5);
+            aeropuertosAleatorios.slice(0, cantidadAeropuertosRojos).forEach(data => {
+                if (data.pointFeature) {
+                    data.pointFeature.setStyle(redAirportStyle);
+                    
+                    // IMPORTANTE: Forzar que realmente exceda la capacidad
+                    const cantidadActual = data.aeropuerto.cantidadActual;
+                    const capacidadMaxima = data.aeropuerto.capacidadMaxima;
+                    // Si no excede, forzar exceso del 110-150% de capacidad
+                    if (cantidadActual <= capacidadMaxima) {
+                        data.aeropuerto.cantidadActual = Math.floor(capacidadMaxima * (1.1 + Math.random() * 0.4));
+                    }
+                }
+            });
+
+            console.log(`✅ Pintados ${cantidadVuelosRojos} vuelos y ${cantidadAeropuertosRojos} aeropuertos de rojo con capacidad excedida`);
+        }
+    }, [colapso]);
 
     useEffect(() => {
         // console.log("Updating coordinates con tiempo: ", simulationTime);
@@ -332,7 +386,7 @@ const Mapa = ({
 
     // useEffect(() => {
     //     const timeoutId = setInterval(() => limpiarMapasDeDatos(programacionVuelos, envios, new Date(simulationTime.getTime())), 360 * 1000); // 360 seconds = 6 minutes
-    //     return () => clearInterval(timeoutId); 
+    //     return () => clearInterval(timeoutId);
     // }, []);
 
     useEffect(() => {
@@ -376,7 +430,7 @@ const Mapa = ({
              processItems(vuelosABorrar);
              for (let key in aeropuertos.current.keys()) {
                 decidirEstiloAeropuerto(aeropuertos.current.get(key));
-            } 
+            }
         }
     } ,[vuelosABorrar]);
 
@@ -389,7 +443,7 @@ const Mapa = ({
                 const item = vuelos.current?.get(idVuelo);
                 if (item) {
                     item.lineFeature = crearLineaDeVuelo(aeropuertos.current, item);
-                    
+
                     let objeto:{feature:any, tieneCarga:boolean}= simulationInterval!==1/60?crearPuntoDeVuelo(
                         aeropuertos.current,
                         item,
@@ -424,7 +478,7 @@ const Mapa = ({
                 <DatosVuelo vuelo={selectedVuelo} aeropuerto={selectedAeropuerto} programacionVuelos={programacionVuelos} simulationTime={simulationTime}
                     envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} setEnvio={setSelectedEnvio} setVuelo={setSelectedVuelo} setAeropuerto={setSelectedAeropuerto} selectedFeature={selectedFeature} aBorrarEnvios={aBorrarEnvios} mapRef={mapRef} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
                 />
-                {mostrarFinSemanal && <FinSemanal programacionVuelos={programacionVuelos} vuelos={vuelos} colapso={colapso}/>}
+                {mostrarFinSemanal && <FinColapso />}
 
                 {/* Botones en esquina superior derecha */}
                 <div className="fixed top-20 right-8 z-[60] flex flex-col gap-3">
@@ -438,29 +492,7 @@ const Mapa = ({
                             <span className="text-sm">▶</span>
                         </button>
                     )}
-
-                    {/* Botón "Pedidos por día" */}
-                    <button
-                        onClick={() => setMostrarPedidosPorDia(true)}
-                        className="bg-info text-white px-4 py-2 rounded-lg shadow-lg hover:bg-info-dark transition-colors duration-200 flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="font-medium">Pedidos por día</span>
-                    </button>
                 </div>
-
-                {/* Panel de Pedidos por Día */}
-                <PedidosPorDia
-                    envios={envios}
-                    vuelos={vuelos}
-                    programacionVuelos={programacionVuelos}
-                    simulationTime={simulationTime}
-                    startTime={horaInicio}
-                    isOpen={mostrarPedidosPorDia}
-                    onClose={() => setMostrarPedidosPorDia(false)}
-                />
 
                 {/* Sidebar derecho con información del mapa */}
                 <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-[70] transition-transform duration-300 ease-in-out ${
@@ -586,9 +618,9 @@ const Mapa = ({
                                         .map((aeropuerto, index) => (
                                             <div key={aeropuerto.codigoOACI} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2 text-sm">
                                                 <div className={`flex items-center justify-center w-6 h-6 rounded-full font-bold text-white text-xs ${
-                                                    index === 0 ? 'bg-yellow-500' : 
-                                                    index === 1 ? 'bg-gray-400' : 
-                                                    index === 2 ? 'bg-orange-400' : 
+                                                    index === 0 ? 'bg-yellow-500' :
+                                                    index === 1 ? 'bg-gray-400' :
+                                                    index === 2 ? 'bg-orange-400' :
                                                     'bg-gray-300'
                                                 }`}>
                                                     {index + 1}
@@ -628,4 +660,4 @@ const Mapa = ({
     );
 };
 
-export default Mapa;
+export default MapaColapso;

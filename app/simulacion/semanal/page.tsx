@@ -62,7 +62,8 @@ const Page = () => {
                     true
                 );
             },
-            share: true,
+            share: false,
+            shouldReconnect: () => false,
         }
     );
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
