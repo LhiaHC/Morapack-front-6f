@@ -12,7 +12,7 @@ type Step = {
   ms: number;
 };
 
-export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
+export default function SimulacionPreloadScreen({ startDate, onDone }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<"idle" | "processing" | "done">("idle");
 
@@ -23,7 +23,6 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
   const timeoutsRef = useRef<number[]>([]);
 
   const steps: Step[] = useMemo(() => {
-    // Si el usuario sube un archivo, lo usamos; si no, mostramos nombres basados en fecha
     const y = startDate.getFullYear();
     const m = String(startDate.getMonth() + 1).padStart(2, "0");
     const d = String(startDate.getDate()).padStart(2, "0");
@@ -58,7 +57,6 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
     const start = performance.now();
     let alive = true;
 
-    // progreso global suave
     const tick = () => {
       if (!alive) return;
       const elapsed = performance.now() - start;
@@ -68,7 +66,6 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
     };
     rafRef.current = requestAnimationFrame(tick);
 
-    // avance por pasos
     let acc = 0;
     steps.forEach((s, idx) => {
       acc += s.ms;
@@ -76,11 +73,9 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
         if (!alive) return;
         setStepIndex(Math.min(idx + 1, steps.length));
         if (idx === steps.length - 1) {
-          // terminado
           const doneId = window.setTimeout(() => {
             if (!alive) return;
             setPhase("done");
-            // un pequeño delay para que el usuario vea el "✅"
             const finalId = window.setTimeout(() => onDone(), 700);
             timeoutsRef.current.push(finalId);
           }, 350);
@@ -90,7 +85,6 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
       timeoutsRef.current.push(id);
     });
 
-    // cleanup por si desmonta
     return () => {
       alive = false;
       clearAllTimers();
@@ -114,14 +108,14 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
-                Cargar pedidos del día
+                Cargar pedidos para simulación semanal
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Selecciona un archivo para simular la carga y procesamiento antes de iniciar la simulación.
+                Selecciona un archivo CSV para cargar los pedidos que se procesarán en la simulación semanal.
               </p>
             </div>
             <div className="text-xs text-gray-500 text-right">
-              <div className="font-medium">Fecha</div>
+              <div className="font-medium">Fecha de inicio</div>
               <div>{startDate.toLocaleString()}</div>
             </div>
           </div>
@@ -176,14 +170,14 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
               </button>
 
               <div className="text-xs text-gray-500 flex items-center">
-                {isIdle && "Luego de procesar, se iniciará la carga real del sistema."}
-                {isProcessing && "Procesando en segundo plano (simulado)."}
-                {isDone && "Listo. Iniciando simulación..."}
+                {isIdle && "Los pedidos se cargarán para iniciar la simulación semanal."}
+                {isProcessing && "Procesando archivo CSV (simulado)."}
+                {isDone && "Listo. Regresando al menú de simulación..."}
               </div>
             </div>
           </div>
 
-          {/* Progreso + pasos (solo cuando procesa o terminó) */}
+          {/* Progreso + pasos */}
           {(isProcessing || isDone) && (
             <>
               <div className="mt-5 rounded-xl border border-gray-200 bg-white px-4 py-3">
@@ -240,7 +234,7 @@ export default function PedidosPreloadScreen({ startDate, onDone }: Props) {
           )}
 
           <div className="mt-5 text-xs text-gray-500">
-            * Estos archivos son para la simulación día a día.
+            * Estos archivos son para la simulación semanal.
           </div>
         </div>
       </div>
