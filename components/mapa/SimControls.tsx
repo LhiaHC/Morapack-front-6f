@@ -73,7 +73,7 @@ const SimControls: React.FC<SimControlsProps> = ({
               <option value="4">4x</option>
               <option value="5">5x</option>
               <option value="10">10x</option>
-              <option value="15">12x</option>
+              <option value="15">13x</option>
               <option value="20">15x</option>
               <option value="30">16x</option>
             </select>
