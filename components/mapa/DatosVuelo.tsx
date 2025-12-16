@@ -190,8 +190,11 @@ const DatosVuelo: React.FC<DatosVueloProps> = ({ vuelo, aeropuerto, programacion
   }
 
   function construirRuta(paquete: Paquete, nombres: boolean = false) {
+    console.log("Paquete ruta:", paquete.ruta);
     const envio = envios.current?.get(paquete.codigoEnvio);
     let ruta = "";
+    // LOG: Mostrar el valor de paquete.ruta
+    console.log("[DEBUG] paquete.ruta para paquete", paquete.id, ":", paquete.ruta);
     if(nombres){
       if(paquete.ruta){
         for (let i = 0; i < paquete.ruta.length; i++) {

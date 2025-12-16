@@ -3,15 +3,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import Mapa from "@/components/mapa/Mapa";
+import SimControls from "@/components/mapa/controlsDiario";
 import axios from "axios";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
 import { conectarAWebsocket, enviarMensaje } from "@/utils/FuncionesWebsocket";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
-import { actualizarDataReal, procesarData, procesarDataReal, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
+import { procesarData, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
 import { Envio } from "@/types/Envio";
-import BotonRegistroPedido from "@/components/mapa/BotonRegistroPedido";
 
 type MessageData = {
     data: Array<any>;
@@ -35,7 +35,6 @@ const Page = () => {
     const programacionVuelos = useRef<Map<string, ProgramacionVuelo>>(
         new Map()
     );
-    const auxiliarVuelos = useRef<Map<number, Vuelo>>(new Map());
     const envios = useRef<Map<string, Envio>>(new Map());
     const aeropuertos = useRef<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>>(new Map());
     const [cargado, setCargado] = useState(false);
@@ -45,80 +44,130 @@ const Page = () => {
     const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(
         process.env.NEXT_PUBLIC_MORAPACK_WS_URL + "/socket",
         {
+            onOpen: () => {
+                let auxHoraInicio: Date = new Date();
+                if (typeof window !== "undefined") {
+                    const params = new URLSearchParams(window.location.search);
+                    auxHoraInicio = new Date(
+                        params.get("startDate") ||
+                            new Date()
+                    );
+                }
+                console.log("Conexión abierta con tiempo: ", auxHoraInicio);
+                sendMessage(
+                    "simulacionSemanal: tiempo: " +
+                        auxHoraInicio.toLocaleString("en-US", {
+                            timeZone: "America/Lima",
+                        }),
+                    true
+                );
+            },
             share: true,
         }
     );
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
-    const initializedRef = useRef(false);
-    const [colapso, setColapso] = useState(false);
-
+    const [simulationInterval, setSimulationInterval] = useState(4);
+    const [playing, setPlaying] = useState(true);
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [loadingProgress, setLoadingProgress] = useState(0);
+    const [loadingStage, setLoadingStage] = useState("Inicializando...");
+    const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [cargado]);
 
-    async function fetchAeropuertos() {
-        const response = await axios.get(`${apiURL}/aeropuerto`);
-        const auxAeropuertos = new Map<string, { aeropuerto: Aeropuerto; pointFeature: any }>();
-        response.data.forEach((aeropuerto: Aeropuerto) => {
-            aeropuerto.paquetes = [];
-            aeropuerto.cantidadActual = 0;
-            auxAeropuertos.set(aeropuerto.codigoOACI, { aeropuerto: aeropuerto, pointFeature: null });
-        });
-        return auxAeropuertos;
-    }
-    
-    async function fetchVuelos() {
-        const response = await axios.get(`${apiURL}/vuelo`);
-        const auxVuelos = new Map<number, Vuelo>();
-        response.data.forEach((vuelo: Vuelo) => {
-            auxVuelos.set(vuelo.id, vuelo);
-        });
-        return auxVuelos;
-    }
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // Progreso lento mientras espera datos del WebSocket
+    useEffect(() => {
+        if (loadingProgress >= 55 && loadingProgress < 80 && !cargado) {
+            slowProgressInterval.current = setInterval(() => {
+                setLoadingProgress(prev => {
+                    if (prev < 75) return prev + 0.5;
+                    return prev;
+                });
+            }, 400);
+        } else if (slowProgressInterval.current) {
+            clearInterval(slowProgressInterval.current);
+            slowProgressInterval.current = null;
+        }
+
+        return () => {
+            if (slowProgressInterval.current) {
+                clearInterval(slowProgressInterval.current);
+            }
+        };
+    }, [loadingProgress, cargado]);
 
     useEffect(() => {
-        if (!initializedRef.current) {
-            const initializeData = async () => {
-                //   fecha y hora actual
-                setHoraInicio(new Date());
-    
-                try {
-                    const [auxAeropuertos, vuelos] = await Promise.all([fetchAeropuertos(), fetchVuelos()]);
-                    console.log("Aeropuertos cargados: ");
-                    aeropuertos.current = auxAeropuertos;
-                    console.log("Vuelos auxiliares cargados: ");
-                    auxiliarVuelos.current = vuelos;
-    
-                    setCampana((prev) => prev + 2);
-                } catch (error) {
-                    console.error("Error cargando datos: ", error);
-                }
-            };
-            initializeData();
-            initializedRef.current = true;
+        const params = new URLSearchParams(window.location.search);
+        const startDate = params.get("startDate");
+        if (startDate !== null) {
+            setHoraInicio(new Date(startDate));
+        } else {
+            setHoraInicio(new Date());
         }
+
+        setLoadingProgress(10);
+        setLoadingStage("Conectando con el servidor...");
+
+        // Simulación de progreso incremental mientras se carga
+        const progressInterval = setInterval(() => {
+            setLoadingProgress(prev => {
+                if (prev < 30) return prev + 2;
+                if (prev < 50) return prev + 1;
+                return prev;
+            });
+        }, 150);
+
+        axios
+            .get(`${apiURL}/aeropuerto`)
+            .then((response) => {
+                clearInterval(progressInterval);
+                if (response.data) {
+                    // console.log("Respuesta de aeropuertos: ", response.data);
+                    const auxAeropuertos = new Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>();
+                    response.data.forEach((aeropuerto: Aeropuerto) => {
+                        aeropuerto.paquetes = [];
+                        aeropuerto.cantidadActual = 0;
+                        auxAeropuertos.set(aeropuerto.codigoOACI, {aeropuerto: aeropuerto, pointFeature: null});
+                    });
+                    // console.log("Aeropuertos cargados: ", auxAeropuertos);
+                    aeropuertos.current = auxAeropuertos;
+                    setLoadingProgress(55);
+                    setLoadingStage("Aeropuertos cargados, esperando datos de vuelos...");
+                    setCampana(campana + 1);
+                }
+            })
+            .catch((error) => {
+                clearInterval(progressInterval);
+                console.error("Error fetching data from the API: ", error);
+            });
+
+        return () => clearInterval(progressInterval);
     }, []);
 
     useEffect(() => {
-        console.log("Campana: ", campana);
-        if(campana ==  2) {
-            let auxHoraInicio: Date = new Date();
-            const mensajeTiempo = "vuelosEnVivo: tiempo: " + auxHoraInicio.toLocaleString("en-US", {timeZone: "America/Lima"});
-            console.log("=== ENVIANDO MENSAJE AL WEBSOCKET ===");
-            console.log("Fecha actual:", auxHoraInicio);
-            console.log("Mensaje completo:", mensajeTiempo);
-            console.log("=====================================");
-            sendMessage(mensajeTiempo, true);
-            console.log("Enviando mensaje de tiempo con campana 2");
-        }
-        if (campana ==3 ) {
+        if (campana ==2) {
             console.log("Campana sonando");
             if (cargado) {
                 return;
             }
-            setCargado(true);
+            setLoadingStage("Finalizando carga...");
+            setLoadingProgress(95);
+            setTimeout(() => {
+                setLoadingProgress(100);
+                setTimeout(() => {
+                    setCargado(true);
+                }, 200);
+            }, 150);
             console.log("Cargando datos");
             // console.log("Aeropuertos cargados: ", aeropuertos);
             if (typeof window !== "undefined") {
@@ -172,28 +221,22 @@ const Page = () => {
                         });
                         auxNuevosVuelos.push(vuelo.id);
                     });
-                    setCampana((prev) => prev + 1);
-                    // setNuevosVuelos(auxNuevosVuelos);
-                    // setSemaforo(semaforo + 1);
+                    setLoadingProgress(80);
+                    setLoadingStage("Vuelos cargados, esperando rutas optimizadas del servidor...");
+                    setCampana(campana + 1);
                     console.log("Vuelos cargados: ", vuelos.current.size);
                 }
             }
             if(message.metadata.includes("primeraCarga")) {
                 console.log("Mensaje de primera carga");
                 console.log("Datos recibidos: ", message.data);
-                procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, auxiliarVuelos, setColapso);
+                setLoadingProgress(90);
+                setLoadingStage("Procesando rutas de envíos...");
+                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, () => {}); // No detectar colapso en semanal
             }
-            if (message.metadata.includes("nuevosEnvios")) {
-                console.log("Nuevos envíos recibidos (sin rutas):", message.data);
-                procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, auxiliarVuelos, setColapso);
-            }
-            if (message.metadata.includes("rutasAsignadas")) {
-                console.log("Rutas asignadas recibidas:", message.data);
-                // Actualizar los envíos que ahora tienen rutas asignadas
-                actualizarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, false, vuelos);
-            }
-            if (message.metadata.includes("enviosEnOperacion")) {
-                actualizarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, false, vuelos);
+            if (message.metadata.includes("correrAlgoritmo")) {
+                console.log(message.data);
+                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, () => {}); // No detectar colapso en semanal
             }
         }
     }, [lastMessage]);
@@ -201,25 +244,78 @@ const Page = () => {
     
     return (
         <>
+            {!cargado && (
+                <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+                    <div className="text-center max-w-md px-8">
+                        <div className="mb-8">
+                            <svg
+                                className="w-20 h-20 mx-auto text-primary animate-bounce"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-800 mb-3">
+                            Cargando Simulación
+                        </h2>
+                        <p className="text-gray-600 mb-8">
+                            {loadingStage}
+                        </p>
+
+                        {/* Barra de progreso */}
+                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                            <div
+                                className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
+                                style={{ width: `${loadingProgress}%` }}
+                            >
+                                <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-3 font-medium">
+                            {loadingProgress}% completado
+                        </p>
+                    </div>
+                </div>
+            )}
             {cargado && (
-                <div className="pb-4">
+                <div className="w-full h-screen">
                     <Mapa
                         vuelos={vuelos}
                         aeropuertos={aeropuertos}
                         programacionVuelos={programacionVuelos}
                         envios={envios}
-                        simulationInterval={1/60}
+                        simulationInterval={playing ? simulationInterval : 0}
                         horaInicio={horaInicio}
                         nuevosVuelos={nuevosVuelos}
                         semaforo={semaforo}
                         setSemaforo={setSemaforo}
                         sendMessage={sendMessage}
                         onSimulationTimeChange={setSimulationTime}
-                        auxiliarVuelos={auxiliarVuelos}
-                        colapso={colapso}
-                        setColapso={setColapso}
+                        colapso={false}
+                        setColapso={() => {}}
+                        setPlaying={setPlaying}
                     />
-                    <BotonRegistroPedido />
+                    <SimControls
+                        simulationInterval={simulationInterval}
+                        onSpeedChange={setSimulationInterval}
+                        playing={playing}
+                        onPlayPause={() => setPlaying(!playing)}
+                        onReset={() => {
+                            setSimulationTime(horaInicio);
+                            setPlaying(false);
+                        }}
+                        currentTime={currentTime.toLocaleString()}
+                        simulationTime={simulationTime || horaInicio}
+                        startTime={horaInicio}
+                        isSimulation={true}
+                    />
                     <div ref={bottomRef}></div>
                 </div>
             )}
