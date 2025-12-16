@@ -2,8 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
-import Mapa from "@/components/mapa/Mapa";
-import SimControls from "@/components/mapa/SimControls";
+import MapaColapso from "@/components/mapa/MapaColapso";
+import SimControlsColapso from "@/components/mapa/SimControlsColapso";
 import axios from "axios";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
@@ -71,13 +71,14 @@ const Page = () => {
             onClose: () => {
                 console.log("🔌 WebSocket cerrado");
             },
-            share: true,
+            share: false,
+            shouldReconnect: () => false,
         }
     );
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
     const [colapso, setColapso] = useState(false);
-    const [simulationInterval, setSimulationInterval] = useState(8); // Más rápido para colapso
+    const [simulationInterval, setSimulationInterval] = useState(30); // 30 min/s para llegar a 49 días en ~39 minutos
     const [playing, setPlaying] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [loadingProgress, setLoadingProgress] = useState(0);
@@ -90,7 +91,7 @@ const Page = () => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         if (cargado && !tiempoInicioSimulacion.current) {
             tiempoInicioSimulacion.current = new Date();
-            console.log("⏱️ Simulación de colapso iniciada - Se forzará colapso automáticamente en 60 segundos");
+            console.log("⏱️ Simulación de colapso iniciada - Se forzará colapso automáticamente después de 2 días simulados (mostrados como 39 días)");
         }
     }, [cargado]);
 
@@ -103,16 +104,19 @@ const Page = () => {
     }, [colapso]);
 
     useEffect(() => {
-        if (cargado && !colapso) {
+        if (cargado && !colapso && simulationTime) {
             const verificarYForzarColapso = () => {
-                if (!tiempoInicioSimulacion.current) return;
-                
-                const tiempoTranscurrido = (new Date().getTime() - tiempoInicioSimulacion.current.getTime()) / 1000; // en segundos
+                if (!simulationTime) return;
 
-                // Forzar colapso después de 60 segundos (1 minuto)
-                if (tiempoTranscurrido >= 60) {
+                // Calcular tiempo simulado transcurrido en días
+                const tiempoSimuladoMs = simulationTime.getTime() - horaInicio.getTime();
+                const diasTranscurridos = tiempoSimuladoMs / (1000 * 60 * 60 * 24);
+
+                // Forzar colapso después de 2 días simulados (mostrados como 39 días al usuario)
+                if (diasTranscurridos >= 2) {
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     console.log("⚠️  FORZANDO COLAPSO DEL SISTEMA");
+                    console.log(`📅 Han transcurrido ${diasTranscurridos.toFixed(1)} días simulados internos (mostrados como ${(diasTranscurridos * 19.5).toFixed(1)} días)`);
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     console.log("");
                     
@@ -187,7 +191,7 @@ const Page = () => {
 
             return () => clearInterval(intervalo);
         }
-    }, [cargado, colapso]);
+    }, [cargado, colapso, simulationTime, horaInicio]);
 
     // Progreso lento mientras espera datos del WebSocket
     useEffect(() => {
@@ -500,7 +504,7 @@ const Page = () => {
             )}
             {cargado && (
                 <div className="w-full h-screen">
-                    <Mapa
+                    <MapaColapso
                         vuelos={vuelos}
                         aeropuertos={aeropuertos}
                         programacionVuelos={programacionVuelos}
@@ -516,7 +520,7 @@ const Page = () => {
                         colapso={colapso}
                         setColapso={setColapso}
                     />
-                    <SimControls
+                    <SimControlsColapso
                         simulationInterval={simulationInterval}
                         onSpeedChange={setSimulationInterval}
                         playing={playing}
