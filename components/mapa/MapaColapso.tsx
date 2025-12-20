@@ -478,7 +478,7 @@ const MapaColapso = ({
                 <DatosVuelo vuelo={selectedVuelo} aeropuerto={selectedAeropuerto} programacionVuelos={programacionVuelos} simulationTime={simulationTime}
                     envios={envios} aeropuertos={aeropuertos} envio = {selectedEnvio} setEnvio={setSelectedEnvio} setVuelo={setSelectedVuelo} setAeropuerto={setSelectedAeropuerto} selectedFeature={selectedFeature} aBorrarEnvios={aBorrarEnvios} mapRef={mapRef} vuelos = {vuelos} simulation = {simulationInterval!==1/60} auxiliarVuelos={auxiliarVuelos}
                 />
-                {mostrarFinSemanal && <FinColapso />}
+                {mostrarFinSemanal && <FinColapso programacionVuelos={programacionVuelos} vuelos={vuelos} />}
 
                 {/* Botones en esquina superior derecha */}
                 <div className="fixed top-20 right-8 z-[60] flex flex-col gap-3">

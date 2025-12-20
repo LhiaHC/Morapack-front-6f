@@ -78,12 +78,13 @@ export function tiempoFaltante(envio: Envio | undefined, simulationTime: Date): 
     return aHoraMinutos(tiempoRestante);
 }
 
-export function tiempoNumeroADiasHorasMinutos(tiempo: number): string {
+export function tiempoNumeroADiasHorasMinutos(tiempo: number, multiplicador: number = 1): string {
     //Devuelve un string con el tiempo en formato dd hh:mm
-    // console.log("Tiempo: ", tiempo);
-    const dias = Math.floor(tiempo / (60 * 24));
-    const horas = Math.floor((tiempo % (60 * 24)) / 60);
-    const minutos = (tiempo % 60).toFixed(0);
+    // Aplicar multiplicador para simular tiempo acelerado (por defecto 1x = tiempo real)
+    const tiempoAjustado = tiempo * multiplicador;
+    const dias = Math.floor(tiempoAjustado / (60 * 24));
+    const horas = Math.floor((tiempoAjustado % (60 * 24)) / 60);
+    const minutos = (tiempoAjustado % 60).toFixed(0);
     return `${dias}d ${horas.toString().padStart(2, "0")}h ${minutos.toString().padStart(2, "0")}m`;
 }
 
