@@ -1,22 +1,265 @@
 "use client";
-import React, { useState } from 'react';
-import { FaExclamationTriangle, FaTimes } from 'react-icons/fa';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Vuelo } from "@/types/Vuelo";
+import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
+import { tiempoEntre } from "@/utils/FuncionesTiempo";
+import { FaPlane, FaCheckCircle, FaExclamationTriangle, FaTimes, FaFileAlt, FaCalendar, FaBox, FaRoute, FaPercentage, FaClock, FaFire, FaWarehouse, FaChartLine } from 'react-icons/fa';
 
-const FinColapso: React.FC = () => {
+type FinColapsoProps = {
+  programacionVuelos: React.MutableRefObject<Map<string, ProgramacionVuelo>>;
+  vuelos: React.RefObject<Map<number, { vuelo: Vuelo }>>;
+  simulationTime?: Date;
+  startTime?: Date;
+};
+
+const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, simulationTime, startTime }) => {
   const [open, setOpen] = useState(true);
+  const [isCalculating, setIsCalculating] = useState(true);
 
   const handleClose = () => {
     setOpen(false);
   };
 
+  // Efecto para asegurar que los datos estén listos antes de calcular
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log("FinColapso: Iniciando cálculos después del delay");
+      setIsCalculating(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Cálculos y estadísticas - MODO COLAPSO
+  const stats = useMemo(() => {
+    if (isCalculating) {
+      return {
+        totalVuelos: 0,
+        totalPaquetes: 0,
+        capacidadTotal: 0,
+        vuelosExcedidos: 0,
+        promedioOcupacion: 0,
+        vuelosPorDia: {},
+        paquetesPorDia: {},
+        topRutas: [],
+        momentoColapso: null,
+        excesoPaquetesTotal: 0,
+        promedioExceso: 0,
+        topRutasCriticas: [],
+        topAeropuertosAfectados: [],
+        porcentajeVuelosExcedidos: 0,
+        diasTranscurridos: 0,
+      };
+    }
+
+    console.log("=== ANÁLISIS DE COLAPSO ===");
+    console.log("ProgramacionVuelos size:", programacionVuelos.current.size);
+    console.log("Vuelos size:", vuelos.current?.size);
+    
+    const allData = Array.from(programacionVuelos.current.values());
+    console.log("Total programaciones:", allData.length);
+    
+    // VALIDACIÓN CRÍTICA: Si no hay datos suficientes
+    if (allData.length === 0) {
+      console.error("❌ ERROR CRÍTICO: No hay programaciones de vuelo para analizar");
+      console.error("El backend no envió datos de envíos (mensaje 'primeraCarga')");
+    }
+    
+    let totalVuelos = 0;
+    let totalPaquetes = 0;
+    let capacidadTotal = 0;
+    let vuelosExcedidos = 0;
+    let momentoColapso: { dia: number; hora: string; fecha: string } | null = null;
+    let primerVueloExcedido: ProgramacionVuelo | null = null;
+    let ultimaProgramacion: ProgramacionVuelo | null = null;
+    const vuelosPorDia: { [key: number]: number } = {};
+    const paquetesPorDia: { [key: number]: number } = {};
+    const rutasMasUsadas: { [key: string]: number } = {};
+    const rutasCriticas: { [key: string]: { excedidos: number; total: number; excesoProm: number } } = {};
+    const aeropuertosAfectados: { [key: string]: number } = {};
+    let excesoPaquetesTotal = 0;
+    
+    // Encontrar la fecha más temprana
+    let fechaInicio: Date | null = null;
+    let fechaFin: Date | null = null;
+    
+    if (allData.length > 0) {
+      fechaInicio = allData.reduce((min, prog) => {
+        const fecha = new Date(prog.fechaSalida);
+        fecha.setUTCHours(0, 0, 0, 0);
+        return fecha < min ? fecha : min;
+      }, (() => {
+        const d = new Date(allData[0].fechaSalida);
+        d.setUTCHours(0, 0, 0, 0);
+        return d;
+      })());
+      
+      fechaFin = allData.reduce((max, prog) => {
+        const fecha = new Date(prog.fechaSalida);
+        fecha.setUTCHours(0, 0, 0, 0);
+        return fecha > max ? fecha : max;
+      }, new Date(fechaInicio));
+    }
+    
+    const diasTranscurridos = fechaInicio && fechaFin 
+      ? Math.floor((fechaFin.getTime() - fechaInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      : 0;
+    
+    // Calcular días transcurridos usando simulationTime si está disponible (más preciso)
+    // Multiplicador: 3x (mismo que SimControls)
+    const TIME_MULTIPLIER = 3;
+    let diasReales = diasTranscurridos;
+    
+    if (simulationTime && startTime) {
+      // Usar el tiempo real de la simulación (más preciso que fechas de programaciones)
+      const minutosTranscurridos = tiempoEntre(startTime, simulationTime);
+      diasReales = Math.floor((minutosTranscurridos * TIME_MULTIPLIER) / (24 * 60));
+      console.log("Días calculados desde simulationTime:", diasReales, "(minutos:", minutosTranscurridos, ")");
+    }
+    
+    allData.forEach((programacion) => {
+      if (!vuelos.current) return;
+      const vueloInfo = vuelos.current.get(programacion.idVuelo);
+      if (!vueloInfo) return;
+      
+      totalVuelos++;
+      totalPaquetes += programacion.cantPaquetes;
+      capacidadTotal += vueloInfo.vuelo.capacidad;
+      
+      const excedido = programacion.cantPaquetes > vueloInfo.vuelo.capacidad;
+      
+      // Rastrear la última programación para obtener el momento real del colapso
+      if (!ultimaProgramacion || new Date(programacion.fechaSalida) > new Date(ultimaProgramacion.fechaSalida)) {
+        ultimaProgramacion = programacion;
+      }
+      
+      if (excedido) {
+        vuelosExcedidos++;
+        const exceso = programacion.cantPaquetes - vueloInfo.vuelo.capacidad;
+        excesoPaquetesTotal += exceso;
+        
+        // Detectar primer vuelo excedido (para estadísticas)
+        if (!primerVueloExcedido) {
+          primerVueloExcedido = programacion;
+        }
+        
+        // Rutas críticas
+        const ruta = `${vueloInfo.vuelo.origen}→${vueloInfo.vuelo.destino}`;
+        if (!rutasCriticas[ruta]) {
+          rutasCriticas[ruta] = { excedidos: 0, total: 0, excesoProm: 0 };
+        }
+        rutasCriticas[ruta].excedidos++;
+        rutasCriticas[ruta].excesoProm += exceso;
+        
+        // Aeropuertos afectados
+        aeropuertosAfectados[vueloInfo.vuelo.origen] = (aeropuertosAfectados[vueloInfo.vuelo.origen] || 0) + 1;
+        aeropuertosAfectados[vueloInfo.vuelo.destino] = (aeropuertosAfectados[vueloInfo.vuelo.destino] || 0) + 1;
+      }
+      
+      // Contar vuelos por día
+      const fechaSalida = new Date(programacion.fechaSalida);
+      let diaRelativo: number;
+      
+      if (fechaInicio) {
+        const fechaSalidaNormalizada = new Date(fechaSalida);
+        fechaSalidaNormalizada.setUTCHours(0, 0, 0, 0);
+        const diffDays = Math.floor((fechaSalidaNormalizada.getTime() - fechaInicio.getTime()) / (1000 * 60 * 60 * 24));
+        diaRelativo = diffDays + 1;
+      } else {
+        diaRelativo = fechaSalida.getDate();
+      }
+      
+      vuelosPorDia[diaRelativo] = (vuelosPorDia[diaRelativo] || 0) + 1;
+      paquetesPorDia[diaRelativo] = (paquetesPorDia[diaRelativo] || 0) + programacion.cantPaquetes;
+      
+      // Rutas más usadas
+      const ruta = `${vueloInfo.vuelo.origen}-${vueloInfo.vuelo.destino}`;
+      rutasMasUsadas[ruta] = (rutasMasUsadas[ruta] || 0) + 1;
+      
+      // Completar info de rutas críticas
+      const rutaKey = `${vueloInfo.vuelo.origen}→${vueloInfo.vuelo.destino}`;
+      if (rutasCriticas[rutaKey]) {
+        rutasCriticas[rutaKey].total++;
+      }
+    });
+    
+    // Calcular exceso promedio por ruta crítica
+    Object.keys(rutasCriticas).forEach(ruta => {
+      if (rutasCriticas[ruta].excedidos > 0) {
+        rutasCriticas[ruta].excesoProm = Math.round(rutasCriticas[ruta].excesoProm / rutasCriticas[ruta].excedidos);
+      }
+    });
+    
+    const topRutas = Object.entries(rutasMasUsadas)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+    
+    const topRutasCriticas = Object.entries(rutasCriticas)
+      .sort(([, a], [, b]) => b.excedidos - a.excedidos)
+      .slice(0, 5);
+    
+    const topAeropuertosAfectados = Object.entries(aeropuertosAfectados)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+    
+    const promedioOcupacion = capacidadTotal > 0 ? (totalPaquetes / capacidadTotal) * 100 : 0;
+    const promedioExceso = vuelosExcedidos > 0 ? (excesoPaquetesTotal / vuelosExcedidos / (capacidadTotal / totalVuelos)) * 100 : 0;
+    
+    // Calcular el momento del colapso usando la ÚLTIMA programación (cuando se detuvo la simulación)
+    if (ultimaProgramacion && fechaInicio) {
+      const fechaColapso = new Date(ultimaProgramacion.fechaSalida);
+      momentoColapso = {
+        dia: diasReales, // Usar diasReales calculados desde simulationTime
+        hora: fechaColapso.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+        fecha: fechaColapso.toLocaleDateString('es-PE')
+      };
+    }
+    
+    console.log("=== RESULTADOS ANÁLISIS COLAPSO ===");
+    console.log("Total vuelos:", totalVuelos);
+    console.log("Vuelos excedidos:", vuelosExcedidos);
+    console.log("Días desde programaciones:", diasTranscurridos);
+    console.log("Días reales (con multiplicador):", diasReales);
+    console.log("Momento colapso (último día):", momentoColapso);
+    
+    return {
+      totalVuelos,
+      totalPaquetes,
+      capacidadTotal,
+      vuelosExcedidos,
+      promedioOcupacion,
+      vuelosPorDia,
+      paquetesPorDia,
+      topRutas,
+      momentoColapso,
+      excesoPaquetesTotal,
+      promedioExceso,
+      topRutasCriticas,
+      topAeropuertosAfectados,
+      porcentajeVuelosExcedidos: totalVuelos > 0 ? (vuelosExcedidos / totalVuelos) * 100 : 0,
+      diasTranscurridos: diasReales, // Usar diasReales en lugar de diasTranscurridos
+    };
+  }, [programacionVuelos, vuelos, isCalculating, simulationTime, startTime]);
+
   if (!open) return null;
+
+  // Mostrar indicador de carga
+  if (isCalculating) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-600"></div>
+          <p className="text-lg font-semibold text-gray-700">Analizando colapso del sistema...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         {/* Modal */}
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-red-600 to-red-700 px-8 py-6 relative">
             <button
@@ -33,64 +276,280 @@ const FinColapso: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-3xl font-bold font-display text-white mb-1">
-                  Colapso del Sistema Detectado
+                  🔴 Análisis de Colapso del Sistema
                 </h2>
                 <p className="text-red-100 font-sans">
-                  La red logística ha alcanzado su capacidad máxima
+                  Diagnóstico detallado de las causas del fallo operacional
                 </p>
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="px-8 py-8">
-            <div className="space-y-6">
-              {/* Explicación del colapso */}
-              <div className="bg-red-50 border-l-4 border-red-600 rounded-lg p-6">
-                <h3 className="text-xl font-bold text-red-900 mb-3 flex items-center gap-2">
-                  <FaExclamationTriangle className="text-red-600" />
-                  Situación Crítica
-                </h3>
-                <p className="text-gray-800 leading-relaxed mb-4">
-                  El sistema de distribución ha experimentado un <strong>colapso operativo</strong> debido a la
-                  acumulación progresiva de paquetes que excedió la capacidad de procesamiento de la red.
-                </p>
-                <p className="text-gray-800 leading-relaxed">
-                  Este escenario representa lo que ocurriría en una situación real donde la demanda
-                  supera significativamente los recursos disponibles de almacenamiento y transporte.
-                </p>
+          <div className="flex-1 overflow-y-auto px-8 py-6">
+            {/* Alerta si no hay datos */}
+            {stats.totalVuelos === 0 && (
+              <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <FaExclamationTriangle className="text-yellow-600 text-3xl" />
+                  <h3 className="text-xl font-bold text-yellow-900">⚠️ Datos Insuficientes para Análisis</h3>
+                </div>
+                <div className="space-y-3 text-yellow-800">
+                  <p className="font-semibold">
+                    No se encontraron programaciones de vuelo para analizar. Esto indica un problema en la comunicación con el backend.
+                  </p>
+                  <div className="bg-white rounded-lg p-4 border border-yellow-300">
+                    <p className="font-semibold mb-2 text-yellow-900">Posibles causas:</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>El backend no envió el mensaje <code className="bg-yellow-100 px-1 rounded">"primeraCarga"</code> con los datos de envíos</li>
+                      <li>Los envíos no se procesaron correctamente en el servidor</li>
+                      <li>El algoritmo de optimización no generó rutas para los paquetes</li>
+                      <li>Problema de conexión WebSocket durante la transmisión de datos</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
+            )}
+            
+            {stats.totalVuelos > 0 && (
+              <>
+                {/* Alerta Principal */}
+                <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5 mb-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <FaFire className="text-red-600 text-2xl" />
+                    <h3 className="text-xl font-bold text-red-900">¡Sistema Colapsado!</h3>
+                  </div>
+                  <p className="text-red-800 text-sm mb-2">
+                    El sistema no pudo completar la operación debido a sobrecarga. La simulación se detuvo después de {stats.diasTranscurridos} días de operación.
+                  </p>
+                  {stats.momentoColapso && (
+                    <div className="bg-white rounded-lg p-3 mt-3 border border-red-200">
+                      <div className="flex items-center gap-2">
+                        <FaClock className="text-red-600" />
+                        <span className="font-semibold text-red-900">Colapso detectado el:</span>
+                        <span className="text-red-700">Día {stats.momentoColapso.dia} ({stats.momentoColapso.fecha}) a las {stats.momentoColapso.hora}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-              {/* Causas principales */}
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-4">Causas Principales del Colapso:</h4>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <span className="text-red-600 font-bold mt-1">•</span>
-                    <span className="text-gray-700">
-                      <strong>Saturación de aeropuertos:</strong> Los centros de distribución alcanzaron
-                      su límite de almacenamiento, generando cuellos de botella en toda la red.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-red-600 font-bold mt-1">•</span>
-                    <span className="text-gray-700">
-                      <strong>Sobrecarga de vuelos:</strong> La capacidad de transporte aéreo fue insuficiente
-                      para manejar el volumen de paquetes programados.
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+                {/* KPIs Críticos de Colapso */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  {/* Vuelos Excedidos */}
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-5 border-2 border-red-300">
+                    <div className="flex items-center justify-between mb-2">
+                      <FaExclamationTriangle className="text-red-600 text-2xl" />
+                      <span className="text-xs font-semibold text-red-600 bg-red-200 px-2 py-1 rounded-full">CRÍTICO</span>
+                    </div>
+                    <p className="text-4xl font-bold text-red-900 mb-1">{stats.vuelosExcedidos}</p>
+                    <p className="text-sm text-red-700 font-medium">Vuelos excedidos</p>
+                    <p className="text-xs text-red-600 mt-1">({stats.porcentajeVuelosExcedidos.toFixed(1)}% del total)</p>
+                  </div>
+
+                  {/* Exceso Promedio */}
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 border-2 border-orange-300">
+                    <div className="flex items-center justify-between mb-2">
+                      <FaChartLine className="text-orange-600 text-2xl" />
+                      <span className="text-xs font-semibold text-orange-600 bg-orange-200 px-2 py-1 rounded-full">EXCESO</span>
+                    </div>
+                    <p className="text-4xl font-bold text-orange-900 mb-1">+{stats.promedioExceso.toFixed(0)}%</p>
+                    <p className="text-sm text-orange-700 font-medium">Exceso promedio</p>
+                    <p className="text-xs text-orange-600 mt-1">sobre capacidad</p>
+                  </div>
+
+                  {/* Paquetes Excedentes */}
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-5 border-2 border-yellow-300">
+                    <div className="flex items-center justify-between mb-2">
+                      <FaBox className="text-yellow-600 text-2xl" />
+                      <span className="text-xs font-semibold text-yellow-600 bg-yellow-200 px-2 py-1 rounded-full">SIN ASIGNAR</span>
+                    </div>
+                    <p className="text-4xl font-bold text-yellow-900 mb-1">{stats.excesoPaquetesTotal.toLocaleString()}</p>
+                    <p className="text-sm text-yellow-700 font-medium">Paquetes excedentes</p>
+                    <p className="text-xs text-yellow-600 mt-1">no pudieron asignarse</p>
+                  </div>
+
+                  {/* Días Transcurridos */}
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-300">
+                    <div className="flex items-center justify-between mb-2">
+                      <FaCalendar className="text-gray-600 text-2xl" />
+                      <span className="text-xs font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded-full">DURACIÓN</span>
+                    </div>
+                    <p className="text-4xl font-bold text-gray-900 mb-1">{stats.diasTranscurridos}</p>
+                    <p className="text-sm text-gray-700 font-medium">Días antes del colapso</p>
+                  </div>
+                </div>
+
+                {/* Análisis de Causa Raíz */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  {/* Rutas Críticas */}
+                  <div className="bg-white rounded-xl border-2 border-red-200 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <FaRoute className="text-red-600 text-xl" />
+                      <h3 className="text-lg font-bold text-gray-800">Top Rutas Críticas</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {stats.topRutasCriticas.length > 0 ? (
+                        stats.topRutasCriticas.map(([ruta, info], index) => (
+                          <div key={ruta} className="bg-red-50 rounded-lg p-4 border border-red-200">
+                            <div className="flex items-start gap-3">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full font-bold text-white text-sm bg-red-600">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-mono font-bold text-red-900 mb-1">{ruta}</p>
+                                <div className="flex gap-4 text-xs text-red-700">
+                                  <span><span className="font-semibold">{info.excedidos}</span> vuelos excedidos</span>
+                                  <span>Exceso prom: <span className="font-semibold">+{info.excesoProm}</span> paq.</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm text-center py-4">No se detectaron rutas críticas</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Aeropuertos Afectados */}
+                  <div className="bg-white rounded-xl border-2 border-orange-200 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <FaWarehouse className="text-orange-600 text-xl" />
+                      <h3 className="text-lg font-bold text-gray-800">Aeropuertos Más Afectados</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {stats.topAeropuertosAfectados.length > 0 ? (
+                        stats.topAeropuertosAfectados.map(([aeropuerto, cantidad], index) => (
+                          <div key={aeropuerto} className="flex items-center gap-3 bg-orange-50 rounded-lg p-3 border border-orange-200">
+                            <div className={`flex items-center justify-center w-7 h-7 rounded-full font-bold text-white text-xs ${
+                              index === 0 ? 'bg-orange-600' :
+                              index === 1 ? 'bg-orange-500' :
+                              'bg-orange-400'
+                            }`}>
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-mono font-semibold text-orange-900">{aeropuerto}</p>
+                            </div>
+                            <span className="text-orange-700 font-bold text-sm">{cantidad} incidentes</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm text-center py-4">No se detectaron aeropuertos afectados</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estadísticas Generales */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  {/* Vuelos por Día */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <FaCalendar className="text-primary text-xl" />
+                      <h3 className="text-lg font-bold text-gray-800">Distribución por Día</h3>
+                    </div>
+                    <div className="space-y-3 max-h-80 overflow-y-auto">
+                      {Object.entries(stats.vuelosPorDia)
+                        .sort(([a], [b]) => Number(a) - Number(b))
+                        .map(([dia, cantidad]) => {
+                          const maxVuelos = Math.max(...Object.values(stats.vuelosPorDia));
+                          const porcentaje = (cantidad / maxVuelos) * 100;
+                          return (
+                            <div key={dia} className="space-y-1">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-semibold text-gray-700">Día {dia}</span>
+                                <span className="text-gray-600">{cantidad} vuelos | {stats.paquetesPorDia[Number(dia)]} paquetes</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div
+                                  className="bg-primary rounded-full h-3 transition-all duration-500"
+                                  style={{ width: `${porcentaje}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Top Rutas Más Usadas */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <FaRoute className="text-primary text-xl" />
+                      <h3 className="text-lg font-bold text-gray-800">Top 5 Rutas Más Usadas</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {stats.topRutas.map(([ruta, cantidad], index) => (
+                        <div key={ruta} className="flex items-center gap-3">
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-white text-sm ${
+                            index === 0 ? 'bg-yellow-500' :
+                            index === 1 ? 'bg-gray-400' :
+                            index === 2 ? 'bg-orange-400' :
+                            'bg-gray-300'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-mono font-semibold text-gray-800">{ruta}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-primary-50 text-primary">
+                              {cantidad} vuelos
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recomendaciones */}
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border-2 border-blue-300 p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-blue-500 p-3 rounded-full">
+                      <FaFileAlt className="text-white text-2xl" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-blue-900 mb-3">💡 Recomendaciones para Prevenir Colapsos</h3>
+                      <ul className="space-y-2 text-sm text-blue-800">
+                        {stats.topRutasCriticas.length > 0 && (
+                          <li className="flex items-start gap-2">
+                            <span className="text-blue-600 font-bold">•</span>
+                            <span><span className="font-semibold">Aumentar capacidad:</span> Agregar más vuelos en las rutas críticas identificadas</span>
+                          </li>
+                        )}
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-600 font-bold">•</span>
+                          <span><span className="font-semibold">Diversificar rutas:</span> Establecer rutas alternativas para distribuir la carga operacional</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-600 font-bold">•</span>
+                          <span><span className="font-semibold">Optimizar programación:</span> Redistribuir vuelos a lo largo del día para evitar picos de demanda</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-600 font-bold">•</span>
+                          <span><span className="font-semibold">Expandir almacenes:</span> Aumentar la capacidad de almacenamiento en aeropuertos críticos</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
+          <div className="bg-gray-50 px-8 py-4 border-t border-gray-200 flex justify-between items-center">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <FaExclamationTriangle className="text-red-500" />
+              <span className="font-semibold">Análisis de colapso generado automáticamente</span>
+            </div>
             <button
               onClick={handleClose}
-              className="w-full bg-primary hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold font-sans hover:bg-red-700 transition-colors shadow-sm"
             >
-              Cerrar Reporte
+              Cerrar Análisis
             </button>
           </div>
         </div>

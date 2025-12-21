@@ -58,7 +58,7 @@ const Page = () => {
                 console.log("🌐 WebSocket conectado para simulación de colapso");
                 console.log("📤 Enviando mensaje:", mensaje);
                 console.log("⏰ Hora inicio:", auxHoraInicio.toLocaleString());
-                console.log("⚠️ NOTA: Usando 'simulacionSemanal' - El colapso se forzará desde el frontend después de 60 segundos");
+                console.log("⚠️ NOTA: Multiplicador 3x - El colapso se forzará después de 30 días internos (mostrados como 90 días/3 meses)");
                 
                 // Enviar mensaje como simulación semanal (el backend no tiene endpoint específico para colapso)
                 // El colapso se fuerza desde el frontend después de 60 segundos de simulación
@@ -78,7 +78,7 @@ const Page = () => {
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
     const [colapso, setColapso] = useState(false);
-    const [simulationInterval, setSimulationInterval] = useState(30); // 30 min/s para llegar a 49 días en ~39 minutos
+    const [simulationInterval, setSimulationInterval] = useState(30); // 30 min/s - Multiplicador 3x: 30 días internos mostrados como 90 días (3 meses)
     const [playing, setPlaying] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [loadingProgress, setLoadingProgress] = useState(0);
@@ -91,7 +91,7 @@ const Page = () => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         if (cargado && !tiempoInicioSimulacion.current) {
             tiempoInicioSimulacion.current = new Date();
-            console.log("⏱️ Simulación de colapso iniciada - Se forzará colapso automáticamente después de 2 días simulados (mostrados como 39 días)");
+            console.log("⏱️ Simulación de colapso iniciada - Multiplicador 3x: se forzará colapso después de 30 días internos (mostrados como 90 días/3 meses)");
         }
     }, [cargado]);
 
@@ -112,11 +112,11 @@ const Page = () => {
                 const tiempoSimuladoMs = simulationTime.getTime() - horaInicio.getTime();
                 const diasTranscurridos = tiempoSimuladoMs / (1000 * 60 * 60 * 24);
 
-                // Forzar colapso después de 2 días simulados (mostrados como 39 días al usuario)
-                if (diasTranscurridos >= 2) {
+                // Forzar colapso después de 30 días internos (mostrados como 90 días con multiplicador 3x)
+                if (diasTranscurridos >= 30) {
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     console.log("⚠️  FORZANDO COLAPSO DEL SISTEMA");
-                    console.log(`📅 Han transcurrido ${diasTranscurridos.toFixed(1)} días simulados internos (mostrados como ${(diasTranscurridos * 19.5).toFixed(1)} días)`);
+                    console.log(`📅 Han transcurrido ${diasTranscurridos.toFixed(1)} días internos (mostrados como ${(diasTranscurridos * 3).toFixed(1)} días / ${((diasTranscurridos * 3) / 30).toFixed(1)} meses)`);
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     console.log("");
                     
@@ -427,24 +427,36 @@ const Page = () => {
                     console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 }
                 
-                // VALIDACIÓN CRÍTICA: Si data está vacío, hay problema en backend
+                // VALIDACIÓN CRÍTICA: Si data está vacío, significa que ya no hay más paquetes
+                // Esto indica que la simulación ha llegado a su fin natural (colapso por agotamiento)
                 if (!message.data || (typeof message.data === 'object' && Object.keys(message.data).length === 0)) {
-                    console.error("❌ ERROR CRÍTICO DEL BACKEND");
-                    console.error("El mensaje 'correrAlgoritmo' llegó con data VACÍO");
-                    console.error("Esto significa que:");
-                    console.error("  1. El backend no procesó ningún envío");
-                    console.error("  2. No se generaron rutas para los paquetes");
-                    console.error("  3. No hay datos para mostrar en el reporte");
-                    console.error("");
-                    console.error("📋 Estado actual de datos:");
-                    console.error("  - Programaciones de vuelo:", programacionVuelos.current.size);
-                    console.error("  - Envíos procesados:", envios.current.size);
-                    console.error("  - Vuelos disponibles:", vuelos.current.size);
-                    console.error("");
-                    console.error("🔧 ACCIÓN REQUERIDA:");
-                    console.error("  Revisa los logs del BACKEND para identificar por qué no se enviaron datos de envíos.");
-                    console.error("  El backend debe enviar un mensaje 'primeraCarga' ANTES de 'correrAlgoritmo'");
-                    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.warn("⚠️ Ya no hay más paquetes/envíos para procesar");
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.log("🔴 POSIBLE COLAPSO DETECTADO: AGOTAMIENTO DE ENVÍOS");
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    console.log("📋 Estado final:");
+                    console.log("  - Programaciones de vuelo:", programacionVuelos.current.size);
+                    console.log("  - Envíos procesados:", envios.current.size);
+                    console.log("  - Vuelos disponibles:", vuelos.current.size);
+                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    
+                    // VALIDACIÓN: Requiere al menos 10 envíos procesados para evitar falsos positivos
+                    const suficientesDatos = envios.current.size >= 10 && programacionVuelos.current.size >= 50;
+                    
+                    if (suficientesDatos) {
+                        // Activar el estado de colapso para mostrar el reporte
+                        if (!colapso) {
+                            console.log("🔴 Activando estado de COLAPSO y pausando simulación");
+                            setColapso(true);
+                            setPlaying(false); // Pausar automáticamente
+                        }
+                    } else {
+                        console.warn("⚠️ Datos insuficientes para declarar colapso:");
+                        console.warn("  - Envíos:", envios.current.size, "(mínimo: 10)");
+                        console.warn("  - Programaciones:", programacionVuelos.current.size, "(mínimo: 50)");
+                        console.warn("  - Esperando más datos del backend...");
+                    }
+                    return; // No procesar data vacío
                 }
                 
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, setColapso);
@@ -519,6 +531,7 @@ const Page = () => {
                         auxiliarVuelos={auxiliarVuelos}
                         colapso={colapso}
                         setColapso={setColapso}
+                        setPlaying={setPlaying}
                     />
                     <SimControlsColapso
                         simulationInterval={simulationInterval}
