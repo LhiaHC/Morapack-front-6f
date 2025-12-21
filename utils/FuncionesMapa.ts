@@ -214,16 +214,24 @@ export function crearPuntoDeVuelo(aeropuertos: Map<String, {aeropuerto:Aeropuert
         else if (razon <= 1){
             feature.setStyle(redPlaneStyle(item, angulo));
         } else {
-            console.error("❌ COLAPSO POR VUELO EXCEDIDO");
-            console.error("Vuelo ID:", item.vuelo.id);
-            console.error("Ruta:", item.vuelo.origen, "→", item.vuelo.destino);
-            console.error("Paquetes asignados:", paquetes);
-            console.error("Capacidad del vuelo:", item.vuelo.capacidad);
-            console.error("Exceso:", paquetes - item.vuelo.capacidad);
-            console.error("Razón (paquetes/capacidad):", razon);
-            console.error("Llave búsqueda:", llaveBusqueda);
-            console.error("Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
-            setColapso(true);
+            // Validación: Requiere al menos 50 programaciones para evitar falsos positivos en primeros días
+            const suficientesDatos = programacionVuelos.size >= 50;
+            if (suficientesDatos) {
+                console.error("❌ COLAPSO POR VUELO EXCEDIDO");
+                console.error("Vuelo ID:", item.vuelo.id);
+                console.error("Ruta:", item.vuelo.origen, "→", item.vuelo.destino);
+                console.error("Paquetes asignados:", paquetes);
+                console.error("Capacidad del vuelo:", item.vuelo.capacidad);
+                console.error("Exceso:", paquetes - item.vuelo.capacidad);
+                console.error("Razón (paquetes/capacidad):", razon);
+                console.error("Llave búsqueda:", llaveBusqueda);
+                console.error("Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
+                setColapso(true);
+            } else {
+                console.warn("⚠️ Vuelo excedido pero datos insuficientes (", programacionVuelos.size, "programaciones) - esperando más datos");
+                // Pintar de rojo pero no declarar colapso aún
+                feature.setStyle(redPlaneStyle(item, angulo));
+            }
         }
     } else {
         tieneCarga = false;
@@ -276,8 +284,16 @@ export function crearPuntoDeVueloReal(aeropuertos: Map<String, {aeropuerto:Aerop
         else if (razon <= 1){
             feature.setStyle(redPlaneStyle(item, angulo));
         } else {
-            console.error("Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
-             setColapso(true);
+            // Validación: Requiere al menos 50 programaciones para evitar falsos positivos en primeros días
+            const suficientesDatos = programacionVuelos.size >= 50;
+            if (suficientesDatos) {
+                console.error("Error en la cantidad de paquetes, se intentó meter " + paquetes + " paquetes en un vuelo con capacidad de " + item.vuelo.capacidad);
+                setColapso(true);
+            } else {
+                console.warn("⚠️ Vuelo excedido pero datos insuficientes (", programacionVuelos.size, "programaciones)");
+                // Pintar de rojo pero no declarar colapso aún
+                feature.setStyle(redPlaneStyle(item, angulo));
+            }
         }
     } else {
         tieneCarga = false;

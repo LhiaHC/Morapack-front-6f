@@ -82,7 +82,9 @@ export function procesarData(
                     aeropuertoOrigen.paquetes.push(paquete);
                     // Excluir hubs del colapso (capacidad ilimitada)
                     const HUBS = ['EBCI', 'SPIM', 'UBBB'];
-                    if (!HUBS.includes(aeropuertoOrigen.codigoOACI) && aeropuertoOrigen.cantidadActual > aeropuertoOrigen.capacidadMaxima) {
+                    // Validación: Requiere al menos 10 envíos para evitar falsos positivos en primeros días
+                    const suficientesDatos = envios.current.size >= 10;
+                    if (suficientesDatos && !HUBS.includes(aeropuertoOrigen.codigoOACI) && aeropuertoOrigen.cantidadActual > aeropuertoOrigen.capacidadMaxima) {
                         console.error("🔴 COLAPSO DETECTADO en procesarData");
                         console.log("Aeropuerto:", aeropuertoOrigen.codigoOACI);
                         console.log("Cantidad actual:", aeropuertoOrigen.cantidadActual);
@@ -92,6 +94,8 @@ export function procesarData(
                         console.log("Total aeropuertos:", aeropuertos.current.size);
                         setColapso(true);
                         console.log("Colapso en procesarData (aeropuerto origen): " + aeropuertoOrigen.codigoOACI);
+                    } else if (!suficientesDatos && aeropuertoOrigen.cantidadActual > aeropuertoOrigen.capacidadMaxima) {
+                        console.warn("⚠️ Capacidad excedida pero datos insuficientes (", envios.current.size, "envíos) - esperando más datos del backend");
                     }
                 }
             }
@@ -198,9 +202,13 @@ export function procesarDataReal(
                         aeropuerto.paquetes.push(paquete);
                         // Excluir hubs del colapso (capacidad ilimitada)
                         const HUBS = ['EBCI', 'SPIM', 'UBBB'];
-                        if (!HUBS.includes(aeropuerto.codigoOACI) && aeropuerto.cantidadActual > aeropuerto.capacidadMaxima) {
+                        // Validación: Requiere al menos 10 envíos para evitar falsos positivos
+                        const suficientesDatos = envios.current.size >= 10;
+                        if (suficientesDatos && !HUBS.includes(aeropuerto.codigoOACI) && aeropuerto.cantidadActual > aeropuerto.capacidadMaxima) {
                             setColapso(true);
                             console.log("Colapso en procesarDataReal (aeropuerto origen): " + aeropuerto.codigoOACI);
+                        } else if (!suficientesDatos && aeropuerto.cantidadActual > aeropuerto.capacidadMaxima) {
+                            console.warn("⚠️ Capacidad excedida en", aeropuerto.codigoOACI, "pero datos insuficientes (", envios.current.size, "envíos)");
                         }
                     }
                 }
@@ -509,10 +517,14 @@ export function agregarPaquetesAlmacen(
                 cuenta++;
                 // Excluir hubs del colapso (capacidad ilimitada)
                 const HUBS = ['EBCI', 'SPIM', 'UBBB'];
-                if (!HUBS.includes(aeropuertoDestino.aeropuerto.codigoOACI) && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                // Validación: Requiere al menos 10 envíos para evitar falsos positivos
+                const suficientesDatos = envios.current.size >= 10;
+                if (suficientesDatos && !HUBS.includes(aeropuertoDestino.aeropuerto.codigoOACI) && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
                     console.log("Colapso en agregarPaquetesAlmacen: " + aeropuertoDestino.aeropuerto.codigoOACI);
                     setColapso(true);
                     return false;
+                } else if (!suficientesDatos && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                    console.warn("⚠️ Capacidad excedida pero datos insuficientes (", envios.current.size, "envíos)");
                 }
             }
         }
@@ -556,10 +568,14 @@ export function agregarPaquetesAlmacenReal(
                 cuenta++;
                 // Excluir hubs del colapso (capacidad ilimitada)
                 const HUBS = ['EBCI', 'SPIM', 'UBBB'];
-                if (!HUBS.includes(aeropuertoDestino.aeropuerto.codigoOACI) && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                // Validación: Requiere al menos 10 envíos para evitar falsos positivos
+                const suficientesDatos = envios.current.size >= 10;
+                if (suficientesDatos && !HUBS.includes(aeropuertoDestino.aeropuerto.codigoOACI) && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
                     console.log("Colapso en agregarPaquetesAlmacenReal: " + aeropuertoDestino.aeropuerto.codigoOACI);
                     setColapso(true);
                     return false;
+                } else if (!suficientesDatos && aeropuertoDestino.aeropuerto.cantidadActual > aeropuertoDestino.aeropuerto.capacidadMaxima) {
+                    console.warn("⚠️ Capacidad excedida pero datos insuficientes (", envios.current.size, "envíos)");
                 }
 
                 if(aeropuertoDestino.aeropuerto.codigoOACI == envio.destino){

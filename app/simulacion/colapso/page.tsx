@@ -432,7 +432,7 @@ const Page = () => {
                 if (!message.data || (typeof message.data === 'object' && Object.keys(message.data).length === 0)) {
                     console.warn("⚠️ Ya no hay más paquetes/envíos para procesar");
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                    console.log("🔴 COLAPSO DETECTADO: AGOTAMIENTO DE ENVÍOS");
+                    console.log("🔴 POSIBLE COLAPSO DETECTADO: AGOTAMIENTO DE ENVÍOS");
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     console.log("📋 Estado final:");
                     console.log("  - Programaciones de vuelo:", programacionVuelos.current.size);
@@ -440,11 +440,21 @@ const Page = () => {
                     console.log("  - Vuelos disponibles:", vuelos.current.size);
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     
-                    // Activar el estado de colapso para mostrar el reporte
-                    if (!colapso) {
-                        console.log("🔴 Activando estado de COLAPSO y pausando simulación");
-                        setColapso(true);
-                        setPlaying(false); // Pausar automáticamente
+                    // VALIDACIÓN: Requiere al menos 10 envíos procesados para evitar falsos positivos
+                    const suficientesDatos = envios.current.size >= 10 && programacionVuelos.current.size >= 50;
+                    
+                    if (suficientesDatos) {
+                        // Activar el estado de colapso para mostrar el reporte
+                        if (!colapso) {
+                            console.log("🔴 Activando estado de COLAPSO y pausando simulación");
+                            setColapso(true);
+                            setPlaying(false); // Pausar automáticamente
+                        }
+                    } else {
+                        console.warn("⚠️ Datos insuficientes para declarar colapso:");
+                        console.warn("  - Envíos:", envios.current.size, "(mínimo: 10)");
+                        console.warn("  - Programaciones:", programacionVuelos.current.size, "(mínimo: 50)");
+                        console.warn("  - Esperando más datos del backend...");
                     }
                     return; // No procesar data vacío
                 }

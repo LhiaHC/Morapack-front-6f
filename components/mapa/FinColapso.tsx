@@ -2,14 +2,17 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Vuelo } from "@/types/Vuelo";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
+import { tiempoEntre } from "@/utils/FuncionesTiempo";
 import { FaPlane, FaCheckCircle, FaExclamationTriangle, FaTimes, FaFileAlt, FaCalendar, FaBox, FaRoute, FaPercentage, FaClock, FaFire, FaWarehouse, FaChartLine } from 'react-icons/fa';
 
 type FinColapsoProps = {
   programacionVuelos: React.MutableRefObject<Map<string, ProgramacionVuelo>>;
   vuelos: React.RefObject<Map<number, { vuelo: Vuelo }>>;
+  simulationTime?: Date;
+  startTime?: Date;
 };
 
-const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos }) => {
+const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, simulationTime, startTime }) => {
   const [open, setOpen] = useState(true);
   const [isCalculating, setIsCalculating] = useState(true);
 
@@ -67,6 +70,7 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos }) =
     let vuelosExcedidos = 0;
     let momentoColapso: { dia: number; hora: string; fecha: string } | null = null;
     let primerVueloExcedido: ProgramacionVuelo | null = null;
+    let ultimaProgramacion: ProgramacionVuelo | null = null;
     const vuelosPorDia: { [key: number]: number } = {};
     const paquetesPorDia: { [key: number]: number } = {};
     const rutasMasUsadas: { [key: string]: number } = {};
@@ -100,6 +104,18 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos }) =
       ? Math.floor((fechaFin.getTime() - fechaInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1
       : 0;
     
+    // Calcular días transcurridos usando simulationTime si está disponible (más preciso)
+    // Multiplicador: 3x (mismo que SimControls)
+    const TIME_MULTIPLIER = 3;
+    let diasReales = diasTranscurridos;
+    
+    if (simulationTime && startTime) {
+      // Usar el tiempo real de la simulación (más preciso que fechas de programaciones)
+      const minutosTranscurridos = tiempoEntre(startTime, simulationTime);
+      diasReales = Math.floor((minutosTranscurridos * TIME_MULTIPLIER) / (24 * 60));
+      console.log("Días calculados desde simulationTime:", diasReales, "(minutos:", minutosTranscurridos, ")");
+    }
+    
     allData.forEach((programacion) => {
       if (!vuelos.current) return;
       const vueloInfo = vuelos.current.get(programacion.idVuelo);
@@ -111,20 +127,19 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos }) =
       
       const excedido = programacion.cantPaquetes > vueloInfo.vuelo.capacidad;
       
+      // Rastrear la última programación para obtener el momento real del colapso
+      if (!ultimaProgramacion || new Date(programacion.fechaSalida) > new Date(ultimaProgramacion.fechaSalida)) {
+        ultimaProgramacion = programacion;
+      }
+      
       if (excedido) {
         vuelosExcedidos++;
         const exceso = programacion.cantPaquetes - vueloInfo.vuelo.capacidad;
         excesoPaquetesTotal += exceso;
         
-        // Detectar primer vuelo excedido (momento del colapso)
+        // Detectar primer vuelo excedido (para estadísticas)
         if (!primerVueloExcedido) {
           primerVueloExcedido = programacion;
-          const fechaColapso = new Date(programacion.fechaSalida);
-          momentoColapso = {
-            dia: fechaInicio ? Math.floor((fechaColapso.getTime() - fechaInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1 : fechaColapso.getDate(),
-            hora: fechaColapso.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
-            fecha: fechaColapso.toLocaleDateString('es-PE')
-          };
         }
         
         // Rutas críticas
@@ -189,11 +204,22 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos }) =
     const promedioOcupacion = capacidadTotal > 0 ? (totalPaquetes / capacidadTotal) * 100 : 0;
     const promedioExceso = vuelosExcedidos > 0 ? (excesoPaquetesTotal / vuelosExcedidos / (capacidadTotal / totalVuelos)) * 100 : 0;
     
+    // Calcular el momento del colapso usando la ÚLTIMA programación (cuando se detuvo la simulación)
+    if (ultimaProgramacion && fechaInicio) {
+      const fechaColapso = new Date(ultimaProgramacion.fechaSalida);
+      momentoColapso = {
+        dia: diasReales, // Usar diasReales calculados desde simulationTime
+        hora: fechaColapso.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+        fecha: fechaColapso.toLocaleDateString('es-PE')
+      };
+    }
+    
     console.log("=== RESULTADOS ANÁLISIS COLAPSO ===");
     console.log("Total vuelos:", totalVuelos);
     console.log("Vuelos excedidos:", vuelosExcedidos);
-    console.log("Días transcurridos:", diasTranscurridos);
-    console.log("Momento colapso:", momentoColapso);
+    console.log("Días desde programaciones:", diasTranscurridos);
+    console.log("Días reales (con multiplicador):", diasReales);
+    console.log("Momento colapso (último día):", momentoColapso);
     
     return {
       totalVuelos,
@@ -210,9 +236,9 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos }) =
       topRutasCriticas,
       topAeropuertosAfectados,
       porcentajeVuelosExcedidos: totalVuelos > 0 ? (vuelosExcedidos / totalVuelos) * 100 : 0,
-      diasTranscurridos,
+      diasTranscurridos: diasReales, // Usar diasReales en lugar de diasTranscurridos
     };
-  }, [programacionVuelos, vuelos, isCalculating]);
+  }, [programacionVuelos, vuelos, isCalculating, simulationTime, startTime]);
 
   if (!open) return null;
 
@@ -294,13 +320,13 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos }) =
                     <h3 className="text-xl font-bold text-red-900">¡Sistema Colapsado!</h3>
                   </div>
                   <p className="text-red-800 text-sm mb-2">
-                    El sistema no pudo completar la operación debido a sobrecarga. La simulación corrió durante {stats.diasTranscurridos} días antes del colapso total.
+                    El sistema no pudo completar la operación debido a sobrecarga. La simulación se detuvo después de {stats.diasTranscurridos} días de operación.
                   </p>
                   {stats.momentoColapso && (
                     <div className="bg-white rounded-lg p-3 mt-3 border border-red-200">
                       <div className="flex items-center gap-2">
                         <FaClock className="text-red-600" />
-                        <span className="font-semibold text-red-900">Primer colapso detectado:</span>
+                        <span className="font-semibold text-red-900">Colapso detectado el:</span>
                         <span className="text-red-700">Día {stats.momentoColapso.dia} ({stats.momentoColapso.fecha}) a las {stats.momentoColapso.hora}</span>
                       </div>
                     </div>
