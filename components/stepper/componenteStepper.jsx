@@ -266,8 +266,37 @@ export default function HorizontalLinearStepper() {
       console.log("Registrando envío con datos:", envio);
       // Registrar envío
       const responseEnvio = await axios.post(`${apiURL}/envio`, envio);
+      
       console.log("Respuesta envío:", responseEnvio.data);
       envio.id = responseEnvio.data.id;
+
+      //Nueva Sección
+      const fechaBase = isImmediate ? new Date() : horaEnvio;
+      const pad = (n) => String(n).padStart(2, '0');
+      const fechaCompacta =
+        `${fechaBase.getFullYear()}` +
+        `${pad(fechaBase.getMonth() + 1)}` +
+        `${pad(fechaBase.getDate())}`;
+      const horaMinuto =
+        `${pad(fechaBase.getHours())}${pad(fechaBase.getMinutes())}`;
+      const codPaquete = `${fechaCompacta}${horaMinuto}`;
+      const cadenaEnvio =
+        `${ciudadOrigen}-` +
+        `${codPaquete}-` +
+        `${fechaCompacta}-` +
+        `${pad(fechaBase.getHours())}:${pad(fechaBase.getMinutes())}:00-` +
+        `${ciudadDestino}:` +
+        `${numPaquetes}`;
+      console.log("Cadena de envío:", cadenaEnvio);
+
+      // try {
+      //   await axios.post(`${apiURL}/tracking/cadena`, {
+      //     envioId: envio.id,
+      //     cadena: cadenaEnvio
+      //   });
+      // } catch (e) {
+      //   console.warn("No se pudo registrar la cadena:", e);
+      // }
 
       //Los codigos llegan en una string separados por espacios
       let codigos;
@@ -1029,133 +1058,4 @@ export default function HorizontalLinearStepper() {
       </div>
     </Box>
   );
-
-  /* 
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Stepper activeStep={activeStep}>
-        {steps.map((label, index) => {
-          const stepProps = {};
-          const labelProps = {};
-          if (isStepOptional(index)) {
-            labelProps.optional = (
-              <Typography variant="caption">Siguiente paso</Typography>
-            );
-          }
-          if (isStepSkipped(index)) {
-            stepProps.completed = false;
-          }
-          return (
-            <Step key={label} {...stepProps}>
-              <StepLabel {...labelProps}>{label}</StepLabel>
-            </Step>
-          );
-        })}
-      </Stepper>
-      {activeStep === steps.length ? (
-        <React.Fragment>
-          <Typography sx={{ mt: 2, mb: 1 }}>
-            All steps completed - you&apos;re finished
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-            <Box sx={{ flex: '1 1 auto' }} />
-            <Button onClick={handleReset}>Reset</Button>
-          </Box>
-        </React.Fragment>
-      ) : (
-        <React.Fragment>
-          <Typography sx={{ mt: 2, mb: 1 }}>Paso {activeStep + 1}</Typography>
-          <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-                    Tipo de documento
-          </h2>
-          <div className="flex flex-col gap-4">
-            <BasicSelect/>
-            <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                    Número de documento
-                    <TextField id="filled-basic" label="Ej. 742056989" variant="outlined" sx={{ width: '40%' }}/>
-            </h2>
-            <h2 className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                width="100%"
-                mt={1}
-                gap={2}
-              >
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Apellido
-                  </h2>
-                  <TextField id="apellido" label="Ej. Cruzalegui" variant="outlined" fullWidth />
-                </Box>
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Nombre
-                  </h2>
-                  <TextField id="nombre" label="Ej. Miguel" variant="outlined" fullWidth />
-                </Box>
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Segundo nombre
-                  </h2>
-                  <TextField id="segundo-nombre" label="Ej. David" variant="outlined" fullWidth />
-                </Box>
-
-              </Box>  
-            </h2>
-            <h2 className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-              <Box
-                display="flex"
-                justifyContent="flex-start"
-                width="100%"
-                gap={1}
-              >
-                <Box display="flex" flexDirection="column" alignItems="left" width="35%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Teléfono
-                  </h2>
-                  <SelectVariants/>
-                </Box>
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                        Número
-                  </h2>
-                  <TextField id="nombre" label="Ej. 985632599" variant="outlined" fullWidth />
-                </Box>
-              </Box>  
-            </h2>
-          </div>
-
-          
-          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-          
-            <Button
-              color="inherit"
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              sx={{ mr: 1 , color: '#84A98C'}}
-            >
-              Atrás
-            </Button>
-            <Box sx={{ flex: '1 1 auto' }} />
-            {isStepOptional(activeStep) && (
-              <Button color="inherit" onClick={handleSkip} sx={{ mr:1, color: '#84A98C' }}>
-                Skip
-              </Button>
-            )}
-
-            <Button 
-              onClick={handleNext} 
-              sx={{ color: '#52489C' }} 
-              variant="contained"
-            >
-              
-              {activeStep === steps.length - 1 ? 'Finish' : 'Siguiente'}
-            </Button>
-          </Box>
-        </React.Fragment>
-      )}
-    </Box>
-  );
-  */
 }
