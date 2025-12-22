@@ -80,12 +80,6 @@ const SimControlsColapso: React.FC<SimControlsColapsoProps> = ({
               <option value="15">15 min/s</option>
               <option value="20">20 min/s</option>
               <option value="30">30 min/s</option>
-              <option value="50">50 min/s</option>
-              <option value="100">100 min/s</option>
-              <option value="500">500 min/s</option>
-              <option value="1000">1000 min/s</option>
-              <option value="5000">5000 min/s</option>
-              <option value="10000">10000 min/s</option>
             </select>
           </div>
 

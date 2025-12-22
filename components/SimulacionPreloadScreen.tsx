@@ -12,10 +12,19 @@ type Step = {
   ms: number;
 };
 
-export default function SimulacionPreloadScreen({ startDate, onDone }: Props) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [phase, setPhase] = useState<"idle" | "processing" | "done">("idle");
+type FileUpload = {
+  pedidos: File | null;
+  vuelos: File | null;
+  almacenes: File | null;
+};
 
+export default function SimulacionPreloadScreen({ startDate, onDone }: Props) {
+  const [files, setFiles] = useState<FileUpload>({
+    pedidos: null,
+    vuelos: null,
+    almacenes: null,
+  });
+  const [phase, setPhase] = useState<"idle" | "processing" | "done">("idle");
   const [stepIndex, setStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -26,17 +35,18 @@ export default function SimulacionPreloadScreen({ startDate, onDone }: Props) {
     const y = startDate.getFullYear();
     const m = String(startDate.getMonth() + 1).padStart(2, "0");
     const d = String(startDate.getDate()).padStart(2, "0");
-    const fileName = selectedFile?.name || `pedidos_${y}${m}${d}.csv`;
 
     return [
-      { name: fileName, detail: "Leyendo archivo...", ms: 1100 },
-      { name: "validaciones", detail: "Validando columnas y formatos...", ms: 1000 },
-      { name: "normalización", detail: "Normalizando zonas horarias...", ms: 900 },
-      { name: "enriquecimiento", detail: "Cruzando clientes y destinos...", ms: 1100 },
-      { name: "consolidación", detail: "Armando lotes y priorización...", ms: 1200 },
-      { name: "resumen", detail: "Generando índice para la simulación...", ms: 900 },
+      { name: "Pedidos", detail: "Leyendo archivo de pedidos...", ms: 1200 },
+      { name: "Vuelos", detail: "Procesando archivo de vuelos...", ms: 1300 },
+      { name: "Almacenes", detail: "Cargando archivo de almacenes...", ms: 1100 },
+      { name: "Validaciones", detail: "Validando columnas y formatos...", ms: 1000 },
+      { name: "Normalización", detail: "Normalizando zonas horarias...", ms: 900 },
+      { name: "Enriquecimiento", detail: "Cruzando datos entre archivos...", ms: 1200 },
+      { name: "Consolidación", detail: "Armando lotes y priorización...", ms: 1300 },
+      { name: "Resumen", detail: "Generando índice para la simulación...", ms: 900 },
     ];
-  }, [startDate, selectedFile]);
+  }, [startDate]);
 
   const clearAllTimers = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -45,8 +55,10 @@ export default function SimulacionPreloadScreen({ startDate, onDone }: Props) {
     timeoutsRef.current = [];
   };
 
+  const allFilesSelected = files.pedidos && files.vuelos && files.almacenes;
+
   const startProcessing = () => {
-    if (!selectedFile) return;
+    if (!allFilesSelected) return;
 
     clearAllTimers();
     setPhase("processing");
@@ -101,79 +113,98 @@ export default function SimulacionPreloadScreen({ startDate, onDone }: Props) {
   const isProcessing = phase === "processing";
   const isDone = phase === "done";
 
+  const handleFileChange = (type: keyof FileUpload, file: File | null) => {
+    setFiles((prev) => ({ ...prev, [type]: file }));
+    setPhase("idle");
+    setProgress(0);
+    setStepIndex(0);
+  };
+
+  const FileUploadBox = ({
+    label,
+    type,
+    accept,
+  }: {
+    label: string;
+    type: keyof FileUpload;
+    accept: string;
+  }) => {
+    const file = files[type];
+    return (
+      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div className="min-w-0">
+            <div className="text-xs text-gray-500">{label}</div>
+            <div className="font-semibold text-gray-800 truncate">
+              {file ? file.name : "Ningún archivo seleccionado"}
+            </div>
+            <div className="text-xs text-gray-600">
+              {file ? `${(file.size / 1024).toFixed(1)} KB` : "Formato: CSV"}
+            </div>
+          </div>
+
+          <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-gray-200 shadow-sm hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-700">
+            <input
+              type="file"
+              accept={accept}
+              className="hidden"
+              disabled={isProcessing || isDone}
+              onChange={(e) => handleFileChange(type, e.target.files?.[0] || null)}
+            />
+            Elegir archivo
+          </label>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
-      <div className="w-full max-w-xl px-6">
+      <div className="w-full max-w-2xl px-6">
         <div className="bg-white/90 backdrop-blur-xl border border-gray-200 shadow-xl rounded-2xl p-6">
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
-                Cargar pedidos para simulación semanal
+                Cargar archivos para simulación
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Selecciona un archivo CSV para cargar los pedidos que se procesarán en la simulación semanal.
+                Selecciona los 3 archivos CSV necesarios para la simulación.
               </p>
-            </div>
-            <div className="text-xs text-gray-500 text-right">
-              <div className="font-medium">Fecha de inicio</div>
-              <div>{startDate.toLocaleString()}</div>
             </div>
           </div>
 
-          {/* Zona de carga de archivo */}
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-              <div className="min-w-0">
-                <div className="text-xs text-gray-500">Archivo de pedidos</div>
-                <div className="font-semibold text-gray-800 truncate">
-                  {selectedFile ? selectedFile.name : "Ningún archivo seleccionado"}
-                </div>
-                <div className="text-xs text-gray-600">
-                  {selectedFile
-                    ? `${(selectedFile.size / 1024).toFixed(1)} KB`
-                    : "Formato sugerido: CSV"}
-                </div>
-              </div>
+          {/* Zona de carga de archivos */}
+          <div className="space-y-3">
+            <FileUploadBox label="Archivo de Pedidos" type="pedidos" accept=".csv,.txt" />
+            <FileUploadBox label="Archivo de Vuelos" type="vuelos" accept=".csv,.txt" />
+            <FileUploadBox label="Archivo de Almacenes" type="almacenes" accept=".csv,.txt" />
+          </div>
 
-              <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-gray-200 shadow-sm hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-700">
-                <input
-                  type="file"
-                  accept=".csv,.txt,.json"
-                  className="hidden"
-                  disabled={isProcessing || isDone}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] || null;
-                    setSelectedFile(f);
-                    setPhase("idle");
-                    setProgress(0);
-                    setStepIndex(0);
-                  }}
-                />
-                Elegir archivo
-              </label>
-            </div>
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => startProcessing()}
+              disabled={!allFilesSelected || isProcessing || isDone}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors
+                ${
+                  !allFilesSelected || isProcessing || isDone
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-primary text-white hover:opacity-95"
+                }`}
+            >
+              {isIdle && "Cargar y procesar archivos"}
+              {isProcessing && "Procesando..."}
+              {isDone && "Archivos cargados ✅"}
+            </button>
 
-            <div className="mt-3 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => startProcessing()}
-                disabled={!selectedFile || isProcessing || isDone}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors
-                  ${
-                    !selectedFile || isProcessing || isDone
-                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      : "bg-primary text-white hover:opacity-95"
-                  }`}
-              >
-                {isIdle && "Cargar y procesar"}
-                {isProcessing && "Procesando..."}
-                {isDone && "Archivo cargado ✅"}
-              </button>
-
-              <div className="text-xs text-gray-500 flex items-center">
-                {isIdle && "Los pedidos se cargarán para iniciar la simulación semanal."}
-                {isProcessing && "Procesando archivo CSV (simulado)."}
-                {isDone && "Listo. Regresando al menú de simulación..."}
-              </div>
+            <div className="text-xs text-gray-500 flex items-center">
+              {isIdle &&
+                `${
+                  allFilesSelected
+                    ? "Todos los archivos seleccionados. Listo para procesar."
+                    : `Faltan ${3 - Object.values(files).filter(Boolean).length} archivo(s).`
+                }`}
+              {isProcessing && "Procesando archivos CSV (simulado)."}
+              {isDone && "Listo. Regresando al menú de simulación..."}
             </div>
           </div>
 
@@ -234,7 +265,7 @@ export default function SimulacionPreloadScreen({ startDate, onDone }: Props) {
           )}
 
           <div className="mt-5 text-xs text-gray-500">
-            * Estos archivos son para la simulación semanal.
+            * Los 3 archivos son requeridos para iniciar la simulación.
           </div>
         </div>
       </div>
