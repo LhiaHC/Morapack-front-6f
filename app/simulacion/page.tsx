@@ -12,8 +12,6 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { procesarData, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
 import { Envio } from "@/types/Envio";
-import CancelacionVuelo from "@/components/CancelacionVuelo";
-import { X } from "lucide-react";
 
 type MessageData = {
     data: Array<any>;
@@ -23,8 +21,8 @@ type MessageData = {
 const Page = () => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
-    const vuelos = useRef
-        Map
+    const vuelos = useRef<
+        Map<
             number,
             {
                 vuelo: Vuelo;
@@ -43,8 +41,6 @@ const Page = () => {
     const [horaInicio, setHoraInicio] = useState(new Date());
     const [campana, setCampana] = useState(0);
     const [simulationTime, setSimulationTime] = useState<Date | null>(null);
-    const [mostrarCancelacion, setMostrarCancelacion] = useState(false);
-    
     const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(
         process.env.NEXT_PUBLIC_MORAPACK_WS_URL + "/socket",
         {
@@ -79,16 +75,6 @@ const Page = () => {
     const [loadingStage, setLoadingStage] = useState("Inicializando...");
     const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
 
-    const handleCancelarVuelo = (idVuelo: string, archivo?: File) => {
-        if (archivo) {
-            console.log("Procesando archivo de cancelaciones:", archivo.name);
-            // Aquí implementarías la lógica para procesar el archivo
-        } else {
-            console.log("Cancelando vuelo ID:", idVuelo);
-            sendMessage(`cancelarVuelo: ${idVuelo}`);
-        }
-    };
-
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [cargado]);
@@ -100,6 +86,7 @@ const Page = () => {
         return () => clearInterval(intervalId);
     }, []);
 
+    // Progreso lento mientras espera datos del WebSocket
     useEffect(() => {
         if (loadingProgress >= 55 && loadingProgress < 80 && !cargado) {
             slowProgressInterval.current = setInterval(() => {
@@ -132,6 +119,7 @@ const Page = () => {
         setLoadingProgress(10);
         setLoadingStage("Conectando con el servidor...");
 
+        // Simulación de progreso incremental mientras se carga
         const progressInterval = setInterval(() => {
             setLoadingProgress(prev => {
                 if (prev < 30) return prev + 2;
@@ -145,12 +133,14 @@ const Page = () => {
             .then((response) => {
                 clearInterval(progressInterval);
                 if (response.data) {
+                    // console.log("Respuesta de aeropuertos: ", response.data);
                     const auxAeropuertos = new Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>();
                     response.data.forEach((aeropuerto: Aeropuerto) => {
                         aeropuerto.paquetes = [];
                         aeropuerto.cantidadActual = 0;
                         auxAeropuertos.set(aeropuerto.codigoOACI, {aeropuerto: aeropuerto, pointFeature: null});
                     });
+                    // console.log("Aeropuertos cargados: ", auxAeropuertos);
                     aeropuertos.current = auxAeropuertos;
                     setLoadingProgress(55);
                     setLoadingStage("Aeropuertos cargados, esperando datos de vuelos...");
@@ -180,7 +170,9 @@ const Page = () => {
                 }, 200);
             }, 150);
             console.log("Cargando datos");
+            // console.log("Aeropuertos cargados: ", aeropuertos);
             if (typeof window !== "undefined") {
+                //Limpiar la URL del query string
                 window.history.replaceState(
                     {},
                     document.title,
@@ -192,11 +184,15 @@ const Page = () => {
 
     useEffect(() => {
         if (lastMessage) {
+            //console.log("Mensaje recibido: ", lastMessage);
+            //Parsear el mensaje recibido
             let message = JSON.parse(lastMessage.data) as MessageData;
+            // console.log("Mensaje recibido: ", message);
             const auxNuevosVuelos: number[] = [];
 
             if (message.metadata.includes("dataVuelos")) {
                 console.log("Actualizando vuelos");
+                // console.log("Vuelos recibidos: ", message.data);
                 console.log("Vuelos actuales tamaño: ", vuelos.current.size);
                 if (cargado) {
                     message.data.forEach((vuelo: Vuelo) => {
@@ -213,6 +209,7 @@ const Page = () => {
                     quitarPaquetesAlmacenados(auxNuevosVuelos, programacionVuelos, aeropuertos, simulationTime);
                     setNuevosVuelos(auxNuevosVuelos);
                     setSemaforo(semaforo + 1);
+                    // console.log("Vuelos actualizados: ", vuelos);
                 } else {
                     console.log("Cargando vuelos con datos: ", message.data);
                     message.data.forEach((vuelo: Vuelo) => {
@@ -236,11 +233,11 @@ const Page = () => {
                 console.log("Datos recibidos: ", message.data);
                 setLoadingProgress(90);
                 setLoadingStage("Procesando rutas de envíos...");
-                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, () => {});
+                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, () => {}); // No detectar colapso en semanal
             }
             if (message.metadata.includes("correrAlgoritmo")) {
                 console.log(message.data);
-                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, () => {});
+                procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, () => {}); // No detectar colapso en semanal
             }
         }
     }, [lastMessage]);
@@ -273,6 +270,7 @@ const Page = () => {
                             {loadingStage}
                         </p>
 
+                        {/* Barra de progreso */}
                         <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                             <div
                                 className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
@@ -288,57 +286,39 @@ const Page = () => {
                 </div>
             )}
             {cargado && (
-                <>
-                    <div className="w-full h-screen">
-                        <Mapa
-                            vuelos={vuelos}
-                            aeropuertos={aeropuertos}
-                            programacionVuelos={programacionVuelos}
-                            envios={envios}
-                            simulationInterval={playing ? simulationInterval : 0}
-                            horaInicio={horaInicio}
-                            nuevosVuelos={nuevosVuelos}
-                            semaforo={semaforo}
-                            setSemaforo={setSemaforo}
-                            sendMessage={sendMessage}
-                            onSimulationTimeChange={setSimulationTime}
-                            colapso={false}
-                            setColapso={() => {}}
-                            setPlaying={setPlaying}
-                        />
-                        <SimControls
-                            simulationInterval={simulationInterval}
-                            onSpeedChange={setSimulationInterval}
-                            playing={playing}
-                            onPlayPause={() => setPlaying(!playing)}
-                            onReset={() => {
-                                setSimulationTime(horaInicio);
-                                setPlaying(false);
-                            }}
-                            currentTime={currentTime.toLocaleString()}
-                            simulationTime={simulationTime || horaInicio}
-                            startTime={horaInicio}
-                            isSimulation={true}
-                        />
-                        
-                        <button
-                            onClick={() => setMostrarCancelacion(true)}
-                            className="fixed bottom-24 right-6 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-red-600 transition-all hover:scale-105 flex items-center gap-2 z-40"
-                        >
-                            <X className="w-5 h-5" />
-                            Cancelar Vuelo
-                        </button>
-
-                        {mostrarCancelacion && (
-                            <CancelacionVuelo
-                                onCancelar={handleCancelarVuelo}
-                                onClose={() => setMostrarCancelacion(false)}
-                            />
-                        )}
-                        
-                        <div ref={bottomRef}></div>
-                    </div>
-                </>
+                <div className="w-full h-screen">
+                    <Mapa
+                        vuelos={vuelos}
+                        aeropuertos={aeropuertos}
+                        programacionVuelos={programacionVuelos}
+                        envios={envios}
+                        simulationInterval={playing ? simulationInterval : 0}
+                        horaInicio={horaInicio}
+                        nuevosVuelos={nuevosVuelos}
+                        semaforo={semaforo}
+                        setSemaforo={setSemaforo}
+                        sendMessage={sendMessage}
+                        onSimulationTimeChange={setSimulationTime}
+                        colapso={false}
+                        setColapso={() => {}}
+                        setPlaying={setPlaying}
+                    />
+                    <SimControls
+                        simulationInterval={simulationInterval}
+                        onSpeedChange={setSimulationInterval}
+                        playing={playing}
+                        onPlayPause={() => setPlaying(!playing)}
+                        onReset={() => {
+                            setSimulationTime(horaInicio);
+                            setPlaying(false);
+                        }}
+                        currentTime={currentTime.toLocaleString()}
+                        simulationTime={simulationTime || horaInicio}
+                        startTime={horaInicio}
+                        isSimulation={true}
+                    />
+                    <div ref={bottomRef}></div>
+                </div>
             )}
         </>
     );
