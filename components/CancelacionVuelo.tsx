@@ -5,10 +5,11 @@ import { X } from "lucide-react";
 type Props = {
   onCancelar: (idVuelo: string, archivoAlternativo?: File) => void;
   onClose: () => void;
+  vueloPreseleccionado?: string;
 };
 
-export default function CancelacionVuelo({ onCancelar, onClose }: Props) {
-  const [idVuelo, setIdVuelo] = useState("");
+export default function CancelacionVuelo({ onCancelar, onClose, vueloPreseleccionado }: Props) {
+  const [idVuelo, setIdVuelo] = useState(vueloPreseleccionado || "");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tipoInput, setTipoInput] = useState<"id" | "archivo">("id");
 

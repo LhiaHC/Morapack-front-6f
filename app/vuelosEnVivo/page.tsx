@@ -13,7 +13,6 @@ import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { procesarData, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
 import { Envio } from "@/types/Envio";
 import PedidosPreloadScreen from "@/components/PedidosPreloadScreen";
-import { useRouter } from "next/navigation";
 
 
 type MessageData = {
@@ -22,15 +21,19 @@ type MessageData = {
 };
 
 const Page = () => {
-    const router = useRouter();
     const bottomRef = useRef<HTMLDivElement>(null);
     const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
-    const vuelos = useRef<Map<number, {
-        vuelo: Vuelo;
-        pointFeature: any;
-        lineFeature: any;
-        routeFeature: any;
-    }>>(new Map());
+    const vuelos = useRef<
+        Map<
+            number,
+            {
+                vuelo: Vuelo;
+                pointFeature: any;
+                lineFeature: any;
+                routeFeature: any;
+            }
+        >
+    >(new Map());
     const programacionVuelos = useRef<Map<string, ProgramacionVuelo>>(
         new Map()
     );
@@ -40,7 +43,6 @@ const Page = () => {
     const [horaInicio, setHoraInicio] = useState(new Date());
 
     const [preloadDone, setPreloadDone] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
 
     const [campana, setCampana] = useState(0);
     const [simulationTime, setSimulationTime] = useState<Date | null>(null);
@@ -77,24 +79,6 @@ const Page = () => {
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [loadingStage, setLoadingStage] = useState("Inicializando...");
     const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
-
-    // Cerrar menú al hacer clic fuera
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as HTMLElement;
-            if (showMenu && !target.closest('.menu-container')) {
-                setShowMenu(false);
-            }
-        };
-
-        if (showMenu) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showMenu]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -333,71 +317,6 @@ const Page = () => {
                     />
                     <SimControls
                     />
-
-                    {/* Botón flotante con menú de opciones */}
-                    <div className="fixed top-6 right-6 z-50 menu-container">
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowMenu(!showMenu)}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all duration-200 shadow-lg active:scale-95"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                <span className="font-medium">Cargar Datos</span>
-                                <svg className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-
-                            {/* Menú desplegable */}
-                            {showMenu && (
-                                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-                                    <button
-                                        onClick={() => {
-                                            setShowMenu(false);
-                                            router.push('/simulacion/semanal');
-                                        }}
-                                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 group"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="font-semibold text-gray-900">Cargar archivos</p>
-                                                <p className="text-xs text-gray-500">Simulación semanal completa</p>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            setShowMenu(false);
-                                            // TODO: Implementar navegación a registro pedido por pedido
-                                            alert('Funcionalidad de registro pedido por pedido en desarrollo');
-                                        }}
-                                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 group-hover:bg-green-100 transition-colors">
-                                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="font-semibold text-gray-900">Registro pedido por pedido</p>
-                                                <p className="text-xs text-gray-500">Ingreso manual de pedidos</p>
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
                     <div ref={bottomRef}></div>
                 </div>
             )}
