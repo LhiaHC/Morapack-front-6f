@@ -54,8 +54,14 @@ export default function HorizontalLinearStepper() {
 
   const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
   const [codigosPaquetes, setCodigosPaquetes] = React.useState([]);
+  const [showLoading, setShowLoading] = React.useState(false);
   const [isImmediate, setIsImmediate] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
+
+  const [codigoEnvioMemState, setCodigoEnvioMemState] = React.useState(null);
+  const [cadenaEnvioState, setCadenaEnvioState] = React.useState(null);
+  const [fechaBaseState, setFechaBaseState] = React.useState(null);
+
 
   // Función de validación
   const validateStep = (step) => {
@@ -191,6 +197,23 @@ export default function HorizontalLinearStepper() {
   };
 
   const handleFinish = async () => {
+    setShowLoading(true);
+    let loadingTimeout;
+    let loadingMinTimeout;
+    let finished = false;
+    // Garantiza al menos 3s de carga, máximo 5s
+    const minLoadingPromise = new Promise((resolve) => {
+      loadingMinTimeout = setTimeout(resolve, 3000);
+    });
+    const maxLoadingPromise = new Promise((resolve) => {
+      loadingTimeout = setTimeout(() => {
+        if (!finished) {
+          setShowLoading(false);
+          finished = true;
+        }
+        resolve();
+      }, 5000);
+    });
     //Guardar datos en clientes
     let clienteEmisor = {
       username: emailREM,
@@ -266,8 +289,51 @@ export default function HorizontalLinearStepper() {
       console.log("Registrando envío con datos:", envio);
       // Registrar envío
       const responseEnvio = await axios.post(`${apiURL}/envio`, envio);
+      
       console.log("Respuesta envío:", responseEnvio.data);
       envio.id = responseEnvio.data.id;
+
+      //Nueva Sección
+      const fechaBase = isImmediate ? new Date() : horaEnvio;
+      const pad = (n) => String(n).padStart(2, '0');
+      const fechaCompacta =
+        `${fechaBase.getFullYear()}` +
+        `${pad(fechaBase.getMonth() + 1)}` +
+        `${pad(fechaBase.getDate())}`;
+      const horaMinuto =
+        `${pad(fechaBase.getHours())}${pad(fechaBase.getMinutes())}`;
+      const codPaquete = `${horaMinuto}`;
+      const cadenaEnvio =
+        `${ciudadOrigen}-` +
+        `${codPaquete}-` +
+        `${fechaCompacta}-` +
+        `${pad(fechaBase.getHours())}:${pad(fechaBase.getMinutes())}:00-` +
+        `${ciudadDestino}:` +
+        `${numPaquetes}`;
+      console.log("Cadena de envío:", cadenaEnvio);
+
+      // Inicializar codigoEnvioMem antes de usarlo
+      let codigoEnvioMem = `${ciudadOrigen}${codPaquete}${fechaCompacta}`;
+      setCodigoEnvioMemState(codigoEnvioMem);
+      setCadenaEnvioState(cadenaEnvio);
+      setFechaBaseState(fechaBase);
+
+      let idEnvioMem = null;
+      try {
+        await axios.post(`${apiURL}/tracking/cadena`, {
+          cadena: cadenaEnvio
+        });
+        // Obtener el envío recién insertado para mostrar el idEnvio
+        const responseEnvioMem = await axios.get(`${apiURL}/tracking/envio/${codigoEnvioMem}`);
+        if (responseEnvioMem.data && responseEnvioMem.data.idEnvio !== undefined) {
+          idEnvioMem = responseEnvioMem.data.idEnvio;
+          console.log("idEnvio asignado en memoria:", idEnvioMem);
+        } else {
+          console.log("No se pudo obtener el idEnvio asignado en memoria");
+        }
+      } catch (e) {
+        console.warn("No se pudo registrar la cadena:", e);
+      }
 
       //Los codigos llegan en una string separados por espacios
       let codigos;
@@ -278,8 +344,17 @@ export default function HorizontalLinearStepper() {
         codigos = codigos.filter((codigo) => codigo !== "");
       }
       console.log("Códigos de paquetes:", codigos);
+      // Guardar el idEnvio en memoria para mostrarlo en el modal
       setCodigosPaquetes(codigos);
+      await minLoadingPromise;
+      if (!finished) {
+        setShowLoading(false);
+        finished = true;
+      }
+      clearTimeout(loadingTimeout);
     } catch (error) {
+      setShowLoading(false);
+      clearTimeout(loadingTimeout);
       console.error("Error al registrar el envío:", error);
       setErrorMessage(
         error.response?.data?.message ||
@@ -287,17 +362,19 @@ export default function HorizontalLinearStepper() {
         "Error al registrar el envío. Por favor intente nuevamente."
       );
     } finally {
+      clearTimeout(loadingMinTimeout);
       //Cursor normal
       document.body.style.cursor = 'default';
     }
   };
 
   React.useEffect(() => {
-    if(codigosPaquetes.length > 0){
-      handleOpenModal(); // Abre el modal al hacer clic en 'Finalizar'
+    if (codigosPaquetes.length > 0) {
+      setTimeout(() => {
+        handleOpenModal();
+      }, 600);
     }
   }, [codigosPaquetes]);
-
 
   const handleBack = () => {
     setErrorMessage('');
@@ -904,13 +981,24 @@ export default function HorizontalLinearStepper() {
       <div>
         {activeStep === steps.length ? (
           <React.Fragment>
-            <Typography className="flex flex-col text-3l mb-2 text-[#000000] text-center font-bold" sx={{ mt: 2, mb: 1 }} component="div">
-              Tu envío fue registrado con éxito
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-              <Box sx={{ flex: '1 1 auto' }} />
-              <Button sx={{ color: '#52489C', backgroundColor: "#FFFFFF" }} onClick={handleReset}>Registrar otro envío</Button>
-            </Box>
+            {showLoading ? (
+              <div className="flex flex-col items-center justify-center min-h-[300px]">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-6"></div>
+                  <h2 className="text-2xl font-bold text-primary mb-2">Agregando pedido...</h2>
+                  <p className="text-gray-600 text-base mb-4">Por favor espera mientras procesamos tu envío.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[300px]">
+                <div className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center">
+                  <span className="bg-primary text-white rounded-full p-2 text-3xl mb-4">✅</span>
+                  <h2 className="text-2xl font-bold text-primary mb-2">¡Pedido registrado!</h2>
+                  <p className="text-gray-600 text-base mb-4">Tu envío fue registrado con éxito.</p>
+                  <Button sx={{ color: '#52489C', backgroundColor: "#FFFFFF" }} onClick={handleReset}>Registrar otro envío</Button>
+                </div>
+              </div>
+            )}
           </React.Fragment>
         ) : (
           <React.Fragment>
@@ -925,13 +1013,11 @@ export default function HorizontalLinearStepper() {
                 Atrás
               </Button>
               <Box sx={{ flex: '1 1 auto' }} />
-              
               {errorMessage && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-3 mr-3 rounded">
                   <p className="text-sm text-red-700 font-medium">⚠️ {errorMessage}</p>
                 </div>
               )}
-              
               <Button
                 sx={{ color: '#52489C', backgroundColor: "#FFFFFF" }}
                 variant="contained"
@@ -941,7 +1027,6 @@ export default function HorizontalLinearStepper() {
                     setErrorMessage(error);
                     return;
                   }
-                  
                   setErrorMessage('');
                   if (activeStep === steps.length - 1) {
                     await handleFinish();
@@ -951,7 +1036,6 @@ export default function HorizontalLinearStepper() {
                 }}>
                 {activeStep === steps.length - 1 ? 'Finalizar' : 'Siguiente'}
               </Button>
-
               <Modal
                 open={openModal}
                 onClose={handleCloseModal}
@@ -971,15 +1055,31 @@ export default function HorizontalLinearStepper() {
                   p: 4,
                   overflow: 'auto',
                 }}>
-                  <div className="mb-6">
-                    <h2 className="text-3xl mb-3 text-primary font-bold">
-                      ✅ ¡Envío Registrado Exitosamente!
+                  <div className="mb-6 flex items-center gap-3">
+                    <span className="bg-primary text-white rounded-full p-2 text-2xl">✅</span>
+                    <h2 className="text-2xl font-bold text-primary">
+                      ¡Pedido registrado!
                     </h2>
-                    <p className="text-gray-600 text-base">
-                      A continuación se muestran los códigos de rastreo generados para cada paquete:
-                    </p>
                   </div>
-                  
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-200 rounded-xl p-5 mb-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">
+                      Resumen del Envío
+                    </h3>
+                    <div className="grid grid-cols-2 gap-y-3 text-sm">
+                      <span className="text-gray-500">Código único</span>
+                      <span className="font-mono font-semibold text-primary">{codigoEnvioMemState}</span>
+                      <span className="text-gray-500">Origen</span>
+                      <span className="font-semibold">{ciudadOrigen}</span>
+                      <span className="text-gray-500">Destino</span>
+                      <span className="font-semibold">{ciudadDestino}</span>
+                      <span className="text-gray-500">Fecha y hora</span>
+                      <span className="font-semibold">
+                        {fechaBaseState && fechaBaseState.toLocaleDateString()} {fechaBaseState && fechaBaseState.toLocaleTimeString().slice(0,5)}
+                      </span>
+                      <span className="text-gray-500">Cantidad de paquetes</span>
+                      <span className="font-semibold">{numPaquetes}</span>
+                    </div>
+                  </div>                 
                   <div className="bg-gray-50 rounded-xl p-6 mb-6">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">
                       Códigos de Rastreo ({codigosPaquetes.length} paquetes)
@@ -996,13 +1096,11 @@ export default function HorizontalLinearStepper() {
                       ))}
                     </div>
                   </div>
-
                   <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded">
                     <p className="text-sm text-blue-800">
-                      💡 <strong>Importante:</strong> Guarde estos códigos. Los clientes podrán usar estos números para rastrear sus paquetes.
+                      💡 <strong>Importante:</strong> Guarda estos códigos. Los clientes podrán usar estos números para rastrear sus paquetes.
                     </p>
                   </div>
-
                   <Button 
                     onClick={handleCloseModal} 
                     variant="contained"
@@ -1022,140 +1120,10 @@ export default function HorizontalLinearStepper() {
                   </Button>
                 </Box>
               </Modal>
-
             </Box>
           </React.Fragment>
         )}
       </div>
     </Box>
   );
-
-  /* 
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Stepper activeStep={activeStep}>
-        {steps.map((label, index) => {
-          const stepProps = {};
-          const labelProps = {};
-          if (isStepOptional(index)) {
-            labelProps.optional = (
-              <Typography variant="caption">Siguiente paso</Typography>
-            );
-          }
-          if (isStepSkipped(index)) {
-            stepProps.completed = false;
-          }
-          return (
-            <Step key={label} {...stepProps}>
-              <StepLabel {...labelProps}>{label}</StepLabel>
-            </Step>
-          );
-        })}
-      </Stepper>
-      {activeStep === steps.length ? (
-        <React.Fragment>
-          <Typography sx={{ mt: 2, mb: 1 }}>
-            All steps completed - you&apos;re finished
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-            <Box sx={{ flex: '1 1 auto' }} />
-            <Button onClick={handleReset}>Reset</Button>
-          </Box>
-        </React.Fragment>
-      ) : (
-        <React.Fragment>
-          <Typography sx={{ mt: 2, mb: 1 }}>Paso {activeStep + 1}</Typography>
-          <h2 className="text-3m mb-2 text-[#000000] text-left font-bold">
-                    Tipo de documento
-          </h2>
-          <div className="flex flex-col gap-4">
-            <BasicSelect/>
-            <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                    Número de documento
-                    <TextField id="filled-basic" label="Ej. 742056989" variant="outlined" sx={{ width: '40%' }}/>
-            </h2>
-            <h2 className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                width="100%"
-                mt={1}
-                gap={2}
-              >
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Apellido
-                  </h2>
-                  <TextField id="apellido" label="Ej. Cruzalegui" variant="outlined" fullWidth />
-                </Box>
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Nombre
-                  </h2>
-                  <TextField id="nombre" label="Ej. Miguel" variant="outlined" fullWidth />
-                </Box>
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                        Segundo nombre
-                  </h2>
-                  <TextField id="segundo-nombre" label="Ej. David" variant="outlined" fullWidth />
-                </Box>
-
-              </Box>  
-            </h2>
-            <h2 className="flex flex-row gap-2 text-3m mb-2 text-[#000000] text-left font-bold">
-              <Box
-                display="flex"
-                justifyContent="flex-start"
-                width="100%"
-                gap={1}
-              >
-                <Box display="flex" flexDirection="column" alignItems="left" width="35%">
-                  <h2 className="flex flex-col gap-3 text-3m mb-2 text-[#000000] text-left font-bold">
-                      Teléfono
-                  </h2>
-                  <SelectVariants/>
-                </Box>
-                <Box display="flex" flexDirection="column" alignItems="left" width="30%">
-                  <h2 className="flex flex-col text-3m mb-2 text-[#000000] text-left font-bold">
-                        Número
-                  </h2>
-                  <TextField id="nombre" label="Ej. 985632599" variant="outlined" fullWidth />
-                </Box>
-              </Box>  
-            </h2>
-          </div>
-
-          
-          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-          
-            <Button
-              color="inherit"
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              sx={{ mr: 1 , color: '#84A98C'}}
-            >
-              Atrás
-            </Button>
-            <Box sx={{ flex: '1 1 auto' }} />
-            {isStepOptional(activeStep) && (
-              <Button color="inherit" onClick={handleSkip} sx={{ mr:1, color: '#84A98C' }}>
-                Skip
-              </Button>
-            )}
-
-            <Button 
-              onClick={handleNext} 
-              sx={{ color: '#52489C' }} 
-              variant="contained"
-            >
-              
-              {activeStep === steps.length - 1 ? 'Finish' : 'Siguiente'}
-            </Button>
-          </Box>
-        </React.Fragment>
-      )}
-    </Box>
-  );
-  */
 }

@@ -13,6 +13,7 @@ import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
 import { procesarData, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
 import { Envio } from "@/types/Envio";
 import PedidosPreloadScreen from "@/components/PedidosPreloadScreen";
+import BotonRegistroPedido from "@/components/mapa/BotonRegistroPedido";
 
 
 type MessageData = {
@@ -317,6 +318,7 @@ const Page = () => {
                     />
                     <SimControls
                     />
+                    <BotonRegistroPedido />
                     <div ref={bottomRef}></div>
                 </div>
             )}
