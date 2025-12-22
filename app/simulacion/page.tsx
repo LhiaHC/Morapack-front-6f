@@ -7,10 +7,15 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaCalendarAlt, FaTimes, FaCog } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
-function ConfiguracionModal({ isOpen, onClose }) {
+interface ConfiguracionModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+function ConfiguracionModal({ isOpen, onClose }: ConfiguracionModalProps) {
     const router = useRouter();
-    const [startDate, setStartDate] = useState(null);
-    const [activeTab, setActiveTab] = useState("semanal");
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [activeTab, setActiveTab] = useState<"semanal" | "colapso">("semanal");
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -93,20 +98,19 @@ function ConfiguracionModal({ isOpen, onClose }) {
                             <div className="flex items-center border rounded-md bg-white">
                                 <DatePicker
                                     selected={startDate}
-                                    onChange={(date) => setStartDate(date)}
+                                    onChange={(date: Date | null) => setStartDate(date)}
                                     showTimeSelect
                                     dateFormat="dd/MM/yyyy - HH:mm:ss"
                                     className="flex-grow p-3 text-left outline-none bg-transparent"
                                 />
                                 <div
                                     className="p-3 cursor-pointer flex-shrink-0 text-gray-500 hover:text-gray-700"
-                                    onClick={() =>
-                                        document
-                                            .querySelector(
-                                                ".react-datepicker-wrapper input"
-                                            )
-                                            .focus()
-                                    }
+                                    onClick={() => {
+                                        const input = document.querySelector<HTMLInputElement>(
+                                            ".react-datepicker-wrapper input"
+                                        );
+                                        input?.focus();
+                                    }}
                                 >
                                     <FaCalendarAlt className="text-lg" />
                                 </div>
