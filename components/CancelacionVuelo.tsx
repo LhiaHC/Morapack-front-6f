@@ -3,35 +3,27 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 
 type Props = {
-  onCancelar: (idVuelo: string, archivoAlternativo?: File) => void;
+  onCancelar: (idVuelo: string) => void;
   onClose: () => void;
   vueloPreseleccionado?: string;
 };
 
 export default function CancelacionVuelo({ onCancelar, onClose, vueloPreseleccionado }: Props) {
   const [idVuelo, setIdVuelo] = useState(vueloPreseleccionado || "");
-  const [archivo, setArchivo] = useState<File | null>(null);
-  const [tipoInput, setTipoInput] = useState<"id" | "archivo">("id");
 
   const handleSubmit = () => {
-    if (tipoInput === "id" && idVuelo.trim()) {
+    if (idVuelo.trim()) {
       onCancelar(idVuelo);
-      handleClose();
-    } else if (tipoInput === "archivo" && archivo) {
-      onCancelar("", archivo);
       handleClose();
     }
   };
 
   const handleClose = () => {
     setIdVuelo("");
-    setArchivo(null);
     onClose();
   };
 
-  const isValid = 
-    (tipoInput === "id" && idVuelo.trim()) || 
-    (tipoInput === "archivo" && archivo);
+  const isValid = idVuelo.trim();
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -51,84 +43,21 @@ export default function CancelacionVuelo({ onCancelar, onClose, vueloPreseleccio
 
         {/* Body */}
         <div className="p-6 space-y-4">
-          {/* Selector de tipo */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTipoInput("id")}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                tipoInput === "id"
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Por ID de Vuelo
-            </button>
-            <button
-              onClick={() => setTipoInput("archivo")}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                tipoInput === "archivo"
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Por Archivo
-            </button>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ID del Vuelo
+            </label>
+            <input
+              type="text"
+              value={idVuelo}
+              onChange={(e) => setIdVuelo(e.target.value)}
+              placeholder="Ej: 12345"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              Ingresa el ID del vuelo que deseas cancelar
+            </p>
           </div>
-
-          {/* Input según tipo */}
-          {tipoInput === "id" ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ID del Vuelo
-              </label>
-              <input
-                type="text"
-                value={idVuelo}
-                onChange={(e) => setIdVuelo(e.target.value)}
-                placeholder="Ej: 12345"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Ingresa el ID del vuelo que deseas cancelar
-              </p>
-            </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Archivo de Cancelaciones
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-primary transition-colors">
-                <input
-                  type="file"
-                  accept=".csv,.txt"
-                  onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="archivo-cancelacion"
-                />
-                <label
-                  htmlFor="archivo-cancelacion"
-                  className="cursor-pointer block text-center"
-                >
-                  {archivo ? (
-                    <div>
-                      <p className="font-semibold text-gray-800">{archivo.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(archivo.size / 1024).toFixed(1)} KB
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-gray-600">Haz clic para seleccionar archivo</p>
-                      <p className="text-xs text-gray-500 mt-1">CSV o TXT</p>
-                    </div>
-                  )}
-                </label>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                El archivo debe contener los IDs de los vuelos a cancelar
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

@@ -5,6 +5,7 @@ import "ol/ol.css";
 import Mapa from "@/components/mapa/Mapa";
 import SimControls from "@/components/mapa/SimControls";
 import CancelacionVuelo from "@/components/CancelacionVuelo";
+import CancelacionMasivaVuelo from "@/components/CancelacionMasivaVuelo";
 import axios from "axios";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
@@ -22,6 +23,7 @@ type MessageData = {
 const Page = () => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
+    const wsRef = useRef<WebSocket | null>(null); // Ref para guardar la instancia del WebSocket
     const vuelos = useRef<
         Map<
             number,
@@ -55,13 +57,27 @@ const Page = () => {
                     );
                 }
                 console.log("Conexión abierta con tiempo: ", auxHoraInicio);
-                sendMessage(
-                    "simulacionSemanal: tiempo: " +
-                        auxHoraInicio.toLocaleString("en-US", {
-                            timeZone: "America/Lima",
-                        }),
-                    true
-                );
+                const ws = getWebSocket();
+                
+                
+                // Pequeño delay para permitir que el backend inicialice sus estructuras
+                setTimeout(() => {
+                    sendMessage(
+                        "simulacionSemanal: tiempo: " +
+                            auxHoraInicio.toLocaleString("en-US", {
+                                timeZone: "America/Lima",
+                            }),
+                        true
+                    );
+                    console.log("Mensaje inicial enviado al backend");
+                }, 100); // 100ms de delay
+            },
+            onClose: () => {
+                console.log("WebSocket cerrado - Simulación Semanal");
+                wsRef.current = null;
+            },
+            onError: (event) => {
+                console.error("Error en WebSocket - Simulación Semanal:", event);
             },
             share: false,
             shouldReconnect: () => false,
@@ -76,6 +92,37 @@ const Page = () => {
     const [loadingStage, setLoadingStage] = useState("Inicializando...");
     const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
     const [mostrarCancelacion, setMostrarCancelacion] = useState(false);
+    const [mostrarCancelacionMasiva, setMostrarCancelacionMasiva] = useState(false);
+
+    // Cleanup: cerrar WebSocket al desmontar - CRÍTICO para evitar conflictos
+    useEffect(() => {
+        return () => {
+            console.log("Componente desmontándose - Cerrando WebSocket");
+            
+            // Intentar cerrar con la referencia guardada
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                console.log("Cerrando WebSocket desde wsRef");
+                wsRef.current.close(1000, "Navegando a otra página");
+            }
+            
+            // Backup: intentar cerrar con getWebSocket
+            try {
+                const ws = getWebSocket();
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    console.log("Cerrando WebSocket desde getWebSocket");
+                    ws.close(1000, "Navegando a otra página");
+                }
+            } catch (error) {
+                console.error("Error al cerrar WebSocket:", error);
+            }
+            
+            // Limpiar referencias
+            wsRef.current = null;
+            vuelos.current.clear();
+            programacionVuelos.current.clear();
+            envios.current.clear();
+        };
+    }, []); // Array vacío - solo se ejecuta al desmontar
     const [mostrarListaVuelos, setMostrarListaVuelos] = useState(false);
     const [vueloSeleccionado, setVueloSeleccionado] = useState<string>("");
     const [vuelosCancelados, setVuelosCancelados] = useState<Array<{
@@ -253,70 +300,122 @@ const Page = () => {
         }
     }, [lastMessage]);
 
-    const handleCancelarVuelo = async (idVuelo: string, archivoAlternativo?: File) => {
+    const handleCancelarVuelo = async (idVuelo: string) => {
         try {
-            if (archivoAlternativo) {
-                // Simulación: leer archivo y cancelar múltiples vuelos
-                const text = await archivoAlternativo.text();
-                const idsVuelos = text.split('\n').map(line => line.trim()).filter(line => line);
-                
-                let vuelosCanceladosCount = 0;
-                idsVuelos.forEach(id => {
-                    const vueloId = parseInt(id);
-                    if (!isNaN(vueloId)) {
-                        // Buscar el vuelo en programacionVuelos
-                        let programacion = programacionVuelos.current.get(vueloId.toString());
-                        if (!programacion) {
-                            programacion = programacionVuelos.current.get(vueloId.toString());
-                        }
-                        
-                        // Verificar que no esté ya cancelado
-                        const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
-                        
-                        if (!yaCancelado) {
-                            setVuelosCancelados(prev => [...prev, {
-                                id: vueloId,
-                                fechaCancelacion: new Date(),
-                                motivoCancelacion: "Cancelación por archivo",
-                                cantPaquetes: programacion?.cantPaquetes || 0
-                            }]);
-                            vuelosCanceladosCount++;
-                        }
-                    }
-                });
-                
-                alert(`Se cancelaron ${vuelosCanceladosCount} vuelos exitosamente`);
+            // Simulación: cancelar un solo vuelo
+            const vueloId = parseInt(idVuelo);
+            
+            // Buscar el vuelo en programacionVuelos con diferentes formatos de key
+            let programacion = programacionVuelos.current.get(idVuelo);
+            if (!programacion) {
+                programacion = programacionVuelos.current.get(vueloId.toString());
+            }
+            
+            // Verificar que no esté ya cancelado
+            const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+            
+            if (yaCancelado) {
+                alert(`El vuelo #${vueloId} ya fue cancelado`);
             } else {
-                // Simulación: cancelar un solo vuelo
-                const vueloId = parseInt(idVuelo);
+                setVuelosCancelados(prev => [...prev, {
+                    id: vueloId,
+                    fechaCancelacion: new Date(),
+                    motivoCancelacion: "Cancelación manual",
+                    cantPaquetes: programacion?.cantPaquetes || 0
+                }]);
                 
-                // Buscar el vuelo en programacionVuelos con diferentes formatos de key
-                let programacion = programacionVuelos.current.get(idVuelo);
-                if (!programacion) {
-                    programacion = programacionVuelos.current.get(vueloId.toString());
-                }
-                
-                // Verificar que no esté ya cancelado
-                const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
-                
-                if (yaCancelado) {
-                    alert(`El vuelo #${vueloId} ya fue cancelado`);
-                } else {
-                    setVuelosCancelados(prev => [...prev, {
-                        id: vueloId,
-                        fechaCancelacion: new Date(),
-                        motivoCancelacion: "Cancelación manual",
-                        cantPaquetes: programacion?.cantPaquetes || 0
-                    }]);
-                    
-                    alert(`Vuelo #${vueloId} cancelado exitosamente`);
-                }
+                alert(`Vuelo #${vueloId} cancelado exitosamente`);
             }
             
             setVueloSeleccionado("");
         } catch (error) {
             console.error("Error al cancelar vuelo:", error);
-            alert("Error al cancelar el vuelo. Por favor intenta nuevamente.");
+            alert("Error al cancelar el vuelo");
+        }
+    };
+
+    const handleCancelarVuelosMasivo = async (archivo: File) => {
+        try {
+            // Simulación: leer archivo y cancelar múltiples vuelos
+            const text = await archivo.text();
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            // Formato: ORIGEN-DESTINO-HORA_SALIDA-HORA_LLEGADA-ID
+            const idsVuelos = lines.map(line => {
+                const parts = line.split('-');
+                return parts.length >= 5 ? parts[4] : line; // El ID es el último campo
+            });
+            
+            let vuelosCanceladosCount = 0;
+            let vuelosDuplicados = 0;
+            let totalPaquetesAfectados = 0;
+            const nuevasCancelaciones: Array<{
+                id: number;
+                fechaCancelacion: Date;
+                motivoCancelacion: string;
+                cantPaquetes: number;
+            }> = [];
+            
+            // Set para detectar duplicados dentro del mismo archivo
+            const idsUnicos = new Set<number>();
+            const idsRepetidosEnArchivo = new Set<number>();
+            
+            idsVuelos.forEach(id => {
+                const vueloId = parseInt(id);
+                if (!isNaN(vueloId)) {
+                    // Verificar duplicados dentro del archivo
+                    if (idsUnicos.has(vueloId)) {
+                        idsRepetidosEnArchivo.add(vueloId);
+                        return; // Skip duplicado en archivo
+                    }
+                    idsUnicos.add(vueloId);
+                    
+                    // Buscar el vuelo en programacionVuelos
+                    let programacion = programacionVuelos.current.get(vueloId.toString());
+                    if (!programacion) {
+                        programacion = programacionVuelos.current.get(vueloId.toString());
+                    }
+                    
+                    // Verificar que no esté ya cancelado
+                    const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+                    
+                    if (!yaCancelado) {
+                        const cantPaquetes = programacion?.cantPaquetes || 0;
+                        totalPaquetesAfectados += cantPaquetes;
+                        
+                        nuevasCancelaciones.push({
+                            id: vueloId,
+                            fechaCancelacion: new Date(),
+                            motivoCancelacion: `Cancelación masiva - ${archivo.name}`,
+                            cantPaquetes: cantPaquetes
+                        });
+                        vuelosCanceladosCount++;
+                    } else {
+                        vuelosDuplicados++;
+                    }
+                }
+            });
+            
+            // Actualizar estado una sola vez con todas las cancelaciones
+            if (nuevasCancelaciones.length > 0) {
+                setVuelosCancelados(prev => [...prev, ...nuevasCancelaciones]);
+            }
+            
+            // Mensaje detallado
+            let mensaje = `✅ Cancelación masiva completada:\n\n`;
+            mensaje += `• ${vuelosCanceladosCount} vuelos cancelados\n`;
+            mensaje += `• ${totalPaquetesAfectados} paquetes afectados\n`;
+            if (vuelosDuplicados > 0) {
+                mensaje += `• ${vuelosDuplicados} vuelos ya estaban cancelados previamente\n`;
+            }
+            if (idsRepetidosEnArchivo.size > 0) {
+                mensaje += `• ${idsRepetidosEnArchivo.size} IDs repetidos en el archivo (ignorados)\n`;
+            }
+            mensaje += `\nArchivo: ${archivo.name}`;
+            
+            alert(mensaje);
+        } catch (error) {
+            console.error("Error al cancelar vuelos masivamente:", error);
+            alert("Error al procesar el archivo de cancelaciones");
         }
     };
 
@@ -449,13 +548,25 @@ const Page = () => {
                     {/* Botón para ver vuelos cancelados */}
                     <button
                         onClick={() => setMostrarListaCancelados(!mostrarListaCancelados)}
-                        className="fixed bottom-8 right-64 z-[85] bg-red-500 hover:bg-red-600 text-white rounded-full px-6 py-4 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                        className="fixed bottom-8 right-80 z-[85] bg-red-500 hover:bg-red-600 text-white rounded-full px-6 py-4 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
                         title="Ver vuelos cancelados"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                         <span className="font-semibold">Cancelados ({vuelosCancelados.length})</span>
+                    </button>
+
+                    {/* Botón para cancelación masiva */}
+                    <button
+                        onClick={() => setMostrarCancelacionMasiva(true)}
+                        className="fixed bottom-24 right-8 z-[85] bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6 py-4 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                        title="Cancelación masiva por archivo"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="font-semibold">Cancelación Masiva</span>
                     </button>
 
                     {mostrarListaVuelos && (
@@ -533,8 +644,8 @@ const Page = () => {
 
                     {/* Panel de vuelos cancelados */}
                     {mostrarListaCancelados && (
-                        <div className="fixed left-0 top-0 h-full w-96 bg-white shadow-2xl z-[90] flex flex-col border-r-4 border-red-500">
-                            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6">
+                        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] max-h-[85vh] bg-white shadow-2xl z-[200] flex flex-col rounded-xl border-4 border-red-500">
+                            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-t-lg">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-xl font-bold">Vuelos Cancelados</h2>
                                     <button
@@ -631,6 +742,13 @@ const Page = () => {
                                 setVueloSeleccionado("");
                             }}
                             vueloPreseleccionado={vueloSeleccionado}
+                        />
+                    )}
+
+                    {mostrarCancelacionMasiva && (
+                        <CancelacionMasivaVuelo
+                            onCancelar={handleCancelarVuelosMasivo}
+                            onClose={() => setMostrarCancelacionMasiva(false)}
                         />
                     )}
                     
