@@ -78,6 +78,13 @@ const Page = () => {
     const [mostrarCancelacion, setMostrarCancelacion] = useState(false);
     const [mostrarListaVuelos, setMostrarListaVuelos] = useState(false);
     const [vueloSeleccionado, setVueloSeleccionado] = useState<string>("");
+    const [vuelosCancelados, setVuelosCancelados] = useState<Array<{
+        id: number;
+        fechaCancelacion: Date;
+        motivoCancelacion: string;
+        cantPaquetes: number;
+    }>>([]);
+    const [mostrarListaCancelados, setMostrarListaCancelados] = useState(false);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -249,20 +256,63 @@ const Page = () => {
     const handleCancelarVuelo = async (idVuelo: string, archivoAlternativo?: File) => {
         try {
             if (archivoAlternativo) {
-                const formData = new FormData();
-                formData.append("file", archivoAlternativo);
+                // Simulación: leer archivo y cancelar múltiples vuelos
+                const text = await archivoAlternativo.text();
+                const idsVuelos = text.split('\n').map(line => line.trim()).filter(line => line);
                 
-                const response = await axios.post(`${apiURL}/vuelo/cancelar-batch`, formData, {
-                    headers: { "Content-Type": "multipart/form-data" }
+                let vuelosCanceladosCount = 0;
+                idsVuelos.forEach(id => {
+                    const vueloId = parseInt(id);
+                    if (!isNaN(vueloId)) {
+                        // Buscar el vuelo en programacionVuelos
+                        let programacion = programacionVuelos.current.get(vueloId.toString());
+                        if (!programacion) {
+                            programacion = programacionVuelos.current.get(vueloId.toString());
+                        }
+                        
+                        // Verificar que no esté ya cancelado
+                        const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+                        
+                        if (!yaCancelado) {
+                            setVuelosCancelados(prev => [...prev, {
+                                id: vueloId,
+                                fechaCancelacion: new Date(),
+                                motivoCancelacion: "Cancelación por archivo",
+                                cantPaquetes: programacion?.cantPaquetes || 0
+                            }]);
+                            vuelosCanceladosCount++;
+                        }
+                    }
                 });
                 
-                console.log("Vuelos cancelados por archivo:", response.data);
+                alert(`Se cancelaron ${vuelosCanceladosCount} vuelos exitosamente`);
             } else {
-                const response = await axios.post(`${apiURL}/vuelo/cancelar/${idVuelo}`);
-                console.log("Vuelo cancelado:", response.data);
+                // Simulación: cancelar un solo vuelo
+                const vueloId = parseInt(idVuelo);
+                
+                // Buscar el vuelo en programacionVuelos con diferentes formatos de key
+                let programacion = programacionVuelos.current.get(idVuelo);
+                if (!programacion) {
+                    programacion = programacionVuelos.current.get(vueloId.toString());
+                }
+                
+                // Verificar que no esté ya cancelado
+                const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+                
+                if (yaCancelado) {
+                    alert(`El vuelo #${vueloId} ya fue cancelado`);
+                } else {
+                    setVuelosCancelados(prev => [...prev, {
+                        id: vueloId,
+                        fechaCancelacion: new Date(),
+                        motivoCancelacion: "Cancelación manual",
+                        cantPaquetes: programacion?.cantPaquetes || 0
+                    }]);
+                    
+                    alert(`Vuelo #${vueloId} cancelado exitosamente`);
+                }
             }
             
-            sendMessage("actualizarVuelos");
             setVueloSeleccionado("");
         } catch (error) {
             console.error("Error al cancelar vuelo:", error);
@@ -289,7 +339,10 @@ const Page = () => {
             const vueloId = programacion.idVuelo;
             const vueloActivo = vuelos.current.get(vueloId);
             
-            if (!vueloActivo && simulationTime) {
+            // Verificar si el vuelo está cancelado
+            const estaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+            
+            if (!vueloActivo && !estaCancelado && simulationTime) {
                 const fechaSalida = new Date(programacion.fechaSalida);
                 if (fechaSalida > simulationTime) {
                     vuelosProgramados.push({
@@ -393,6 +446,18 @@ const Page = () => {
                         <span className="font-semibold">Vuelos Programados</span>
                     </button>
 
+                    {/* Botón para ver vuelos cancelados */}
+                    <button
+                        onClick={() => setMostrarListaCancelados(!mostrarListaCancelados)}
+                        className="fixed bottom-8 right-64 z-[85] bg-red-500 hover:bg-red-600 text-white rounded-full px-6 py-4 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                        title="Ver vuelos cancelados"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span className="font-semibold">Cancelados ({vuelosCancelados.length})</span>
+                    </button>
+
                     {mostrarListaVuelos && (
                         <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-[90] flex flex-col">
                             <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6">
@@ -458,6 +523,98 @@ const Page = () => {
                                                     </svg>
                                                     Cancelar este vuelo
                                                 </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Panel de vuelos cancelados */}
+                    {mostrarListaCancelados && (
+                        <div className="fixed left-0 top-0 h-full w-96 bg-white shadow-2xl z-[90] flex flex-col border-r-4 border-red-500">
+                            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xl font-bold">Vuelos Cancelados</h2>
+                                    <button
+                                        onClick={() => setMostrarListaCancelados(false)}
+                                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p className="text-sm text-red-100 mt-2">
+                                    Total: {vuelosCancelados.length} {vuelosCancelados.length === 1 ? 'vuelo' : 'vuelos'}
+                                </p>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-4">
+                                {vuelosCancelados.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                        <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p className="text-center">No hay vuelos cancelados</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {vuelosCancelados.sort((a, b) => b.fechaCancelacion.getTime() - a.fechaCancelacion.getTime()).map((vuelo) => (
+                                            <div
+                                                key={vuelo.id}
+                                                className="bg-red-50 border-2 border-red-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                                            >
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                            <span className="text-xs font-semibold text-red-600">CANCELADO</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-semibold text-gray-600">Vuelo ID:</span>
+                                                            <span className="text-lg font-bold text-gray-800">{vuelo.id}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="text-xs text-gray-600 mb-2 space-y-1">
+                                                    <div className="flex items-center gap-1">
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span className="font-medium">Cancelado:</span>
+                                                        <span>{vuelo.fechaCancelacion.toLocaleString()}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                        </svg>
+                                                        <span className="font-medium">Paquetes afectados:</span>
+                                                        <span>{vuelo.cantPaquetes}</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-1 mt-2">
+                                                        <svg className="w-3.5 h-3.5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <div>
+                                                            <span className="font-medium">Motivo:</span>
+                                                            <p className="text-gray-700 mt-0.5">{vuelo.motivoCancelacion}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-3 pt-3 border-t border-red-200">
+                                                    <div className="flex items-center gap-2 text-xs text-red-700">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                        </svg>
+                                                        <span className="font-semibold">Este vuelo no despegará</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
