@@ -16,6 +16,7 @@ import PedidosPreloadScreen from "@/components/PedidosPreloadScreen";
 import BotonRegistroPedido from "@/components/mapa/BotonRegistroPedido";
 import ToastNotification from "@/components/ToastNotification";
 import NewOrderIndicator from "@/components/NewOrderIndicator";
+import PedidosPendientes from "@/components/PedidosPendientes";
 
 
 type MessageData = {
@@ -358,6 +359,7 @@ const Page = () => {
                             }, 8000);
                         }}
                     />
+                    <PedidosPendientes apiURL={apiURL || ""} />
                     <div ref={bottomRef}></div>
                 </div>
             )}
