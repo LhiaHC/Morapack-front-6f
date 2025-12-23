@@ -47,7 +47,7 @@ export default function CancelacionMasivaVuelo({ onCancelar, onClose }: Props) {
   const isValid = archivo && totalIds > 0;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[95] p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">

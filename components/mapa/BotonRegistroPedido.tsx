@@ -4,7 +4,11 @@ import { FaPlus, FaTimes } from "react-icons/fa";
 import Box from '@mui/material/Box';
 import ComponenteStepper from "../stepper/componenteStepper";
 
-export default function BotonRegistroPedido({ onPedidoRegistrado }) {
+interface BotonRegistroPedidoProps {
+  onPedidoRegistrado?: (origen: string, destino: string, paquetes: number) => void;
+}
+
+export default function BotonRegistroPedido({ onPedidoRegistrado }: BotonRegistroPedidoProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const togglePanel = () => {
@@ -64,7 +68,7 @@ export default function BotonRegistroPedido({ onPedidoRegistrado }) {
             {/* Contenido del Panel */}
             <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
               <ComponenteStepper 
-                onPedidoRegistrado={(origen, destino, paquetes) => {
+                onPedidoRegistrado={(origen: string, destino: string, paquetes: number) => {
                   if (onPedidoRegistrado) {
                     onPedidoRegistrado(origen, destino, paquetes);
                   }

@@ -26,7 +26,7 @@ export default function CancelacionVuelo({ onCancelar, onClose, vueloPreseleccio
   const isValid = idVuelo.trim();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[95] p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
