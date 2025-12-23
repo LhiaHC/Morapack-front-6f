@@ -105,8 +105,8 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, sim
       : 0;
     
     // Calcular días transcurridos usando simulationTime si está disponible (más preciso)
-    // Multiplicador: 3x (mismo que SimControls)
-    const TIME_MULTIPLIER = 3;
+    // Multiplicador: 6x (mismo que SimControlsColapso)
+    const TIME_MULTIPLIER = 6;
     let diasReales = diasTranscurridos;
     
     if (simulationTime && startTime) {
@@ -205,13 +205,16 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, sim
     const promedioExceso = vuelosExcedidos > 0 ? (excesoPaquetesTotal / vuelosExcedidos / (capacidadTotal / totalVuelos)) * 100 : 0;
     
     // Calcular el momento del colapso usando la ÚLTIMA programación (cuando se detuvo la simulación)
-    if (ultimaProgramacion && fechaInicio) {
+    if (ultimaProgramacion && fechaInicio && startTime) {
       const programacionFinal: ProgramacionVuelo = ultimaProgramacion;
-      const fechaColapso = new Date(programacionFinal.fechaSalida);
+      const minutosTranscurridos = tiempoEntre(startTime, new Date(programacionFinal.fechaSalida));
+      // Calcular la fecha simulada usando el multiplicador
+      const fechaSimulada = new Date(startTime.getTime() + minutosTranscurridos * TIME_MULTIPLIER * 60000);
+      
       momentoColapso = {
         dia: diasReales, // Usar diasReales calculados desde simulationTime
-        hora: fechaColapso.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
-        fecha: fechaColapso.toLocaleDateString('es-PE')
+        hora: fechaSimulada.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+        fecha: fechaSimulada.toLocaleDateString('es-PE')
       };
     }
     

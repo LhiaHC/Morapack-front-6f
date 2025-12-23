@@ -60,7 +60,7 @@ const Page = () => {
                 console.log("🌐 WebSocket conectado para simulación de colapso");
                 console.log("📤 Enviando mensaje:", mensaje);
                 console.log("⏰ Hora inicio:", auxHoraInicio.toLocaleString());
-                console.log("⚠️ NOTA: Multiplicador 3x - El colapso se forzará después de 30 días internos (mostrados como 90 días/3 meses)");
+                console.log(`⚠️ CONFIGURACIÓN: Velocidad inicial ${VELOCIDAD_FIJA_COLAPSO} min/s | Multiplicador 6x | Colapso en ~96 días internos (mostrados como ~576 días / 19.2 meses)`);
                 
                 // Enviar mensaje como simulación semanal (el backend no tiene endpoint específico para colapso)
                 // El colapso se fuerza desde el frontend después de 60 segundos de simulación
@@ -80,7 +80,8 @@ const Page = () => {
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
     const [colapso, setColapso] = useState(false);
-    const [simulationInterval, setSimulationInterval] = useState(30); // 30 min/s - Multiplicador 3x: 30 días internos mostrados como 90 días (3 meses)
+    const VELOCIDAD_FIJA_COLAPSO = 20; // VELOCIDAD FIJA: 20 min/s para estabilidad con WebSocket - NO CAMBIAR durante simulación
+    const [simulationInterval, setSimulationInterval] = useState(VELOCIDAD_FIJA_COLAPSO);
     const [playing, setPlaying] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [loadingProgress, setLoadingProgress] = useState(0);
@@ -106,7 +107,14 @@ const Page = () => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         if (cargado && !tiempoInicioSimulacion.current) {
             tiempoInicioSimulacion.current = new Date();
-            console.log("⏱️ Simulación de colapso iniciada - Multiplicador 3x: se forzará colapso después de 30 días internos (mostrados como 90 días/3 meses)");
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("⏱️ SIMULACIÓN DE COLAPSO INICIADA");
+            console.log(`⚙️ Velocidad INICIAL: ${VELOCIDAD_FIJA_COLAPSO} min/s (recomendada para estabilidad)`);
+            console.log("📊 Multiplicador de tiempo: 6x (visualización equilibrada)");
+            console.log("⏳ Duración estimada: ~96 días internos (mostrados como ~576 días / 19.2 meses)");
+            console.log("🚀 Vuelos durarán máximo 3 días en pantalla");
+            console.log("🎯 El colapso se forzará automáticamente al alcanzar este tiempo");
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         }
     }, [cargado]);
 
@@ -127,11 +135,12 @@ const Page = () => {
                 const tiempoSimuladoMs = simulationTime.getTime() - horaInicio.getTime();
                 const diasTranscurridos = tiempoSimuladoMs / (1000 * 60 * 60 * 24);
 
-                // Forzar colapso después de 30 días internos (mostrados como 90 días con multiplicador 3x)
-                if (diasTranscurridos >= 30) {
+                // Forzar colapso después de 96 días internos (mostrados como 384 días / ~12.8 meses con multiplicador 4x)
+                const DIAS_HASTA_COLAPSO = 96;
+                if (diasTranscurridos >= DIAS_HASTA_COLAPSO) {
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     console.log("⚠️  FORZANDO COLAPSO DEL SISTEMA");
-                    console.log(`📅 Han transcurrido ${diasTranscurridos.toFixed(1)} días internos (mostrados como ${(diasTranscurridos * 3).toFixed(1)} días / ${((diasTranscurridos * 3) / 30).toFixed(1)} meses)`);
+                    console.log(`📅 Han transcurrido ${diasTranscurridos.toFixed(1)} días internos (mostrados como ${(diasTranscurridos * 6).toFixed(1)} días / ${((diasTranscurridos * 6) / 30).toFixed(1)} meses)`);
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     console.log("");
                     
