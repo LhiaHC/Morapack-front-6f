@@ -25,9 +25,9 @@ const SimControlsColapso: React.FC<SimControlsColapsoProps> = ({
   startTime,
   isSimulation = true,
 }) => {
-  // Multiplicador moderado para simulación de colapso: 3x
-  // Muestra 90 días (3 meses) cuando internamente han pasado 30 días
-  const TIME_MULTIPLIER = 3;
+  // Multiplicador moderado para simulación de colapso: 6x
+  // Hace que la simulación visual avance 6 veces más rápido (equilibrado)
+  const TIME_MULTIPLIER = 6;
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
