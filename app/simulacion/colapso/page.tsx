@@ -99,6 +99,8 @@ const Page = () => {
         cantPaquetes: number;
     }>>([]);
     const [mostrarListaCancelados, setMostrarListaCancelados] = useState(false);
+    const contadorCerosConsecutivos = useRef<number>(0);
+    const INTENTOS_MINIMOS_COLAPSO = 15; // Esperar 15 respuestas consecutivas con 0 datos antes de declarar colapso
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -443,26 +445,42 @@ const Page = () => {
                 // VALIDACIÓN CRÍTICA: Si data está vacío, significa que ya no hay más paquetes
                 // Esto indica que la simulación ha llegado a su fin natural (colapso por agotamiento)
                 if (!message.data || (typeof message.data === 'object' && Object.keys(message.data).length === 0)) {
-                    console.warn("⚠️ Ya no hay más paquetes/envíos para procesar");
+                    // Incrementar contador de respuestas vacías consecutivas
+                    contadorCerosConsecutivos.current += 1;
+                    
+                    console.warn(`⚠️ Respuesta vacía del backend (#${contadorCerosConsecutivos.current}/${INTENTOS_MINIMOS_COLAPSO})`);
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                    console.log("🔴 POSIBLE COLAPSO DETECTADO: AGOTAMIENTO DE ENVÍOS");
-                    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                    console.log("📋 Estado final:");
+                    console.log("📊 Estado actual:");
+                    console.log(`  - Respuestas vacías consecutivas: ${contadorCerosConsecutivos.current}/${INTENTOS_MINIMOS_COLAPSO}`);
                     console.log("  - Programaciones de vuelo:", programacionVuelos.current.size);
                     console.log("  - Envíos procesados:", envios.current.size);
                     console.log("  - Vuelos disponibles:", vuelos.current.size);
                     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                     
-                    // VALIDACIÓN: Requiere al menos 10 envíos procesados para evitar falsos positivos
+                    // VALIDACIÓN: Requiere suficientes datos Y múltiples intentos para evitar falsos positivos
                     const suficientesDatos = envios.current.size >= 10 && programacionVuelos.current.size >= 50;
+                    const suficientesIntentos = contadorCerosConsecutivos.current >= INTENTOS_MINIMOS_COLAPSO;
                     
-                    if (suficientesDatos) {
+                    if (suficientesDatos && suficientesIntentos) {
                         // Activar el estado de colapso para mostrar el reporte
                         if (!colapso) {
+                            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                            console.log("🔴 COLAPSO CONFIRMADO: AGOTAMIENTO SOSTENIDO DE ENVÍOS");
+                            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                            console.log("📋 Estado final:");
+                            console.log(`  - Respuestas vacías consecutivas: ${contadorCerosConsecutivos.current}`);
+                            console.log("  - Programaciones de vuelo:", programacionVuelos.current.size);
+                            console.log("  - Envíos procesados:", envios.current.size);
+                            console.log("  - Vuelos disponibles:", vuelos.current.size);
+                            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                             console.log("🔴 Activando estado de COLAPSO y pausando simulación");
                             setColapso(true);
                             setPlaying(false); // Pausar automáticamente
                         }
+                    } else if (!suficientesIntentos) {
+                        console.warn(`⏳ Esperando más confirmaciones... (${contadorCerosConsecutivos.current}/${INTENTOS_MINIMOS_COLAPSO} intentos)`);
+                        console.warn("   El backend puede estar iniciando la simulación o procesando datos.");
+                        console.warn("   Se requieren múltiples respuestas vacías consecutivas para confirmar colapso.");
                     } else {
                         console.warn("⚠️ Datos insuficientes para declarar colapso:");
                         console.warn("  - Envíos:", envios.current.size, "(mínimo: 10)");
@@ -470,6 +488,12 @@ const Page = () => {
                         console.warn("  - Esperando más datos del backend...");
                     }
                     return; // No procesar data vacío
+                } else {
+                    // Si recibimos datos, resetear el contador de ceros consecutivos
+                    if (contadorCerosConsecutivos.current > 0) {
+                        console.log(`✅ Datos recibidos del backend - Reseteando contador de ceros (era ${contadorCerosConsecutivos.current})`);
+                        contadorCerosConsecutivos.current = 0;
+                    }
                 }
                 
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, setColapso);
