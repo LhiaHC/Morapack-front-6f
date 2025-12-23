@@ -423,6 +423,8 @@ const Page = () => {
         setVueloSeleccionado(idVuelo);
         setMostrarCancelacion(true);
         setMostrarListaVuelos(false);
+        setMostrarCancelacionMasiva(false);
+        setMostrarListaCancelados(false);
     };
 
     const getVuelosProgramados = () => {
@@ -535,7 +537,12 @@ const Page = () => {
                     />
                     
                     <button
-                        onClick={() => setMostrarListaVuelos(!mostrarListaVuelos)}
+                        onClick={() => {
+                            setMostrarListaVuelos(!mostrarListaVuelos);
+                            setMostrarCancelacion(false);
+                            setMostrarCancelacionMasiva(false);
+                            if (!mostrarListaVuelos) setMostrarListaCancelados(false);
+                        }}
                         className="fixed bottom-8 right-8 z-[85] bg-blue-500 hover:bg-blue-600 text-white rounded-full px-6 py-4 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
                         title="Ver vuelos programados"
                     >
@@ -547,7 +554,12 @@ const Page = () => {
 
                     {/* Botón para ver vuelos cancelados */}
                     <button
-                        onClick={() => setMostrarListaCancelados(!mostrarListaCancelados)}
+                        onClick={() => {
+                            setMostrarListaCancelados(!mostrarListaCancelados);
+                            setMostrarCancelacion(false);
+                            setMostrarCancelacionMasiva(false);
+                            if (!mostrarListaCancelados) setMostrarListaVuelos(false);
+                        }}
                         className="fixed bottom-8 right-80 z-[85] bg-red-500 hover:bg-red-600 text-white rounded-full px-6 py-4 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
                         title="Ver vuelos cancelados"
                     >
@@ -559,7 +571,12 @@ const Page = () => {
 
                     {/* Botón para cancelación masiva */}
                     <button
-                        onClick={() => setMostrarCancelacionMasiva(true)}
+                        onClick={() => {
+                            setMostrarCancelacionMasiva(true);
+                            setMostrarCancelacion(false);
+                            setMostrarListaCancelados(false);
+                            setMostrarListaVuelos(false);
+                        }}
                         className="fixed bottom-24 right-8 z-[85] bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6 py-4 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
                         title="Cancelación masiva por archivo"
                     >
@@ -644,7 +661,7 @@ const Page = () => {
 
                     {/* Panel de vuelos cancelados */}
                     {mostrarListaCancelados && (
-                        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] max-h-[85vh] bg-white shadow-2xl z-[200] flex flex-col rounded-xl border-4 border-red-500">
+                        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] max-h-[85vh] bg-white shadow-2xl z-[96] flex flex-col rounded-xl border-4 border-red-500">
                             <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-t-lg">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-xl font-bold">Vuelos Cancelados</h2>

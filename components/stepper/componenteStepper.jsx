@@ -21,7 +21,7 @@ import { FaCalendarAlt } from "react-icons/fa";
 
 const steps = ['Datos del cliente', 'Destino y paquetes', 'Datos del receptor', 'Confirmar envío'];
 
-export default function HorizontalLinearStepper() {
+export default function HorizontalLinearStepper({ onPedidoRegistrado }) {
   const [value, setValue] = React.useState('');
   const [city, setCity] = React.useState('');
   const [numCode, setnumCode] = React.useState('');
@@ -346,6 +346,12 @@ export default function HorizontalLinearStepper() {
       console.log("Códigos de paquetes:", codigos);
       // Guardar el idEnvio en memoria para mostrarlo en el modal
       setCodigosPaquetes(codigos);
+      
+      // Llamar al callback para notificar el registro exitoso
+      if (onPedidoRegistrado) {
+        onPedidoRegistrado(ciudadOrigen, ciudadDestino, numPaquetes);
+      }
+      
       await minLoadingPromise;
       if (!finished) {
         setShowLoading(false);

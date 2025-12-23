@@ -14,6 +14,8 @@ import { procesarData, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos"
 import { Envio } from "@/types/Envio";
 import PedidosPreloadScreen from "@/components/PedidosPreloadScreen";
 import BotonRegistroPedido from "@/components/mapa/BotonRegistroPedido";
+import ToastNotification from "@/components/ToastNotification";
+import NewOrderIndicator from "@/components/NewOrderIndicator";
 
 
 type MessageData = {
@@ -80,6 +82,11 @@ const Page = () => {
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [loadingStage, setLoadingStage] = useState("Inicializando...");
     const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
+    
+    // Estados para notificaciones de nuevos pedidos
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [newOrderNotification, setNewOrderNotification] = useState<{origen: string, destino: string, paquetes: number} | null>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -246,6 +253,22 @@ const Page = () => {
                 console.log(message.data);
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, () => {}); // No detectar colapso en semanal
             }
+            if (message.metadata.includes("nuevoPedido")) {
+                console.log("Nuevo pedido registrado:", message.data);
+                const pedidoInfo = message.data[0];
+                setNewOrderNotification({
+                    origen: pedidoInfo.origen,
+                    destino: pedidoInfo.destino,
+                    paquetes: pedidoInfo.cantidadPaquetes
+                });
+                setToastMessage(`✅ Nuevo pedido registrado: ${pedidoInfo.origen} → ${pedidoInfo.destino} (${pedidoInfo.cantidadPaquetes} paquetes)`);
+                setShowToast(true);
+                
+                // Auto-ocultar después de 5 segundos
+                setTimeout(() => {
+                    setNewOrderNotification(null);
+                }, 8000);
+            }
         }
     }, [lastMessage]);
 
@@ -318,9 +341,41 @@ const Page = () => {
                     />
                     <SimControls
                     />
-                    <BotonRegistroPedido />
+                    <BotonRegistroPedido 
+                        onPedidoRegistrado={(origen: string, destino: string, paquetes: number) => {
+                            setToastMessage(`✅ Pedido registrado exitosamente: ${origen} → ${destino} (${paquetes} paquetes)`);
+                            setShowToast(true);
+                            setNewOrderNotification({ origen, destino, paquetes });
+                            
+                            // Notificar al WebSocket
+                            sendMessage(JSON.stringify({
+                                tipo: "nuevoPedido",
+                                data: { origen, destino, cantidadPaquetes: paquetes }
+                            }), false);
+                            
+                            setTimeout(() => {
+                                setNewOrderNotification(null);
+                            }, 8000);
+                        }}
+                    />
                     <div ref={bottomRef}></div>
                 </div>
+            )}
+            {showToast && (
+                <ToastNotification
+                    message={toastMessage}
+                    type="pedido"
+                    duration={5000}
+                    visible={showToast}
+                    onClose={() => setShowToast(false)}
+                />
+            )}
+            {newOrderNotification && (
+                <NewOrderIndicator
+                    origen={newOrderNotification.origen}
+                    destino={newOrderNotification.destino}
+                    paquetes={newOrderNotification.paquetes}
+                />
             )}
         </>
     );

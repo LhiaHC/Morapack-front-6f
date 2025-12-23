@@ -101,6 +101,13 @@ const SimControlsColapso: React.FC<SimControlsColapsoProps> = ({
                       {tiempoNumeroADiasHorasMinutos(tiempoEntre(startTime, simulationTime) * TIME_MULTIPLIER)}
                     </div>
                   </div>
+                  <div className="border-l border-neutral-custom-300"></div>
+                  <div className="text-center">
+                    <div className="text-neutral-custom-600 font-semibold mb-0.5">Tiempo simulación</div>
+                    <div className="text-neutral-custom-800 font-medium">
+                      {new Date(startTime.getTime() + tiempoEntre(startTime, simulationTime) * TIME_MULTIPLIER * 60000).toLocaleString()}
+                    </div>
+                  </div>
                 </>
               )}
             </div>
