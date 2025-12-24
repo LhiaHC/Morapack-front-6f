@@ -25,9 +25,9 @@ const SimControlsColapso: React.FC<SimControlsColapsoProps> = ({
   startTime,
   isSimulation = true,
 }) => {
-  // Multiplicador moderado para simulación de colapso: 3x
-  // Muestra 90 días (3 meses) cuando internamente han pasado 30 días
-  const TIME_MULTIPLIER = 3;
+  // Multiplicador moderado para simulación de colapso: 6x
+  // Hace que la simulación visual avance 6 veces más rápido (equilibrado)
+  const TIME_MULTIPLIER = 6;
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4">
@@ -80,12 +80,6 @@ const SimControlsColapso: React.FC<SimControlsColapsoProps> = ({
               <option value="15">15 min/s</option>
               <option value="20">20 min/s</option>
               <option value="30">30 min/s</option>
-              <option value="50">50 min/s</option>
-              <option value="100">100 min/s</option>
-              <option value="500">500 min/s</option>
-              <option value="1000">1000 min/s</option>
-              <option value="5000">5000 min/s</option>
-              <option value="10000">10000 min/s</option>
             </select>
           </div>
 
@@ -105,6 +99,13 @@ const SimControlsColapso: React.FC<SimControlsColapsoProps> = ({
                     <div className="text-neutral-custom-600 font-semibold mb-0.5">Tiempo transcurrido</div>
                     <div className="text-neutral-custom-800 font-medium">
                       {tiempoNumeroADiasHorasMinutos(tiempoEntre(startTime, simulationTime) * TIME_MULTIPLIER)}
+                    </div>
+                  </div>
+                  <div className="border-l border-neutral-custom-300"></div>
+                  <div className="text-center">
+                    <div className="text-neutral-custom-600 font-semibold mb-0.5">Tiempo simulación</div>
+                    <div className="text-neutral-custom-800 font-medium">
+                      {new Date(startTime.getTime() + tiempoEntre(startTime, simulationTime) * TIME_MULTIPLIER * 60000).toLocaleString()}
                     </div>
                   </div>
                 </>

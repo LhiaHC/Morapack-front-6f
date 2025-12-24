@@ -3,16 +3,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import Mapa from "@/components/mapa/Mapa";
+import SimControls from "@/components/mapa/controlsDiario";
+import CancelacionVuelo from "@/components/CancelacionVuelo";
+import CancelacionMasivaVuelo from "@/components/CancelacionMasivaVuelo";
+import PedidosPreloadScreen from "@/components/PedidosPreloadScreen";
+import BotonRegistroPedido from "@/components/mapa/BotonRegistroPedido";
+import ToastNotification from "@/components/ToastNotification";
+import NewOrderIndicator from "@/components/NewOrderIndicator";
+import PedidosPendientes from "@/components/PedidosPendientes";
 import axios from "axios";
 import { Vuelo } from "@/types/Vuelo";
 import { Aeropuerto } from "@/types/Aeropuerto";
 import { conectarAWebsocket, enviarMensaje } from "@/utils/FuncionesWebsocket";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { ProgramacionVuelo } from "@/types/ProgramacionVuelo";
-import { actualizarDataReal, procesarDataReal, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
+import { procesarData, quitarPaquetesAlmacenados } from "@/utils/FuncionesDatos";
 import { Envio } from "@/types/Envio";
-import CancelacionVuelo from "@/components/CancelacionVuelo";
-import { X } from "lucide-react";
+
 
 type MessageData = {
     data: Array<any>;
@@ -22,8 +29,8 @@ type MessageData = {
 const Page = () => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const apiURL = process.env.NEXT_PUBLIC_MORAPACK_API_URL;
-    const vuelos = useRef
-        Map
+    const vuelos = useRef<
+        Map<
             number,
             {
                 vuelo: Vuelo;
@@ -36,39 +43,242 @@ const Page = () => {
     const programacionVuelos = useRef<Map<string, ProgramacionVuelo>>(
         new Map()
     );
-    const auxiliarVuelos = useRef<Map<number, Vuelo>>(new Map());
     const envios = useRef<Map<string, Envio>>(new Map());
     const aeropuertos = useRef<Map<string, {aeropuerto: Aeropuerto; pointFeature: any}>>(new Map());
     const [cargado, setCargado] = useState(false);
     const [horaInicio, setHoraInicio] = useState(new Date());
+
+    const [preloadDone, setPreloadDone] = useState(false);
+
     const [campana, setCampana] = useState(0);
     const [simulationTime, setSimulationTime] = useState<Date | null>(null);
-    const [colapso, setColapso] = useState(false);
-    const [mostrarCancelacion, setMostrarCancelacion] = useState(false);
-    
-    const { sendMessage, lastMessage } = useWebSocket(
+    const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(
         process.env.NEXT_PUBLIC_MORAPACK_WS_URL + "/socket",
         {
+            onOpen: () => {
+                let auxHoraInicio: Date = new Date();
+                if (typeof window !== "undefined") {
+                    const params = new URLSearchParams(window.location.search);
+                    auxHoraInicio = new Date(
+                        params.get("startDate") ||
+                            new Date()
+                    );
+                }
+                console.log("Conexión abierta con tiempo: ", auxHoraInicio);
+                sendMessage(
+                    "simulacionSemanal: tiempo: " +
+                        auxHoraInicio.toLocaleString("en-US", {
+                            timeZone: "America/Lima",
+                        }),
+                    true
+                );
+            },
             share: true,
-<<<<<<< Updated upstream
-        }
-=======
         },
         preloadDone
->>>>>>> Stashed changes
     );
     const [nuevosVuelos, setNuevosVuelos] = useState<number[]>([]);
     const [semaforo, setSemaforo] = useState(0);
-    const initializedRef = useRef(false);
+    const [simulationInterval, setSimulationInterval] = useState(4);
+    const [playing, setPlaying] = useState(true);
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [loadingProgress, setLoadingProgress] = useState(0);
+    const [loadingStage, setLoadingStage] = useState("Inicializando...");
+    const slowProgressInterval = useRef<NodeJS.Timeout | null>(null);
+    
+    // Estados para notificaciones de nuevos pedidos
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [newOrderNotification, setNewOrderNotification] = useState<{origen: string, destino: string, paquetes: number} | null>(null);
 
-<<<<<<< Updated upstream
+    // Estados para paneles y botones de cancelación
+    const [mostrarListaVuelos, setMostrarListaVuelos] = useState(false);
+    const [mostrarListaCancelados, setMostrarListaCancelados] = useState(false);
+    const [mostrarCancelacion, setMostrarCancelacion] = useState(false);
+    const [mostrarCancelacionMasiva, setMostrarCancelacionMasiva] = useState(false);
+    const [vueloSeleccionado, setVueloSeleccionado] = useState<string>("");
+    const [vuelosCancelados, setVuelosCancelados] = useState<any[]>([]);
+
+    // Handler para seleccionar un vuelo desde la lista
+    const handleSeleccionarVuelo = (idVuelo: string) => {
+        setVueloSeleccionado(idVuelo);
+        setMostrarCancelacion(true);
+        setMostrarListaVuelos(false);
+        setMostrarCancelacionMasiva(false);
+        setMostrarListaCancelados(false);
+    };
+
+    // Handler para cancelar un vuelo individual
     const handleCancelarVuelo = (idVuelo: string, archivo?: File) => {
         if (archivo) {
             console.log("Procesando archivo de cancelaciones:", archivo.name);
-        } else {
-            console.log("Cancelando vuelo ID:", idVuelo);
-            sendMessage(`cancelarVuelo: ${idVuelo}`);
+            return;
         }
+
+        try {
+            const vueloId = parseInt(idVuelo);
+            
+            // Buscar el vuelo en programacionVuelos
+            let programacion = programacionVuelos.current.get(idVuelo);
+            if (!programacion) {
+                programacion = programacionVuelos.current.get(vueloId.toString());
+            }
+            
+            // Verificar que no esté ya cancelado
+            const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+            
+            if (yaCancelado) {
+                alert(`El vuelo #${vueloId} ya fue cancelado`);
+                setMostrarCancelacion(false);
+                setVueloSeleccionado("");
+                return;
+            }
+
+            const cantPaquetes = programacion?.cantPaquetes || 0;
+            
+            // Agregar a la lista de cancelados
+            setVuelosCancelados(prev => [
+                ...prev,
+                {
+                    id: vueloId,
+                    fechaCancelacion: new Date(),
+                    motivoCancelacion: "Cancelación manual",
+                    cantPaquetes: cantPaquetes
+                }
+            ]);
+            
+            // Mostrar mensaje de éxito
+            alert(`Vuelo #${vueloId} cancelado exitosamente`);
+            
+            // Cerrar modal y limpiar selección
+            setMostrarCancelacion(false);
+            setVueloSeleccionado("");
+        } catch (error) {
+            console.error("Error al cancelar vuelo:", error);
+            alert("Error al cancelar el vuelo");
+            setMostrarCancelacion(false);
+            setVueloSeleccionado("");
+        }
+    };
+
+    // Handler para cancelación masiva
+    const handleCancelarVuelosMasivo = async (archivo: File) => {
+        try {
+            const text = await archivo.text();
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            // Formato: ORIGEN-DESTINO-HORA_SALIDA-HORA_LLEGADA-ID
+            const idsVuelos = lines.map(line => {
+                const parts = line.split('-');
+                return parts.length >= 5 ? parts[4] : line;
+            });
+            
+            let vuelosCanceladosCount = 0;
+            let vuelosDuplicados = 0;
+            let totalPaquetesAfectados = 0;
+            const nuevasCancelaciones: Array<{
+                id: number;
+                fechaCancelacion: Date;
+                motivoCancelacion: string;
+                cantPaquetes: number;
+            }> = [];
+            
+            const idsUnicos = new Set<number>();
+            const idsRepetidosEnArchivo = new Set<number>();
+            
+            idsVuelos.forEach(id => {
+                const vueloId = parseInt(id);
+                if (!isNaN(vueloId)) {
+                    // Verificar duplicados dentro del archivo
+                    if (idsUnicos.has(vueloId)) {
+                        idsRepetidosEnArchivo.add(vueloId);
+                        return;
+                    }
+                    idsUnicos.add(vueloId);
+                    
+                    // Buscar el vuelo en programacionVuelos
+                    let programacion = programacionVuelos.current.get(vueloId.toString());
+                    if (!programacion) {
+                        programacion = programacionVuelos.current.get(vueloId.toString());
+                    }
+                    
+                    // Verificar que no esté ya cancelado
+                    const yaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+                    
+                    if (!yaCancelado) {
+                        const cantPaquetes = programacion?.cantPaquetes || 0;
+                        totalPaquetesAfectados += cantPaquetes;
+                        
+                        nuevasCancelaciones.push({
+                            id: vueloId,
+                            fechaCancelacion: new Date(),
+                            motivoCancelacion: `Cancelación masiva - ${archivo.name}`,
+                            cantPaquetes: cantPaquetes
+                        });
+                        vuelosCanceladosCount++;
+                    } else {
+                        vuelosDuplicados++;
+                    }
+                }
+            });
+            
+            // Actualizar estado una sola vez con todas las cancelaciones
+            if (nuevasCancelaciones.length > 0) {
+                setVuelosCancelados(prev => [...prev, ...nuevasCancelaciones]);
+            }
+            
+            // Mensaje detallado
+            let mensaje = `Cancelación masiva completada:\n\n`;
+            mensaje += `• ${vuelosCanceladosCount} vuelos cancelados\n`;
+            mensaje += `• ${totalPaquetesAfectados} paquetes afectados\n`;
+            if (vuelosDuplicados > 0) {
+                mensaje += `• ${vuelosDuplicados} IDs repetidos en el archivo (ignorados)\n`;
+            }
+            mensaje += `\nArchivo: ${archivo.name}`;
+            
+            alert(mensaje);
+            setMostrarCancelacionMasiva(false);
+        } catch (error) {
+            console.error("Error al cancelar vuelos masivamente:", error);
+            alert("Error al procesar el archivo de cancelaciones");
+        }
+    };
+
+    // Implementación real para mostrar vuelos programados igual que en colapso
+    const getVuelosProgramados = (): Array<{
+        id: number;
+        origen: string;
+        destino: string;
+        fechaSalida: Date;
+        cantPaquetes: number;
+    }> => {
+        const vuelosProgramados: Array<{
+            id: number;
+            origen: string;
+            destino: string;
+            fechaSalida: Date;
+            cantPaquetes: number;
+        }> = [];
+
+        programacionVuelos.current.forEach((programacion) => {
+            const vueloId = programacion.idVuelo;
+            const vueloActivo = vuelos.current.get(vueloId);
+            // Verificar si el vuelo está cancelado
+            const estaCancelado = vuelosCancelados.some(v => v.id === vueloId);
+            if (!vueloActivo && !estaCancelado && simulationTime) {
+                const fechaSalida = new Date(programacion.fechaSalida);
+                if (fechaSalida > simulationTime) {
+                    vuelosProgramados.push({
+                        id: vueloId,
+                        origen: `Vuelo ${vueloId}`,
+                        destino: "",
+                        fechaSalida: fechaSalida,
+                        cantPaquetes: programacion.cantPaquetes
+                    });
+                }
+            }
+        });
+        return vuelosProgramados.sort((a, b) => a.fechaSalida.getTime() - b.fechaSalida.getTime());
     };
 =======
     // Estados para paneles y botones de cancelación
@@ -266,60 +476,26 @@ const Page = () => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [cargado]);
 
-    async function fetchAeropuertos() {
-        const response = await axios.get(`${apiURL}/aeropuerto`);
-        const auxAeropuertos = new Map<string, { aeropuerto: Aeropuerto; pointFeature: any }>();
-        response.data.forEach((aeropuerto: Aeropuerto) => {
-            aeropuerto.paquetes = [];
-            aeropuerto.cantidadActual = 0;
-            auxAeropuertos.set(aeropuerto.codigoOACI, { aeropuerto: aeropuerto, pointFeature: null });
-        });
-        return auxAeropuertos;
-    }
-    
-    async function fetchVuelos() {
-        const response = await axios.get(`${apiURL}/vuelo`);
-        const auxVuelos = new Map<number, Vuelo>();
-        response.data.forEach((vuelo: Vuelo) => {
-            auxVuelos.set(vuelo.id, vuelo);
-        });
-        return auxVuelos;
-    }
-
     useEffect(() => {
-        if (!initializedRef.current) {
-            const initializeData = async () => {
-                setHoraInicio(new Date());
-    
-                try {
-                    const [auxAeropuertos, vuelos] = await Promise.all([fetchAeropuertos(), fetchVuelos()]);
-                    console.log("Aeropuertos cargados: ");
-                    aeropuertos.current = auxAeropuertos;
-                    console.log("Vuelos auxiliares cargados: ");
-                    auxiliarVuelos.current = vuelos;
-    
-                    setCampana((prev) => prev + 2);
-                } catch (error) {
-                    console.error("Error cargando datos: ", error);
-                }
-            };
-            initializeData();
-            initializedRef.current = true;
-        }
+        const intervalId = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(intervalId);
     }, []);
 
+    // Progreso lento mientras espera datos del WebSocket
     useEffect(() => {
-        console.log("Campana: ", campana);
-        if(campana ==  2) {
-            let auxHoraInicio: Date = new Date();
-            sendMessage("vuelosEnVivo: tiempo: " +auxHoraInicio.toLocaleString("en-US", {timeZone: "America/Lima",}),
-                    true
-            );
-            console.log("Enviando mensaje de tiempo con campana 2");
+        if (loadingProgress >= 55 && loadingProgress < 80 && !cargado) {
+            slowProgressInterval.current = setInterval(() => {
+                setLoadingProgress(prev => {
+                    if (prev < 75) return prev + 0.5;
+                    return prev;
+                });
+            }, 400);
+        } else if (slowProgressInterval.current) {
+            clearInterval(slowProgressInterval.current);
+            slowProgressInterval.current = null;
         }
-<<<<<<< Updated upstream
-        if (campana ==3 ) {
-=======
 
         return () => {
             if (slowProgressInterval.current) {
@@ -376,12 +552,18 @@ const Page = () => {
 
     useEffect(() => {
         if (campana ==2) {
->>>>>>> Stashed changes
             console.log("Campana sonando");
             if (cargado) {
                 return;
             }
-            setCargado(true);
+            setLoadingStage("Finalizando carga...");
+            setLoadingProgress(95);
+            setTimeout(() => {
+                setLoadingProgress(100);
+                setTimeout(() => {
+                    setCargado(true);
+                }, 200);
+            }, 150);
             console.log("Cargando datos");
             if (typeof window !== "undefined") {
                 window.history.replaceState(
@@ -428,29 +610,21 @@ const Page = () => {
                         });
                         auxNuevosVuelos.push(vuelo.id);
                     });
-                    setCampana((prev) => prev + 1);
+                    setLoadingProgress(80);
+                    setLoadingStage("Vuelos cargados, esperando rutas optimizadas del servidor...");
+                    setCampana(campana + 1);
                     console.log("Vuelos cargados: ", vuelos.current.size);
                 }
             }
             if(message.metadata.includes("primeraCarga")) {
                 console.log("Mensaje de primera carga");
                 console.log("Datos recibidos: ", message.data);
-<<<<<<< Updated upstream
-                procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, auxiliarVuelos, setColapso);
-=======
                 setLoadingProgress(90);
                 setLoadingStage("Procesando rutas de envíos...");
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, true, vuelos, true, () => {});
->>>>>>> Stashed changes
             }
-            if (message.metadata.includes("nuevosEnvios")) {
+            if (message.metadata.includes("correrAlgoritmo")) {
                 console.log(message.data);
-<<<<<<< Updated upstream
-                procesarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, auxiliarVuelos, setColapso);
-            }
-            if (message.metadata.includes("enviosEnOperacion")) {
-                actualizarDataReal(message.data, programacionVuelos, envios, aeropuertos, simulationTime?simulationTime:horaInicio, false, vuelos);
-=======
                 procesarData(message.data, programacionVuelos, envios, aeropuertos, simulationTime, false, vuelos, true, () => {});
             }
             if (message.metadata.includes("nuevoPedido")) {
@@ -467,7 +641,6 @@ const Page = () => {
                 setTimeout(() => {
                     setNewOrderNotification(null);
                 }, 8000);
->>>>>>> Stashed changes
             }
         }
     }, [lastMessage]);
@@ -475,46 +648,6 @@ const Page = () => {
     
     return (
         <>
-<<<<<<< Updated upstream
-            {cargado && (
-                <>
-                    <div className="pb-4">
-                        <Mapa
-                            vuelos={vuelos}
-                            aeropuertos={aeropuertos}
-                            programacionVuelos={programacionVuelos}
-                            envios={envios}
-                            simulationInterval={1/60}
-                            horaInicio={horaInicio}
-                            nuevosVuelos={nuevosVuelos}
-                            semaforo={semaforo}
-                            setSemaforo={setSemaforo}
-                            sendMessage={sendMessage}
-                            onSimulationTimeChange={setSimulationTime}
-                            auxiliarVuelos={auxiliarVuelos}
-                            colapso={colapso}
-                            setColapso={setColapso}
-                        />
-                        
-                        <button
-                            onClick={() => setMostrarCancelacion(true)}
-                            className="fixed bottom-24 right-6 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-red-600 transition-all hover:scale-105 flex items-center gap-2 z-40"
-                        >
-                            <X className="w-5 h-5" />
-                            Cancelar Vuelo
-                        </button>
-
-                        {mostrarCancelacion && (
-                            <CancelacionVuelo
-                                onCancelar={handleCancelarVuelo}
-                                onClose={() => setMostrarCancelacion(false)}
-                            />
-                        )}
-                        
-                        <div ref={bottomRef}></div>
-                    </div>
-                </>
-=======
         {!preloadDone && (
         <PedidosPreloadScreen
             startDate={horaInicio}
@@ -833,7 +966,6 @@ const Page = () => {
                     destino={newOrderNotification.destino}
                     paquetes={newOrderNotification.paquetes}
                 />
->>>>>>> Stashed changes
             )}
         </>
     );

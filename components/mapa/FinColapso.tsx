@@ -55,7 +55,7 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, sim
     console.log("ProgramacionVuelos size:", programacionVuelos.current.size);
     console.log("Vuelos size:", vuelos.current?.size);
     
-    const allData = Array.from(programacionVuelos.current.values());
+    const allData: ProgramacionVuelo[] = Array.from(programacionVuelos.current.values());
     console.log("Total programaciones:", allData.length);
     
     // VALIDACIÓN CRÍTICA: Si no hay datos suficientes
@@ -105,8 +105,8 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, sim
       : 0;
     
     // Calcular días transcurridos usando simulationTime si está disponible (más preciso)
-    // Multiplicador: 3x (mismo que SimControls)
-    const TIME_MULTIPLIER = 3;
+    // Multiplicador: 6x (mismo que SimControlsColapso)
+    const TIME_MULTIPLIER = 6;
     let diasReales = diasTranscurridos;
     
     if (simulationTime && startTime) {
@@ -128,7 +128,7 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, sim
       const excedido = programacion.cantPaquetes > vueloInfo.vuelo.capacidad;
       
       // Rastrear la última programación para obtener el momento real del colapso
-      if (!ultimaProgramacion || new Date(programacion.fechaSalida) > new Date(ultimaProgramacion.fechaSalida)) {
+      if (!ultimaProgramacion || new Date(programacion.fechaSalida).getTime() > new Date(ultimaProgramacion.fechaSalida).getTime()) {
         ultimaProgramacion = programacion;
       }
       
@@ -205,12 +205,16 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, sim
     const promedioExceso = vuelosExcedidos > 0 ? (excesoPaquetesTotal / vuelosExcedidos / (capacidadTotal / totalVuelos)) * 100 : 0;
     
     // Calcular el momento del colapso usando la ÚLTIMA programación (cuando se detuvo la simulación)
-    if (ultimaProgramacion && fechaInicio) {
-      const fechaColapso = new Date(ultimaProgramacion.fechaSalida);
+    if (ultimaProgramacion && fechaInicio && startTime) {
+      const programacionFinal: ProgramacionVuelo = ultimaProgramacion;
+      const minutosTranscurridos = tiempoEntre(startTime, new Date(programacionFinal.fechaSalida));
+      // Calcular la fecha simulada usando el multiplicador
+      const fechaSimulada = new Date(startTime.getTime() + minutosTranscurridos * TIME_MULTIPLIER * 60000);
+      
       momentoColapso = {
         dia: diasReales, // Usar diasReales calculados desde simulationTime
-        hora: fechaColapso.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
-        fecha: fechaColapso.toLocaleDateString('es-PE')
+        hora: fechaSimulada.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+        fecha: fechaSimulada.toLocaleDateString('es-PE')
       };
     }
     
@@ -301,7 +305,7 @@ const FinColapso: React.FC<FinColapsoProps> = ({ programacionVuelos, vuelos, sim
                   <div className="bg-white rounded-lg p-4 border border-yellow-300">
                     <p className="font-semibold mb-2 text-yellow-900">Posibles causas:</p>
                     <ul className="list-disc list-inside space-y-1 text-sm">
-                      <li>El backend no envió el mensaje <code className="bg-yellow-100 px-1 rounded">"primeraCarga"</code> con los datos de envíos</li>
+                      <li>El backend no envió el mensaje <code className="bg-yellow-100 px-1 rounded">&quot;primeraCarga&quot;</code> con los datos de envíos</li>
                       <li>Los envíos no se procesaron correctamente en el servidor</li>
                       <li>El algoritmo de optimización no generó rutas para los paquetes</li>
                       <li>Problema de conexión WebSocket durante la transmisión de datos</li>

@@ -338,7 +338,7 @@ const FinSemanal: React.FC<FinSemanalProps> = ({ programacionVuelos, vuelos, col
                     <div className="bg-white rounded-lg p-4 border border-yellow-300">
                       <p className="font-semibold mb-2 text-yellow-900">Posibles causas:</p>
                       <ul className="list-disc list-inside space-y-1 text-sm">
-                        <li>El backend no envió el mensaje <code className="bg-yellow-100 px-1 rounded">"primeraCarga"</code> con los datos de envíos</li>
+                        <li>El backend no envió el mensaje <code className="bg-yellow-100 px-1 rounded">&quot;primeraCarga&quot;</code> con los datos de envíos</li>
                         <li>Los envíos no se procesaron correctamente en el servidor</li>
                         <li>El algoritmo de optimización no generó rutas para los paquetes</li>
                         <li>Problema de conexión WebSocket durante la transmisión de datos</li>
